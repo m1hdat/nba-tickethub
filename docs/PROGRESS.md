@@ -4,7 +4,7 @@ Cập nhật: 2026-11-24 (Asia/Saigon).
 
 ## Tóm tắt
 
-Đã khảo sát nền dự án ở Phase 0. Trong Phase 1 đã đọc đề PDF được bổ sung, chuẩn hóa yêu cầu, soạn DESIGN và cập nhật roadmap/AI log. **Đang chờ người dùng review và thống nhất thiết kế; chưa triển khai chức năng.** Các bảng khảo sát cấu hình bên dưới là bằng chứng Phase 0, không phải kết quả build mới.
+Phase 2 đã được người dùng giao: đã triển khai model, assets JSON, reader/repository, geometry compiler, validator và unit test; kiểm tra JVM đạt. **Android Gradle build chưa thành công do lỗi truy cập SDK jar trong môi trường hiện tại; chưa có APK/runtime được xác minh. Dừng để người dùng review, chưa sang Phase 3.** Các mục Phase 0–1 bên dưới giữ làm lịch sử; kết quả mới nằm ở mục Phase 2 cuối file.
 
 ## Cấu trúc Android
 
@@ -84,7 +84,7 @@ Java source 11 và JVM chạy Gradle 25 là hai cấu hình khác nhau; chưa c�
 - Gradle Wrapper, version catalog và cấu hình daemon JVM không bị chủ ý ignore; cần giữ để tái tạo môi trường.
 - Ignore không thay thế việc kiểm tra bí mật trước khi đưa file lên Git, và không tự loại file đã tracked khi repository được thiết lập sau này.
 
-## Công việc và bằng chứng
+## Công việc và bằng chứng — snapshot Phase 0–1
 
 | Hạng mục | Trạng thái | Bằng chứng / giới hạn |
 | --- | --- | --- |
@@ -153,3 +153,114 @@ Commit message đề xuất cho tài liệu Phase 1: `docs: define NBA ticket pu
 - Kiểm chứng bằng Python đạt: 6 Markdown file có UTF-8/code fence/bảng hợp lệ, 16 link cục bộ tồn tại, đủ REQ-01–18 và D-01–D-09; kiểm tra bỏ trần zoom 8×fit/đường hit-test tuyến tính/bố cục 200 làm giới hạn trong DESIGN. Tập đường dẫn và SHA-256 41 file mã/cấu hình/nguồn ngoài phạm vi không đổi. Chưa triển khai/test generator/index/LOD hoặc chạy Android/build/lint/benchmark; chưa có kết quả quy mô lớn được chứng minh.
 - Git đầu nhiệm vụ: main chưa có commit; AI không init/add/commit/push. Dừng ở tài liệu để người dùng review D-01–D-09; không hỏi lại phạm vi toàn arena đã chốt.
 - Commit message đề xuất: `docs: expand ArenaView design to full arena and scalable seat rendering`.
+
+## Phase 2 — Project Foundation & Data Model (2026-11-24)
+
+Trạng thái: **Đã triển khai phần code trong phạm vi giao; kiểm tra JVM đạt; Android build chưa đạt trong môi trường hiện tại; chưa được người dùng review/nghiệm thu.** Không tự chuyển Phase 3.
+
+### Model và luồng đọc
+
+- `Team`, `Game`: đội/trận demo; Game tham chiếu hai đội và arena, có mô tả thời gian mô phỏng.
+- `Arena → ArenaLevel → Section → SeatRow → Seat`: hierarchy vật lý độc lập inventory. Arena có world/court bounds; level/section/row có footprint vành khuyên; Seat có ID, rowId, số vị trí, kind và geometryIndex, không chứa giá hoặc trạng thái theo trận.
+- `GameSeat`: thông tin offer/vé theo khóa (gameId, seatId), gồm Money, baseStatus và provenance. Đây chưa phải vé đã mua/Booking/My Tickets. Cùng Seat có giá/trạng thái khác nhau ở hai trận.
+- `WorldRect`, `AnnularSector`, `SeatGeometry`: hình học logic Java thuần, không Canvas/Matrix/screen coordinates. SeatGeometry giữ bốn đỉnh bất biến; compiler mock hiện sinh rect, validator kiểm được cả quad xoay.
+- `Money` lưu long minor units và mã tiền; giá mock nhân hệ số từng trận bằng số nguyên, làm tròn half-up, phát hiện overflow. `SeatStatus` chỉ có AVAILABLE/BOOKED/LOCKED; chưa có selection state.
+- `DataProvenance` phân biệt MOCK/REAL_SNAPSHOT/LIVE_VERIFIED. Reader mock chỉ chấp nhận MOCK; toàn bộ sơ đồ/sức chứa/lịch/giá/inventory hiện tại là dữ liệu tổng hợp, không có nguồn NBA thực đã được xác minh.
+- `ArenaDataset` giữ map ID, flat seat order, geometry và inventory bất biến; constructor chỉ trả về khi validator đạt. Mảng đỉnh được clone; collection ngoài không sửa được dữ liệu.
+
+Luồng blocking (chỉ gọi trên worker): `assets/mock/*.json → AndroidAssetSource → MockArenaRepository → StrictJson → MockArenaJsonReader → ArenaGeometryCompiler → ArenaDataset/ArenaDataValidator`.
+
+`AndroidAssetSource` chỉ giữ AssetManager và chặn gọi trên main thread. Repository nhận AssetSource để unit test không phụ thuộc Android; đóng stream kể cả khi lỗi, báo tên asset và từ chối path traversal/UTF-8 lỗi. Phase này chưa nối repository vào MainActivity; UI template giữ nguyên. Executor/UI state sẽ được nối khi có nhiệm vụ sau, không đọc assets trong onDraw.
+
+### JSON và hình học toàn arena
+
+- Manifest v1 có provenance, arena/court, teams, games và mockInventory từng trận, levels, sections; mỗi section có angular span, rowCount, seatsPerRow và giá nền mock. Dữ liệu hình học/ghế được sinh xác định theo version, ID và seed, không khai báo tay hàng chục nghìn ghế.
+- Compiler tạo các vành tầng không chồng nhau quanh court trung tâm, nhiều section với khoảng cách góc, row radial ranges, seat ID riêng và tọa độ world. World units là đơn vị mô phỏng, không phải kích thước đo tại sân NBA.
+- Validator kiểm ID trùng, FK, hai đội khác nhau, schema version, section/row/range/geometryIndex, thứ tự hàng, hierarchy containment, số ghế/geometry, quad hợp lệ, shape chồng nhau/đè court, inventory đầy đủ, currency theo trận và giá hợp lệ.
+- Private grid/SAT trong validator chỉ phát hiện hình học chồng lấn; chưa cung cấp query touch/viewport hay ArenaSpatialIndex cho UI. Không triển khai hit-testing tương tác, pan/zoom hoặc chọn ghế.
+- Không có giới hạn domain 200. Budget tài nguyên mặc định: 100.000 vị trí, 500.000 offers, manifest tối đa 1.048.576 ký tự/depth 64. Seat/offer budget truyền được qua constructor; số lượng vượt budget bị báo lỗi trước cấp phát lớn, không bị cắt âm thầm. Budget không phải sức chứa NBA thực hoặc giới hạn schema.
+- StrictJson dùng Java chuẩn để giữ nguyên Gradle/dependency và kiểm tra cùng parser trên Android/JVM; xử lý số chính xác, escape/Unicode, từ chối duplicate key/trailing content/syntax lỗi. Chỉ dùng cho manifest mock v1 đang có; tích hợp provider thật cần nhiệm vụ riêng.
+
+| Manifest / test | Tầng | Section | Hàng | Tổng vị trí | Ghế ngồi | Vị trí đứng | Trận |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| arena-small.json | 3 | 20 | 40 | 200 | 190 | 10 | 2 |
+| arena-10k.json | 3 | 20 | 200 | 10.000 | 9.500 | 500 | 2 |
+| arena-30k.json | 3 | 20 | 600 | 30.000 | 28.500 | 1.500 | 2 |
+| Test biến rowCount từ 30 lên 50 của manifest 30k | 3 | 20 | 1.000 | 50.000 | 47.500 | 2.500 | 2 |
+
+50k chỉ là cấu hình phát sinh trong unit test, chưa tạo asset thứ tư. Tất cả profile dùng cùng reader/compiler/validator. Kết quả load/validate quy mô lớn không chứng minh frame time hoặc hit-testing/rendering trên Android.
+
+### File tạo mới và thay đổi
+
+Prefix mã chính: `app/src/main/java/com/example/nbatickethub/`. Có **25 file Java mới**, chỉ trong model/data/geometry; không tạo package state/ui rỗng.
+
+| Thư mục dưới prefix | File mới |
+| --- | --- |
+| model/ | Team.java, Game.java, Arena.java, ArenaLevel.java, Section.java, SeatRow.java, Seat.java, GameSeat.java |
+| model/ | Money.java, SeatStatus.java, PositionKind.java, DataProvenance.java, WorldRect.java, AnnularSector.java, SeatGeometry.java, ModelChecks.java |
+| data/ | ArenaDataset.java, ArenaDataValidator.java, ArenaRepository.java, AssetSource.java, AndroidAssetSource.java |
+| data/json/ | StrictJson.java |
+| data/mock/ | MockArenaJsonReader.java, MockArenaRepository.java |
+| geometry/ | ArenaGeometryCompiler.java |
+
+Các file còn lại:
+
+- `app/src/main/assets/mock/arena-small.json`, `arena-10k.json`, `arena-30k.json` (3 manifest mới).
+- `app/src/test/java/com/example/nbatickethub/data/ModelTest.java`, `JsonParsingTest.java`, `ArenaDataTest.java`, `RepositoryTest.java`, `TestAssets.java` (4 test class + 1 helper mới).
+- `tools/test-foundation.ps1` (runner kiểm tra JVM dự phòng, output dưới `.gradle/`, không thay APK/Gradle verification).
+- Cập nhật `docs/PROGRESS.md`, `docs/AI_LOG.md`, `docs/ROADMAP.md` theo tiến độ và giới hạn Phase 2 được giao.
+
+Không sửa MainActivity/XML/manifest, Java/SDK/AGP/Gradle/dependency, AGENTS/REQUIREMENTS/DESIGN hoặc PDF. `docs/sources/` đã untracked từ đầu lượt, không phải file AI mới tạo trong Phase 2. Git đầu lượt: main theo origin/main, HEAD `a4e6788`, có 3 commit trước đó; AI không tạo các commit này.
+
+### Kiểm tra thực tế
+
+| Kiểm tra / lệnh | Kết quả thực tế | Giới hạn |
+| --- | --- | --- |
+| `./gradlew.bat --offline --no-daemon assembleDebug testDebugUnitTest lintDebug` | Lần đầu không tạo được lock tại C:\\.gradle | Chưa tới compile |
+| Wrapper với GRADLE_USER_HOME trong workspace và cache dependency có sẵn chỉ đọc | Qua cấu hình plugin sau khi sửa đường dẫn GRADLE_RO_DEP_CACHE; còn thiếu AAPT2 artifact offline | Không thay Gradle files; không coi configuration là build đạt |
+| Wrapper dùng binary AAPT2 đúng 9.4.1-15978811 đã có trên máy, cache/user-home trong workspace và tắt configuration-cache qua CLI | Lượt cuối `BUILD FAILED`, task `:app:compileDebugJavaWithJavac`: `AccessDeniedException` đối với SDK platform android-37.0/android.jar; lượt trước còn báo core-for-system-modules.jar | Dừng trước APK và Gradle test/lint; AAPT2 override là thử nghiệm tạm thời, không ghi vào cấu hình |
+| Java compile `--release 11 -encoding UTF-8 -Xlint:all` qua tools/test-foundation.ps1 | Đạt cho 25 file Java mới; AndroidAssetSource compile riêng với bản sao SDK jar cục bộ | Không phải DEX/APK hoặc runtime Android |
+| JUnit 4.13.2 qua tools/test-foundation.ps1 | **OK (31 tests)**: 30 test mới + 1 ExampleUnitTest cũ; lượt cuối 1.644 giây do JUnit báo | Chưa chạy Gradle test task; test mẫu không chứng minh nghiệp vụ |
+| Unit test quy mô lớn | Đọc/validate 10k, 30k và 50k vị trí đạt; so inventory/physical seats, deterministic ID/geometry/status, immutable data, dữ liệu lỗi và stream handling | Chưa benchmark render/FPS/touch/memory trên thiết bị |
+| `git diff --check`, kiểm tra phạm vi, UTF-8/JSON/link | Đạt: 6 Markdown file/17 link cục bộ hợp lệ, 3 JSON parse được và gắn MOCK; 25 Java mới/5 file test-helper/runner không lỗi UTF-8 hoặc trailing whitespace; SHA-256 của 35 file được bảo vệ không đổi | Chưa có người dùng review/nghiệm thu; Git chỉ cảnh báo chuyển LF→CRLF theo cấu hình sẵn có, không phải lỗi diff |
+
+Lệnh JVM runner đã thực sự chạy (PowerShell tại root):
+
+```powershell
+powershell -NoProfile -File tools/test-foundation.ps1 `
+  -DependencyCacheRoot C:/Users/Dell/.gradle/caches/modules-2/files-2.1 `
+  -AndroidJarPath C:/Users/Dell/AppData/Local/Android/Sdk/platforms/android-37.0/android.jar
+```
+
+Runner sao chép JUnit/Hamcrest/SDK jar được dùng sang `.gradle/foundation-check` để tránh lỗi truy cập jar bên ngoài workspace. Một lần javac đọc trực tiếp JUnit cache báo AccessDenied trong compiler cleanup; đã khắc phục runner bằng bản sao cục bộ và chạy lại sạch. Không sửa JDK/SDK hoặc quyền máy.
+
+Lệnh Gradle cuối sử dụng các biến môi trường và cờ tạm thời dưới đây; log cục bộ nằm tại `.gradle/phase2-gradle-final.log`:
+
+```powershell
+$env:GRADLE_USER_HOME = "$PWD/.gradle/phase2-home"
+$env:GRADLE_RO_DEP_CACHE = 'C:/Users/Dell/.gradle/caches'
+$env:ANDROID_USER_HOME = "$PWD/.gradle/android-user-home"
+$env:JAVA_TOOL_OPTIONS = "-Duser.home=$PWD/.gradle/runtime-home"
+./gradlew.bat --offline --no-daemon --no-configuration-cache `
+  "-Pandroid.aapt2FromMavenOverride=$PWD/.gradle/phase2-tools/aapt2.exe" `
+  assembleDebug testDebugUnitTest lintDebug
+```
+
+Các đường dẫn cache/SDK ở trên là môi trường kiểm tra hiện tại, không phải cấu hình cần commit. Binary AAPT2 và Wrapper distribution đã có trên máy được sao chép vào `.gradle/` cho lượt kiểm tra này; thư mục này bị ignore. Chưa có APK được xác minh, chưa chạy emulator/device hoặc connectedDebugAndroidTest.
+
+### Việc còn lại trước Phase 3
+
+- Người dùng review code/model/manifest và kết quả Phase 2. Chưa ghi nhận người dùng đã đọc, hiểu, tự test hoặc nghiệm thu.
+- Chạy lại Gradle assembleDebug/testDebugUnitTest/lintDebug trong môi trường truy cập SDK bình thường, xử lý lỗi nếu có; kết quả JVM không thay thế việc này.
+- Giữ ArenaView, Canvas/LOD/culling, spatial index tương tác, Matrix/pan/zoom/hit-test/selection, Booking, Smart Seat Finder và My Tickets chưa triển khai theo giới hạn giao việc.
+- Commit message đề xuất: `feat: add arena data foundation and validated mock assets`. AI không stage/commit/push.
+
+## Review Phase 2 và khảo sát nguồn — 2026-11-25
+
+- AI đã review source/data/compiler/validator/test và tài liệu; chạy lại JVM runner: **31 test đạt** (30 mới + 1 mẫu), JUnit báo 1.773 giây. AndroidAssetSource chỉ compile, chưa chạy trên Android.
+- Phát hiện validator P2 đã tái hiện bằng probe riêng: bốn đỉnh quad đều ở trong row nhưng cạnh có trung điểm bán kính 339.899961 < innerRadius 340; ArenaDataset vẫn nhận. Chi tiết và vị trí code tại [SOURCES.md](SOURCES.md). Chưa sửa code hoặc thêm regression test trong nhiệm vụ review này; chưa kết luận mock assets hiện hành sai.
+- Build Android chưa được xác minh. Lượt này không chạy lại Gradle; chỉ đọc lại log Phase 2 báo AccessDeniedException ở SDK jar. Không ghi test JVM là APK/runtime đạt.
+- Tạo SOURCES: nguồn primary, giấy phép, API Java/Views/XML, điều kiện SDK/JDK, ưu tiên theo phase và các nguồn chưa xác minh đủ. ArenaView vẫn tự triển khai Canvas/Paint/Matrix; không thư viện renderer thay thế. Không import dataset, code bên ngoài hoặc dependency mới.
+- File sửa/tạo trong lượt: `docs/SOURCES.md`, `docs/AI_LOG.md`, `docs/PROGRESS.md`. Giữ nguyên application/test/manifest/build/catalog/assets/runner và roadmap/design. Probe nằm ở `.gradle/phase2-review/`, không phải Phase 3.
+- Kiểm tra cuối đạt: 7 Markdown file có UTF-8/code fence/bảng hợp lệ, 26 link cục bộ tồn tại; SOURCES có 17 mục nguồn. SHA-256/tập đường dẫn 73 file mã/test/assets/config/runner/tài liệu thiết kế và roadmap ngoài phạm vi không đổi; git diff --check đạt, staged diff rỗng. Chưa có review/nghiệm thu hoặc quyết định chọn thư viện cụ thể từ người dùng.
+- Commit message đề xuất: `docs: review phase 2 and catalog licensed reference sources`. AI không stage/commit/push; chưa chuyển Phase 3.
