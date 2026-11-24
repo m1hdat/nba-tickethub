@@ -1,0 +1,357 @@
+{
+  "schemaVersion": 1,
+  "geometryVersion": "arena-30k-geometry-v1",
+  "provenance": {
+    "originType": "MOCK",
+    "version": "arena-30k-v1",
+    "simulationSeed": 20261124,
+    "notice": "Synthetic NBA-themed arena. Layout, capacity, schedule, prices and inventory are simulated; no real tickets are sold.",
+    "sourceUrl": null,
+    "collectedAt": null
+  },
+  "arena": {
+    "id": "demo-arena",
+    "name": "Demo Basketball Arena (simulated)",
+    "worldBounds": [
+      0,
+      0,
+      2400,
+      2400
+    ],
+    "courtBounds": [
+      1000,
+      1100,
+      1400,
+      1300
+    ]
+  },
+  "teams": [
+    {
+      "id": "demo-home",
+      "displayName": "Demo Home Team",
+      "shortName": "HOME"
+    },
+    {
+      "id": "demo-away",
+      "displayName": "Demo Away Team",
+      "shortName": "AWAY"
+    }
+  ],
+  "games": [
+    {
+      "id": "demo-game-1",
+      "homeTeamId": "demo-home",
+      "awayTeamId": "demo-away",
+      "arenaId": "demo-arena",
+      "displayTime": "Exhibition session 1 (simulated, not an NBA schedule)",
+      "mockInventory": {
+        "priceFactorPercent": 100,
+        "bookedPercent": 15,
+        "lockedPercent": 10
+      }
+    },
+    {
+      "id": "demo-game-2",
+      "homeTeamId": "demo-home",
+      "awayTeamId": "demo-away",
+      "arenaId": "demo-arena",
+      "displayTime": "Exhibition session 2 (simulated, not an NBA schedule)",
+      "mockInventory": {
+        "priceFactorPercent": 120,
+        "bookedPercent": 25,
+        "lockedPercent": 5
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "lower",
+      "arenaId": "demo-arena",
+      "code": "LOWER",
+      "name": "Lower bowl (simulated)",
+      "order": 1,
+      "innerRadius": 340,
+      "outerRadius": 600
+    },
+    {
+      "id": "club",
+      "arenaId": "demo-arena",
+      "code": "CLUB",
+      "name": "Club bowl (simulated)",
+      "order": 2,
+      "innerRadius": 680,
+      "outerRadius": 800
+    },
+    {
+      "id": "upper",
+      "arenaId": "demo-arena",
+      "code": "UPPER",
+      "name": "Upper bowl (simulated)",
+      "order": 3,
+      "innerRadius": 880,
+      "outerRadius": 1100
+    }
+  ],
+  "sections": [
+    {
+      "id": "lower-01",
+      "levelId": "lower",
+      "code": "101",
+      "name": "Lower section 1 (simulated)",
+      "category": "VIP",
+      "startDegrees": 3.0,
+      "endDegrees": 42.0,
+      "rowCount": 30,
+      "seatsPerRow": 50,
+      "mockBasePriceMinor": 13000,
+      "currencyCode": "USD"
+    },
+    {
+      "id": "lower-02",
+      "levelId": "lower",
+      "code": "102",
+      "name": "Lower section 2 (simulated)",
+      "category": "VIP",
+      "startDegrees": 48.0,
+      "endDegrees": 87.0,
+      "rowCount": 30,
+      "seatsPerRow": 50,
+      "mockBasePriceMinor": 13000,
+      "currencyCode": "USD"
+    },
+    {
+      "id": "lower-03",
+      "levelId": "lower",
+      "code": "103",
+      "name": "Lower section 3 (simulated)",
+      "category": "VIP",
+      "startDegrees": 93.0,
+      "endDegrees": 132.0,
+      "rowCount": 30,
+      "seatsPerRow": 50,
+      "mockBasePriceMinor": 13000,
+      "currencyCode": "USD"
+    },
+    {
+      "id": "lower-04",
+      "levelId": "lower",
+      "code": "104",
+      "name": "Lower section 4 (simulated)",
+      "category": "VIP",
+      "startDegrees": 138.0,
+      "endDegrees": 177.0,
+      "rowCount": 30,
+      "seatsPerRow": 50,
+      "mockBasePriceMinor": 13000,
+      "currencyCode": "USD"
+    },
+    {
+      "id": "lower-05",
+      "levelId": "lower",
+      "code": "105",
+      "name": "Lower section 5 (simulated)",
+      "category": "VIP",
+      "startDegrees": 183.0,
+      "endDegrees": 222.0,
+      "rowCount": 30,
+      "seatsPerRow": 50,
+      "mockBasePriceMinor": 13000,
+      "currencyCode": "USD"
+    },
+    {
+      "id": "lower-06",
+      "levelId": "lower",
+      "code": "106",
+      "name": "Lower section 6 (simulated)",
+      "category": "VIP",
+      "startDegrees": 228.0,
+      "endDegrees": 267.0,
+      "rowCount": 30,
+      "seatsPerRow": 50,
+      "mockBasePriceMinor": 13000,
+      "currencyCode": "USD"
+    },
+    {
+      "id": "lower-07",
+      "levelId": "lower",
+      "code": "107",
+      "name": "Lower section 7 (simulated)",
+      "category": "VIP",
+      "startDegrees": 273.0,
+      "endDegrees": 312.0,
+      "rowCount": 30,
+      "seatsPerRow": 50,
+      "mockBasePriceMinor": 13000,
+      "currencyCode": "USD"
+    },
+    {
+      "id": "lower-08",
+      "levelId": "lower",
+      "code": "108",
+      "name": "Lower section 8 (simulated)",
+      "category": "VIP",
+      "startDegrees": 318.0,
+      "endDegrees": 357.0,
+      "rowCount": 30,
+      "seatsPerRow": 50,
+      "mockBasePriceMinor": 13000,
+      "currencyCode": "USD"
+    },
+    {
+      "id": "club-01",
+      "levelId": "club",
+      "code": "201",
+      "name": "Club section 1 (simulated)",
+      "category": "STANDARD",
+      "startDegrees": 3.0,
+      "endDegrees": 87.0,
+      "rowCount": 30,
+      "seatsPerRow": 50,
+      "mockBasePriceMinor": 10000,
+      "currencyCode": "USD"
+    },
+    {
+      "id": "club-02",
+      "levelId": "club",
+      "code": "202",
+      "name": "Club section 2 (simulated)",
+      "category": "STANDARD",
+      "startDegrees": 93.0,
+      "endDegrees": 177.0,
+      "rowCount": 30,
+      "seatsPerRow": 50,
+      "mockBasePriceMinor": 10000,
+      "currencyCode": "USD"
+    },
+    {
+      "id": "club-03",
+      "levelId": "club",
+      "code": "203",
+      "name": "Club section 3 (simulated)",
+      "category": "STANDARD",
+      "startDegrees": 183.0,
+      "endDegrees": 267.0,
+      "rowCount": 30,
+      "seatsPerRow": 50,
+      "mockBasePriceMinor": 10000,
+      "currencyCode": "USD"
+    },
+    {
+      "id": "club-04",
+      "levelId": "club",
+      "code": "204",
+      "name": "Club section 4 (simulated)",
+      "category": "STANDARD",
+      "startDegrees": 273.0,
+      "endDegrees": 357.0,
+      "rowCount": 30,
+      "seatsPerRow": 50,
+      "mockBasePriceMinor": 10000,
+      "currencyCode": "USD"
+    },
+    {
+      "id": "upper-01",
+      "levelId": "upper",
+      "code": "301",
+      "name": "Upper section 1 (simulated)",
+      "category": "STANDARD",
+      "startDegrees": 3.0,
+      "endDegrees": 42.0,
+      "rowCount": 30,
+      "seatsPerRow": 50,
+      "mockBasePriceMinor": 6000,
+      "currencyCode": "USD"
+    },
+    {
+      "id": "upper-02",
+      "levelId": "upper",
+      "code": "302",
+      "name": "Upper section 2 (simulated)",
+      "category": "STANDARD",
+      "startDegrees": 48.0,
+      "endDegrees": 87.0,
+      "rowCount": 30,
+      "seatsPerRow": 50,
+      "mockBasePriceMinor": 6000,
+      "currencyCode": "USD"
+    },
+    {
+      "id": "upper-03",
+      "levelId": "upper",
+      "code": "303",
+      "name": "Upper section 3 (simulated)",
+      "category": "STANDARD",
+      "startDegrees": 93.0,
+      "endDegrees": 132.0,
+      "rowCount": 30,
+      "seatsPerRow": 50,
+      "mockBasePriceMinor": 6000,
+      "currencyCode": "USD"
+    },
+    {
+      "id": "upper-04",
+      "levelId": "upper",
+      "code": "304",
+      "name": "Upper section 4 (simulated)",
+      "category": "STANDARD",
+      "startDegrees": 138.0,
+      "endDegrees": 177.0,
+      "rowCount": 30,
+      "seatsPerRow": 50,
+      "mockBasePriceMinor": 6000,
+      "currencyCode": "USD"
+    },
+    {
+      "id": "upper-05",
+      "levelId": "upper",
+      "code": "305",
+      "name": "Upper section 5 (simulated)",
+      "category": "STANDARD",
+      "startDegrees": 183.0,
+      "endDegrees": 222.0,
+      "rowCount": 30,
+      "seatsPerRow": 50,
+      "mockBasePriceMinor": 6000,
+      "currencyCode": "USD"
+    },
+    {
+      "id": "upper-06",
+      "levelId": "upper",
+      "code": "306",
+      "name": "Upper section 6 (simulated)",
+      "category": "STANDARD",
+      "startDegrees": 228.0,
+      "endDegrees": 267.0,
+      "rowCount": 30,
+      "seatsPerRow": 50,
+      "mockBasePriceMinor": 6000,
+      "currencyCode": "USD"
+    },
+    {
+      "id": "upper-07",
+      "levelId": "upper",
+      "code": "307",
+      "name": "Upper section 7 (simulated)",
+      "category": "STANDARD",
+      "startDegrees": 273.0,
+      "endDegrees": 312.0,
+      "rowCount": 30,
+      "seatsPerRow": 50,
+      "mockBasePriceMinor": 6000,
+      "currencyCode": "USD"
+    },
+    {
+      "id": "upper-08",
+      "levelId": "upper",
+      "code": "308",
+      "name": "Upper section 8 (simulated)",
+      "category": "STANDING",
+      "startDegrees": 318.0,
+      "endDegrees": 357.0,
+      "rowCount": 30,
+      "seatsPerRow": 50,
+      "mockBasePriceMinor": 3500,
+      "currencyCode": "USD"
+    }
+  ]
+}
