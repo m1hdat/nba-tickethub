@@ -94,6 +94,7 @@ public final class ArenaDataValidator {
                     require(vertexInside(row.boundary, geometry.x(vertex), geometry.y(vertex)),
                             "Seat geometry outside row " + seat.id);
                 }
+                require(edgesInside(row.boundary, geometry), "Seat edge outside row " + seat.id);
             }
             expectedIndex += row.seatCount;
         }
@@ -136,6 +137,40 @@ public final class ArenaDataValidator {
                 && radius <= sector.outerRadius + GEOMETRY_TOLERANCE
                 && degrees >= sector.startDegrees - GEOMETRY_TOLERANCE
                 && degrees <= sector.endDegrees + GEOMETRY_TOLERANCE;
+    }
+
+    private static boolean edgesInside(AnnularSector sector, SeatGeometry geometry) {
+        // Corners outside the inner circle do not imply that the entire edge is outside it.
+        // Also split at the angular boundary rays so reflex sectors are handled correctly.
+        for (int i = 0; i < 4; i++) {
+            int j = (i + 1) % 4;
+            double ax = geometry.x(i) - sector.centerX, ay = geometry.y(i) - sector.centerY;
+            double bx = geometry.x(j) - sector.centerX, by = geometry.y(j) - sector.centerY;
+            double dx = bx - ax, dy = by - ay;
+            double lengthSquared = dx * dx + dy * dy;
+            double t = lengthSquared == 0 ? 0 : Math.max(0, Math.min(1,
+                    -(ax * dx + ay * dy) / lengthSquared));
+            if (Math.hypot(ax + t * dx, ay + t * dy)
+                    < sector.innerRadius - GEOMETRY_TOLERANCE) { return false; }
+            double[] cuts = {0, 1, 1, 1};
+            int count = 2;
+            for (double boundary : new double[]{sector.startDegrees, sector.endDegrees}) {
+                double rx = Math.cos(Math.toRadians(boundary));
+                double ry = Math.sin(Math.toRadians(boundary));
+                double cross = dx * ry - dy * rx;
+                if (Math.abs(cross) > 1e-12) {
+                    double intersection = -(ax * ry - ay * rx) / cross;
+                    if (intersection > 0 && intersection < 1) { cuts[count++] = intersection; }
+                }
+            }
+            java.util.Arrays.sort(cuts, 0, count);
+            for (int c = 0; c < count - 1; c++) {
+                double middle = (cuts[c] + cuts[c + 1]) / 2;
+                if (!vertexInside(sector, (float) (sector.centerX + ax + middle * dx),
+                        (float) (sector.centerY + ay + middle * dy))) { return false; }
+            }
+        }
+        return true;
     }
 
     private static void validateGeometryOverlap(ArenaDataset data) {

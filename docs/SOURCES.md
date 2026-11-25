@@ -1,6 +1,6 @@
 # Review Phase 2 và nguồn tham khảo
 
-Ngày kiểm tra: **2026-11-25**. Chỉ review/tra cứu, chưa tích hợp dependency, tải dataset vào app, sửa code hoặc triển khai Phase 3. Đối chiếu [AGENTS](../AGENTS.md), [REQUIREMENTS](REQUIREMENTS.md), [DESIGN](DESIGN.md) và [PROGRESS](PROGRESS.md).
+Ngày kiểm tra: **2026-11-25**. Các mục review bên dưới giữ kết quả của nhiệm vụ trước. **Cập nhật Phase 3A ở cuối file:** đã tích hợp metadata tên có nguồn CC0 và hình học tự mô phỏng, triển khai Canvas; không thêm dependency hoặc nhập sơ đồ/ảnh/tọa độ ghế bên ngoài. Đối chiếu [AGENTS](../AGENTS.md), [REQUIREMENTS](REQUIREMENTS.md), [DESIGN](DESIGN.md) và [PROGRESS](PROGRESS.md).
 
 ## 1. Kết quả review Phase 2
 
@@ -93,3 +93,140 @@ Trang seating maps của Crypto.com Arena không truy cập được qua công c
 5. Metadata thật hoặc JSON library mới: chỉ thêm khi có nhu cầu và phạm vi rõ; ưu tiên Wikidata structured snapshot cho metadata, giữ mock seat map/inventory.
 
 Chưa chọn hoặc cài phiên bản dependency mới. Chưa có third-party dataset/source được nhập vào app; mọi đề xuất cần kiểm tra artifact/NOTICE/transitive licenses đúng phiên bản khi thực sự áp dụng. Review của AI không phải người dùng đã review/hiểu/nghiệm thu.
+
+## 7. Nguồn sử dụng/tham khảo cho Phase 3A — 2026-11-25
+
+### Phân loại dữ liệu tích hợp
+
+- **Identity tham chiếu:** tên ba sân/đội từ structured Wikidata (CC0-1.0), đối chiếu các trang venue/team dưới đây; lưu source URL/ngày đọc trong `assets/venues/catalog.json`. Không lấy sức chứa hoặc danh mục section thật từ Wikidata. `homeTeam.source` là nguồn riêng cho tên đội. Snapshot do AI nhập các trường identity đã đọc, không phải đồng bộ NBA API.
+- **Nguồn chính thức tham khảo:** website venue/NBA cho bối cảnh seating/court. Không có giấy phép mở được xác minh cho tọa độ ghế hoặc ảnh trên các trang này; chỉ đọc/link tham khảo, không trích xuất bản đồ vào app. Không suy ra quyền tái phân phối từ việc trang công khai. Không sao chép mã của 3D venue vendor.
+- **Tự mô phỏng:** tất cả section `SIM-*`, tầng/row count/seat count, ID, vị trí/hướng/kích thước tương đối, lối đi, màu, giá và availability. `provenance.originType=MOCK`, `sourceUrl=null` cho geometry tự tạo; catalog ghi notice riêng. Không gán URL venue như thể venue cung cấp geometry của project. Không tuyên bố CC0 của Wikidata bao phủ hình học tự tạo, ảnh hay logo.
+
+| ID | Nguồn primary / loại | Quyền và mức xác minh | Phần dùng trong 3A |
+| --- | --- | --- | --- |
+| ARENA-01 | [MSG entity Q186125](https://www.wikidata.org/wiki/Q186125), [Knicks Q131364](https://www.wikidata.org/wiki/Q131364); [Wikidata licensing](https://www.wikidata.org/wiki/Wikidata:Licensing) | Structured data CC0; entity page đã đọc. Không phải chứng nhận từ NBA | Chỉ tên sân/đội và source URL trong catalog; không logo/capacity/seat data |
+| ARENA-02 | [Chase Center Q15262098](https://www.wikidata.org/wiki/Q15262098), [Warriors Q157376](https://www.wikidata.org/wiki/Q157376) | Structured data CC0, đã đối chiếu venue link từ team; tránh nhầm trạm tàu Chase Center | Tên sân/đội, source URL; hình học ellipse do project tự chọn |
+| ARENA-03 | [Crypto.com Arena Q186080](https://www.wikidata.org/wiki/Q186080), [Lakers Q121783](https://www.wikidata.org/wiki/Q121783) | Structured data CC0; tên venue/team có nguồn | Tên sân/đội; không import capacity hay section thật |
+| ARENA-04 | [MSG Knicks seating chart](https://www.msg.com/madison-square-garden/seating/msg-knicks), [MSG Terms](https://www.msgentertainment.com/terms-of-use/) | Trang chính thức có nhóm tầng/bridge và cảnh báo tùy sự kiện; Terms đã đọc, không giấy phép dữ liệu mở | Tham khảo phân tầng tổng thể. Gallery hai dải/42 section của mock không phải tổ chức chính thức của MSG |
+| ARENA-05 | [Chase venue maps](https://www.chasecenter.com/plan-your-visit/transportation/venue-maps/), [Warriors seating/prices](https://www.nba.com/warriors/tickets/prices) | Venue maps chỉ trả iframe qua công cụ; không truy cập đầy đủ engine 3D hoặc license geometry. Trang đội là nguồn tham khảo | Bối cảnh seating; không dùng bảng giá/tọa độ/section; tỷ lệ và court xoay là giả lập |
+| ARENA-06 | [Crypto 3D venue map](https://www.cryptoarena.com/premiumhospitality/3d-digital-venue-map/), [Premier Seats](https://www.cryptoarena.com/premiumhospitality/premierseats), [AEG Terms](https://aegworldwide.com/terms-of-use) | Trang chính thức; engine nhúng không đọc được toàn bộ. Terms được truy theo footer chính thức; không cấp open seat-map dataset | Ý tưởng thêm tầng premium mô phỏng. Không tái tạo số/mã section hoặc suy ra hình học chính xác |
+| COURT-01 | [NBA Rule 1](https://official.nba.com/rule-no-1-court-dimensions-equipment/), [Official NBA court diagram / 2025–26 Officials Guide](https://cms.nba.com/wp-content/uploads/sites/4/2025/10/2025-26-NBA-Officials-Guide.pdf) | Quy định/kích thước tham khảo, không copy hình minh họa hoặc PDF vào tài nguyên ứng dụng | Tự dựng đường sân bằng primitive Canvas, tỷ lệ court 94:50, góc ba điểm/keys/circles/rims được minh họa; không nhận là artwork court chính thức |
+| CODE-3A | [Android Canvas](https://developer.android.com/reference/android/graphics/Canvas), [Custom drawing](https://developer.android.com/develop/ui/views/layout/custom-views/custom-drawing) | API framework đã có trong SDK; tham khảo cách tổ chức custom drawing, không thêm dependency/code vendor | Tự viết ArenaView/Path/Paint/cache; Matrix/inverse API tiếp tục dùng tự triển khai trong 3B/3C |
+
+Đã tìm tham chiếu ảnh nội thất: [ảnh MSG từ trang sự kiện chính thức](https://www.msg.com/events-tickets/new-york-knicks-boston-celtics-madison-square-garden-november-2022/3B005D10AEE115B7) (asset `img.msg.com/seatmap/msg/knicks/NYKnicks_Section207_Row3_Seat10_L.jpg`) và [ảnh/tour Chase do NBA đăng](https://cdn-uat.nba.com/news/golden-state-warriors-new-chase-center-features-photos-tour). Kết quả tìm ảnh cho thấy nguồn; lượt mở trực tiếp hai JPEG báo cache miss, tải bằng shell bị chặn mạng. **Chưa kiểm tra trực quan đầy đủ các ảnh này**; không dùng mô tả tìm kiếm để suy ra tọa độ/sức chứa. Crypto có tour 3D trên trang venue nhưng engine nhúng không đọc được; ảnh tìm kiếm từ bên thứ ba không được chọn làm dữ liệu tích hợp. Bản preview vì vậy là hình học tự dựng có tham khảo bối cảnh, không phải bản digitize ảnh/seating chart. Cần người dùng đối chiếu trực quan nếu yêu cầu độ giống venue cao hơn.
+
+Không tìm được nguồn mở đã xác minh chứa đầy đủ ba seat map + row/seat coordinates có quyền tái phân phối phù hợp trong lượt này. Không nhập mã nguồn/dataset mới từ thư viện đề xuất ở các mục trước. Superellipse projection, sinh hàng/ghế, cache Canvas và validator patch là code tự viết trong repo với AI hỗ trợ; không có đoạn mã ngoài được sao chép cần gắn license mới. Chưa chọn license phát hành của chính repository thay người dùng.
+
+### Trạng thái review Phase 2 sau xử lý 3A
+
+- Finding containment ở mục 1 là lịch sử đúng ở thời điểm review. Nay đã sửa `ArenaDataValidator.edgesInside`, thêm regression `rejectsQuadWithVerticesInsideButEdgeCrossingInnerHole`; test từ chối đúng trường hợp đã tái hiện. Không xóa kết quả review cũ.
+- 31 test nền chạy lại trước sửa; sau bổ sung có 36 test (35 liên quan foundation/preview + 1 mẫu). Kết quả build cụ thể và giới hạn lint/device tại [PROGRESS](PROGRESS.md), không lấy kết quả JVM để nhận đã kiểm tra giao diện.
+- Ba metadata khả dụng không có nghĩa đã xác minh các venue còn lại của 30 đội. Khả năng mở rộng hiện nằm ở schema/list/map/renderer không hard-code venue; cần thêm source snapshot và cấu hình cho từng sân sau này.
+
+
+## 8. Tham khảo chẩn đoán treo/rendering — 2026-11-25
+
+- [Android: Diagnose and fix ANRs](https://developer.android.com/topic/performance/anrs/diagnose-and-fix-anrs): phân biệt vấn đề app/main thread với system server/tải thiết bị; cần stack và trace để quy nguyên nhân. Không dùng tên dialog làm bằng chứng lỗi trong JSON hoặc Canvas.
+- [Android: Slow rendering](https://developer.android.com/topic/performance/issues/render): các Path lớn có thể gây chi phí xử lý/upload trên đường render. Căn cứ kiểm tra batch kích thước hữu hạn, không phải bằng chứng thiết bị này đã ANR tại drawPath. Bản cũ đã cache Path; không gán cho nó lỗi sửa Path mỗi frame khi không có việc đó.
+- [Android: Capture and read bug reports](https://developer.android.com/studio/debug/bug-report): hướng dẫn lấy log/stack khi lỗi tái diễn. Trong lượt này ADB/Studio bị chặn truy cập nên chưa có bugreport/Logcat hợp lệ.
+
+Chỉ tham khảo tài liệu primary/API Android sẵn có, không nhập code/dependency. HTML dùng Canvas 2D/Path2D trình duyệt và code tự viết; không CDN, ảnh seating map, WebView trong app hoặc renderer vendor. Trace/timing/batch/export đều do AI viết trong repo, không xác minh FPS bằng tài liệu tham khảo.
+
+
+## 9. Tham khảo cho review thẩm mỹ Phase 3A — 2026-11-25
+
+Người dùng đã xem HTML và đánh giá thẩm mỹ/độ chân thực chưa đạt. Nguồn dưới đây là tham khảo bố cục và giao diện, **không phải dữ liệu geometry được nhập vào dự án**.
+
+| Nguồn công khai đã truy cập | Đọc được và giới hạn | Áp dụng vào bản mô phỏng |
+| --- | --- | --- |
+| [MSG Knicks Seat Map](https://www.msg.com/madison-square-garden/seating/msg-knicks) | Trang chính thức hiển thị nhóm Floor/100s/200s, Suites, 400s, 300s/Hyundai Bridge, Lounges; cảnh báo cấu hình thay đổi theo sự kiện. Engine không cung cấp tọa độ qua phần đọc trang | Phân cấp các dải khán đài, gallery mô phỏng riêng; không sao chép mã section thật |
+| [Chase Maps](https://www.chasecenter.com/plan-your-visit/transportation/venue-maps/) và [Warriors Season Tickets](https://www.nba.com/warriors/tickets/season) | Nội dung tìm kiếm chỉ rõ portals/concourse và 3D seating view; lượt mở Maps chỉ trả iframe. Ảnh linked từ Warriors tải qua web bị lỗi; không nhận đã xem ảnh đó | Oval liên tục, phân biệt courtside/lower/upper; thông số là quyết định thiết kế tự chọn |
+| [Crypto 3D Digital Venue Map](https://www.cryptoarena.com/premiumhospitality/3d-digital-venue-map/) và [Premier Seats](https://www.cryptoarena.com/premiumhospitality/premierseats) | Đọc được trang official, liên kết bản đồ 3D và mô tả premium levels; không trích xuất engine 3D | Dải premier-inspired màu riêng; không gọi 12 SIM-P section là tổ chức thực tế |
+| SeatGeek seating chart: [MSG](https://seatgeek.com/venues/madison-square-garden/seating-chart), [Chase](https://seatgeek.com/venues/chase-center/seating-chart), [Crypto](https://seatgeek.com/venues/crypto-com-arena/seating-chart) | Đọc được trang và liên kết map cả ba. Web mở ảnh Chase thành công; ảnh MSG/Crypto trả cache miss. Trang có nhiều cấu hình sự kiện: hình mặc định không bảo đảm là basketball | Tham khảo hierarchy section → seat view, ranh giới gọn và nhãn; không digitize ảnh, không lấy giá/availability/capacity |
+| [Ticketmaster: Interactive Seat Map](https://help.ticketmaster.com/hc/en-us/articles/9786899270545-What-is-the-interactive-seat-map-and-how-do-I-use-it) | Đọc hướng dẫn official: section, zoom tới ghế, blue/gray theo trạng thái/filter. Không sao chép UI hoặc triển khai chọn/checkout | Ưu tiên nhận biết section toàn cảnh và xem ghế khi phóng đại; trạng thái mô phỏng phân biệt với màu tầng |
+
+Không phát hiện giấy phép tái phân phối đầy đủ seat coordinates trong những nguồn này. Không đưa ảnh, logo, dữ liệu seating hoặc code bên ngoài vào app. Các exponent, radius, angle cuts, palette, seat count và inventory là **MOCK do dự án tự tạo**. Không tuyên bố mức giống chính xác với công trình thật khi chưa đối chiếu được toàn bộ chart. File QA PNG chỉ là ảnh kiểm tra geometry Java do AI render bằng Pillow, không phải browser screenshot, nguồn chính thức hoặc tài nguyên dùng thay Canvas Android.
+
+
+## 10. Ảnh tham khảo court/stands cho theme 3A.1 — 2026-11-25
+
+Các trang ảnh dưới đây được mở để tham khảo; ngày ảnh khác ngày truy cập. Không dùng chúng làm chứng cứ về cấu hình hiện tại hoặc lấy mẫu để khẳng định mã màu ghế chính thức. Không tải/tích hợp ảnh hay logo vào Android/HTML.
+
+| Demo | Nguồn ảnh và thời điểm trên trang | Quyền/giới hạn và phần sử dụng |
+| --- | --- | --- |
+| Knicks / MSG | [Madison Square Garden court.jpg](https://commons.wikimedia.org/wiki/File:Madison_Square_Garden_court.jpg), Ganley894, court năm 2005; [gallery Knicks/Magic của đội](https://www.nba.com/knicks/gallery/gallery-knicks-and-magic-madison-square-garden) | Commons ghi public-domain release của tác giả; trang và link thumbnail đọc/mở được. Gallery NBA không trả nội dung ảnh đọc được. Ảnh 2005 **không xác minh court/ghế năm 2026**; chỉ tham khảo bối cảnh sân/khán đài, tự chọn demo gỗ/xanh/cam |
+| Warriors / Chase | [San Francisco - Chase Center 001.jpg](https://commons.wikimedia.org/wiki/File:San_Francisco_-_Chase_Center_001.jpg), Américo Toledano (Hameryko), 27-12-2019; [gallery Clippers tại Chase của NBA](https://www.nba.com/clippers/photos/gallery-la-clippers-vs-golden-state-warriors-11-1-26) | Commons ghi CC BY-SA 4.0; trang/thông tin và thumbnail mở được. Gallery official có link ảnh nhưng asset CDN trả Internal Error. Không đo màu ghế từ ánh sáng/ảnh; maple/xanh/vàng và tiers tự thiết kế |
+| Lakers / Crypto | [Crypto.com Arena interior - Lakers 2022.jpg](https://commons.wikimedia.org/wiki/File:Crypto.com_Arena_interior_-_Lakers_2022.jpg), Troutfarm27, trước trận Kings 11-11-2022 | Commons ghi CC BY-SA 4.0; mở trang và link thumbnail. Không coi ảnh 2022 là current layout; gỗ mật ong/tím/vàng là palette demo, không tuyên bố hex là official |
+
+Lượt mở các thumbnail qua URL đầy đủ được web trả image reference; một số URL rút bỏ query khi thử lại không truy cập được. Không ghi đã đo/kiểm chứng chính xác mọi pixel hoặc màu ghế. Những giới hạn này là lý do catalog ghi **MOCK** cho toàn theme và notice rõ ràng về palette ghế/tầng tự thiết kế.
+
+Phần **mô phỏng**: toàn bộ mã hex, sắc gỗ và dải ván, màu/ghép màu theo tier, màu nền ghế, vị trí/kích thước chữ tên đội, center mark bằng chữ, đường bao/section/seat count/inventory của các bản trước. Chỉ identity tên sân/đội và hồ sơ ảnh có nguồn; không gọi palette là màu ghế thật. Dùng tên đội bằng font hệ thống, không sử dụng logo chính thức hoặc tuyên bố đã có quyền logo.
+
+Ảnh chỉ là tham chiếu không tái phân phối, nên không áp dụng license ảnh lên code tự viết hoặc tự tuyên bố license repo. Các ảnh `preview/qa-*.png` do tool Pillow vẽ từ snapshot Java và theme của dự án; không phải ảnh venue, browser screenshot, hay tài nguyên thay Canvas Android. Browser host hiện không khả dụng; không suy ra đã xem HTML trực tiếp từ ảnh QA.
+
+
+## 11. Tham chiếu 30 court concepts và phạm vi quyền — 2026-11-25
+
+- Tham chiếu do người dùng chỉ định: [NBA Court Concepts (All 30 Teams), Behance](https://www.behance.net/gallery/69718075/NBA-Court-Concepts-%28All-30-Teams%29). Mở trang trực tiếp bằng web trả **HTTP 403 Forbidden**. Không đọc được đầy đủ nội dung, tác giả hoặc điều kiện dùng artwork của dự án trong lượt này; không tự đặt tên tác giả/license và không ghi đã xem toàn bộ 30 ảnh gốc.
+- Image search theo đúng URL/tên dự án trả hai mục thuộc project 69718075: [ảnh concept Nuggets](https://mir-s3-cdn-cf.behance.net/project_modules/fs/19642069718075.5b8b19db311ad.png) và [ảnh concept Lakers](https://mir-s3-cdn-cf.behance.net/project_modules/max_1200/7e21f669718075.5b8b19db2f06f.png). Thông tin chỉ mục gợi ý mảng mountain motif/court-wide graphics và phân biệt wood/paint/border/lettering. Lượt mở file ảnh trực tiếp tiếp tục trả **Cache miss**. Đây là tham khảo giới hạn từ chỉ mục, không phải quan sát/đo/tracing đầy đủ pixel gốc.
+- Danh sách identity 30 đội được đối chiếu với nguồn NBA: [NBA Cares Teams](https://cares.nba.com/teams/), [NBA All Teams](https://www.nba.com/teams). Chỉ dùng tên/định danh để author concept; không lấy logo từ trang đội rồi coi là đã có quyền tái sử dụng. teamId của dự án là khóa nội bộ, không tuyên bố là schema ID chính thức.
+- Ảnh/seating chart của **ba arena hiện có** tiếp tục theo mục 7/9/10 (MSG/Chase/Crypto); không có nguồn seat geometry/ghế của 27 arena khác trong dataset mới. Mọi bố cục và màu ghế chưa xác minh tiếp tục ghi MOCK, palette được chuyển sang arenaId và không thay theo đội.
+
+Áp dụng vào thiết kế riêng: tách chất liệu gỗ, mảng đồ họa lớn, key edge/border và lettering thành layer dữ liệu, giữ vạch thi đấu phía trên. 30 bộ polygon/polyline/ellipse được tự author trong `tools/court_designs.py`, gồm các motif hình học phổ quát như ván parquet, cầu dây, núi, cây, tia, dải lửa, skyline; **không tải/copy ảnh court, logo, texture hoặc trace tọa độ của tác giả Behance**. Không gọi đây là reproductions của dự án Behance hoặc court NBA thật. Chưa xác minh visual fidelity đầy đủ với tham chiếu bị chặn; giới hạn này cần được cân nhắc khi review.
+
+Logo: chưa xác minh được bộ logo chính thức đủ điều kiện tái phân phối; hiện **0 asset logo / 30 fallback mã đội**. Khung asset local chỉ chấp nhận PNG có source/license được khai báo, fit giữ tỷ lệ và draw dưới vạch; bản hiện tại không dùng đường tải từ nguồn không rõ quyền. Việc sau này thêm asset cần xác minh điều kiện thật, không chỉ điền chuỗi license. Không nhập font chữ thương hiệu; baseline/fallback dùng font hệ thống.
+
+Các thông số màu, grain joinery, diện tích/độ lớn mảng trang trí, key accents, vị trí chữ, kích thước center marks và palette ghế đều là quyết định mô phỏng của dự án. `preview/qa-courts30*.png` là QA Pillow từ dữ liệu đã qua Java parser, không artwork venue hoặc browser screenshot và không được đưa vào Android renderer. Không có code/library/ảnh ngoài được nhập trong lượt này.
+
+## 12. Khán đài 30 sân nhà và palette theo đội — 2026-11-25
+
+**Hợp đồng hiện hành:** hình học theo arenaId; màu ghế/section/tầng theo theme teamId. Phần này thay thế quy tắc palette theo arenaId của mục 11; các mục trước giữ làm lịch sử.
+
+### Nguồn đã kiểm tra và giới hạn
+
+- [NBA — All 30 arenas by team](https://www.nba.com/news/all-30-nba-arenas-by-team), đọc được nội dung qua [bản CDN của NBA](https://cdn-uat.nba.com/news/all-30-nba-arenas-by-team): đối chiếu tên và sân nhà. Không dùng số sức chứa trong bài làm số ghế của dự án. Đây không phải nguồn tọa độ ghế, section, lối đi hoặc màu ghế thực tế.
+- [Intuit Dome seating charts](https://intuitdome.com/events/seating-charts), có [Clippers basketball chart](https://publish-p111705-e1087822.adobeaemcloud.com/content/dam/intuit-dome/en/web/content/seating-charts/1920x1080_GAMES_V2.jpg): mở trang và liên kết ảnh làm tham chiếu; không digitize section/ghế. Cấu hình có end terrace tự thiết kế, không nhận là bản sao hay số hàng/ghế chính thức của The Wall.
+- [Xfinity Mobile Arena seating](https://www.xfinitymobilearena.com/seating), có [76ers chart](https://www.xfinitymobilearena.com/assets/img/76ERS-SEATING-CHART-PRIMEPOINT-UPDATE-2568X1444-NO-BG-d02f0a94c5.png): đối chiếu tên hiện tại và loại chart. Bài directory NBA còn ghi Wells Fargo Center ở mục Philadelphia; bản demo dùng tên trên website venue. `identitySource` của xfinity trỏ trực tiếp nguồn venue này.
+- [TD Garden seating](https://www.tdgarden.com/venue-info/seating): đã thử mở nhưng công cụ không lấy được nội dung chart; không ghi đã xác minh hình học Boston. Các nguồn ảnh/chart MSG, Chase, Crypto của các mục 7/9/10 vẫn chỉ là tham khảo định tính, không dữ liệu ghế chính thức.
+- Các sân có mã **I** trong bảng chỉ đối chiếu identity/home mapping từ directory. Chưa kiểm chứng seating chart hoặc ảnh nội thất chi tiết của từng sân trong lượt này; author một bố cục MOCK riêng. **R** là có đường dẫn chart/ảnh tham khảo như nêu trên hoặc ở các mục trước, vẫn không có tọa độ/hàng/ghế được xác minh. **I/T** là trường hợp TD Garden đã thử mở chart nhưng chưa đọc được.
+
+### Phạm vi dữ liệu mô phỏng — đủ 30 đội
+
+**30/30 cấu hình khán đài là MOCK; 0 sơ đồ ghế chính thức được số hóa.** Mọi độ bo/đường bao, độ sâu tầng, số section, lối đi, hàng ghế, tọa độ, sức chứa dưới đây đều do dự án author. Palette lấy hai màu đang có của theme đội; đây là **màu ghế thiết kế theo theme đội**, không tuyên bố là màu ghế thực tế hoặc mã màu thương hiệu được chứng nhận.
+
+| teamId | Sân nhà / arenaId nội bộ | Tham khảo | Section / hàng / ghế MOCK | Primary / secondary từ theme |
+| --- | --- | --- | --- | --- |
+| `nyk` | Madison Square Garden / `msg` | R | 42 / 606 / 16,908 | `#1656A5` / `#CB763B` |
+| `gsw` | Chase Center / `chase` | R | 34 / 576 / 17,584 | `#234A88` / `#E2BB48` |
+| `lal` | Crypto.com Arena / `crypto` | R | 50 / 656 / 19,056 | `#552583` / `#D9AF40` |
+| `atl` | State Farm Arena / `state_farm` | I | 52 / 674 / 18,576 | `#9B2437` / `#E6B73A` |
+| `bos` | TD Garden / `td_garden` | I/T | 54 / 744 / 19,824 | `#176442` / `#C7AD76` |
+| `bkn` | Barclays Center / `barclays` | I | 50 / 652 / 17,008 | `#263443` / `#8D9EAA` |
+| `cha` | Spectrum Center / `spectrum` | I | 56 / 844 / 21,048 | `#246C77` / `#644B86` |
+| `chi` | United Center / `united` | I | 58 / 912 / 26,148 | `#9D233B` / `#252A34` |
+| `cle` | Rocket Arena / `rocket` | I | 52 / 766 / 20,982 | `#72283E` / `#C6A861` |
+| `dal` | American Airlines Center / `american_airlines` | I | 54 / 824 / 22,144 | `#225A8D` / `#94A4B1` |
+| `den` | Ball Arena / `ball` | I | 56 / 840 / 21,624 | `#173A5D` / `#D3AC48` |
+| `det` | Little Caesars Arena / `little_caesars` | I | 58 / 872 / 21,684 | `#274D91` / `#B72F42` |
+| `hou` | Toyota Center / `toyota` | I | 52 / 720 / 21,174 | `#A72D40` / `#3D4859` |
+| `ind` | Gainbridge Fieldhouse / `gainbridge` | I | 54 / 804 / 20,784 | `#234365` / `#DBB94B` |
+| `lac` | Intuit Dome / `intuit` | R | 61 / 835 / 21,728 | `#254C7A` / `#B64246` |
+| `mem` | FedExForum / `fedex` | I | 52 / 728 / 19,390 | `#284B74` / `#96AED0` |
+| `mia` | Kaseya Center / `kaseya` | I | 56 / 848 / 21,968 | `#842B3D` / `#D48442` |
+| `mil` | Fiserv Forum / `fiserv` | I | 52 / 792 / 19,722 | `#1F5949` / `#B6AA80` |
+| `min` | Target Center / `target` | I | 56 / 824 / 21,176 | `#243C58` / `#699584` |
+| `nop` | Smoothie King Center / `smoothie_king` | I | 50 / 656 / 18,192 | `#263D5A` / `#BAA06B` |
+| `okc` | Paycom Center / `paycom` | I | 54 / 760 / 20,952 | `#236196` / `#CD6C42` |
+| `orl` | Kia Center / `kia` | I | 56 / 880 / 23,504 | `#225B91` / `#8EABBF` |
+| `phi` | Xfinity Mobile Arena / `xfinity` | R | 60 / 886 / 22,906 | `#245695` / `#B94351` |
+| `phx` | Mortgage Matchup Center / `mortgage_matchup` | I | 52 / 702 / 20,034 | `#573478` / `#CA793E` |
+| `por` | Moda Center / `moda` | I | 56 / 860 / 22,124 | `#A5333B` / `#343D46` |
+| `sac` | Golden 1 Center / `golden1` | I | 52 / 754 / 19,600 | `#59447D` / `#8D9CA7` |
+| `sas` | Frost Bank Center / `frost_bank` | I | 56 / 832 / 22,112 | `#34414E` / `#91A0AA` |
+| `tor` | Scotiabank Arena / `scotiabank` | I | 58 / 912 / 23,700 | `#A12F42` / `#353E47` |
+| `uta` | Delta Center / `delta` | I | 54 / 852 / 23,016 | `#343A69` / `#A78155` |
+| `was` | Capital One Arena / `capital_one` | I | 56 / 808 / 22,236 | `#2B426A` / `#B5424B` |
+
+Snapshot này có 30 đội → 30 arenaId khác nhau; Clippers dùng Intuit, Lakers dùng Crypto. Hợp đồng `homeArenas` cho phép nhiều teamId trỏ cùng arenaId; ca dùng chung được kiểm bằng fixture giả lập NYK/GSW, không phải thông tin NBA thật. Không nhân bản hình học khi chỉ đổi đội/palette.
+
+Không tải ảnh seating chart/court/logo vào app. 0 asset logo được cấu hình; giữ 30 mã đội giữa sân và danh sách thiếu asset trong HTML. Tất cả 30 tên/court/logo-slot hiện có được giữ nguyên so với baseline trước thay đổi; ba mock manifest cũ và hash tọa độ ghế cũng giữ nguyên. Ảnh `qa-homearenas30.png` là QA Pillow từ snapshot Java, không ảnh chụp browser/Android hoặc ảnh dùng thay Canvas.

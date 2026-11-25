@@ -41,3 +41,9 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.ext.junit)
 }
+
+// JVM tests read these JSON manifests directly through AssetSource.
+// Asset-only edits must invalidate the test result cache as well as the APK assets.
+tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach {
+    inputs.dir("src/main/assets").withPathSensitivity(PathSensitivity.RELATIVE)
+}

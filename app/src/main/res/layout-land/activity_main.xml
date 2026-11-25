@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/main" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="horizontal" android:background="@color/preview_surface">
+    <ScrollView android:layout_width="240dp" android:layout_height="match_parent" android:fillViewport="true">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="16dp" android:paddingTop="12dp" android:orientation="vertical">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/preview_eyebrow" android:textSize="11sp" android:textColor="@color/preview_accent" android:letterSpacing="0.12" />
+                <TextView android:id="@+id/venue_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/preview_title" android:textSize="23sp" android:textStyle="bold" android:textColor="@color/preview_text" />
+                <TextView android:id="@+id/venue_subtitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/preview_loading" android:textColor="@color/preview_muted" android:textSize="13sp" />
+                <Spinner android:id="@+id/arena_selector" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="8dp" android:background="@drawable/preview_selector" android:popupBackground="@color/preview_selector_surface" android:theme="@style/ThemeOverlay.AppCompat.Light" android:contentDescription="@string/arena_selector" android:enabled="false" />
+                <Spinner android:id="@+id/theme_selector" android:layout_width="match_parent"
+                    android:layout_height="48dp" android:contentDescription="@string/theme_selector"
+                    android:enabled="false" android:background="@drawable/preview_selector"
+                    android:popupBackground="@color/preview_selector_surface" android:theme="@style/ThemeOverlay.AppCompat.Light" />
+                <TextView android:id="@+id/preview_status" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/preview_loading" android:textColor="@color/preview_text" android:textSize="13sp" android:accessibilityLiveRegion="polite" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/simulation_notice" android:textColor="@color/preview_accent" android:textSize="11sp" />
+            </LinearLayout>
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="16dp" android:paddingBottom="8dp" android:orientation="vertical">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/status_legend" android:text="@string/seat_legend" android:textColor="@color/preview_text" android:textSize="12sp" />
+                <TextView android:id="@+id/seat_debug" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="@string/seat_debug_pending" android:textColor="@color/preview_muted" android:textSize="12sp" />
+                <TextView android:id="@+id/tier_legend" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:textColor="@color/preview_text" android:textSize="11sp" />
+                <Button android:id="@+id/reset_view" android:layout_width="match_parent" android:layout_height="48dp" android:enabled="false" android:text="@string/reset_view" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+    <com.example.nbatickethub.ui.arena.ArenaView android:id="@+id/arena_view" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginVertical="4dp" android:contentDescription="@string/preview_title" />
+</LinearLayout>

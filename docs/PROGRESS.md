@@ -1,10 +1,10 @@
 # Tiến độ thực tế
 
-Cập nhật: 2026-11-24 (Asia/Saigon).
+Cập nhật: 2026-11-25 (Asia/Saigon).
 
 ## Tóm tắt
 
-Phase 2 đã được người dùng giao: đã triển khai model, assets JSON, reader/repository, geometry compiler, validator và unit test; kiểm tra JVM đạt. **Android Gradle build chưa thành công do lỗi truy cập SDK jar trong môi trường hiện tại; chưa có APK/runtime được xác minh. Dừng để người dùng review, chưa sang Phase 3.** Các mục Phase 0–1 bên dưới giữ làm lịch sử; kết quả mới nằm ở mục Phase 2 cuối file.
+Người dùng đã giao Phase 3C ngày 2026-11-25. **3B+3C đã triển khai trên Android, chờ test chung trên Samsung và review.** Đã kiểm build 3B trước sửa; 3C có index quad/inverse Matrix, phân biệt tap/drag/pinch, highlight một ghế và thông tin khu/hàng/số ghế. 54 JVM tests đạt; build/lint/test APK compile đạt, chưa chạy test Android do ADB không có thiết bị. Giữ nguyên 30 court designs / 30 cấu hình khán đài / 30 home mappings, 626.904 ghế mô phỏng, 0 logo assets / 30 mã đội fallback. Chưa sang selection nhiều ghế/Bottom Sheet/đặt vé; không commit/push. Các mục trước là lịch sử; xem mục Phase 3C cuối file.
 
 ## Cấu trúc Android
 
@@ -264,3 +264,441 @@ Các đường dẫn cache/SDK ở trên là môi trường kiểm tra hiện t�
 - File sửa/tạo trong lượt: `docs/SOURCES.md`, `docs/AI_LOG.md`, `docs/PROGRESS.md`. Giữ nguyên application/test/manifest/build/catalog/assets/runner và roadmap/design. Probe nằm ở `.gradle/phase2-review/`, không phải Phase 3.
 - Kiểm tra cuối đạt: 7 Markdown file có UTF-8/code fence/bảng hợp lệ, 26 link cục bộ tồn tại; SOURCES có 17 mục nguồn. SHA-256/tập đường dẫn 73 file mã/test/assets/config/runner/tài liệu thiết kế và roadmap ngoài phạm vi không đổi; git diff --check đạt, staged diff rỗng. Chưa có review/nghiệm thu hoặc quyết định chọn thư viện cụ thể từ người dùng.
 - Commit message đề xuất: `docs: review phase 2 and catalog licensed reference sources`. AI không stage/commit/push; chưa chuyển Phase 3.
+
+
+## Phase 3A — dữ liệu đa sân và Canvas preview, 2026-11-25
+
+### Đã thực hiện và phạm vi
+
+- Đọc AGENTS, REQUIREMENTS, DESIGN, ROADMAP, PROGRESS, SOURCES và source/test/config; kiểm tra Git `main...origin/main`. Chạy lại nền 31 test trước sửa: đạt (2.217 giây qua runner JVM). Không suy ra người dùng đã review Phase 2 từ việc giao nhiệm vụ mới.
+- Sửa lỗi containment đã ghi ở review trước; thêm regression đúng quad có edge đi vào inner hole. Không triển khai hit-testing touch.
+- Catalog JSON ba sân, source identity CC0 tách MOCK geometry; layout khác nhau ở bowl shape, tỷ lệ, tầng, section/row density, gap và court angle mô phỏng. MSG 42 section/606 hàng/16.908 ghế; Chase 34/576/17.584; Crypto 50/656/19.056. Không coi số ghế này là capacity thật. Chỉ ba sân khả dụng, catalog/renderer không hard-code giới hạn 3/200; test 30 entries là profile tổng hợp chỉ cho kiểm thử cấu trúc.
+- Worker đọc/validate/generate/project geometry bất biến và cache Path; ArenaView tự vẽ full court + stands/rows/quads/status bằng Canvas/Paint. onDraw không I/O, không sinh hình học hoặc object theo ghế. Chưa có LOD/culling/camera Matrix/touch/selection nghiệp vụ.
+- Launcher MainActivity dùng preview XML dọc/ngang, Spinner, tên đội, counts, legend và nhãn mô phỏng. Reset disabled ghi 3B, debug ghế ghi 3C. Giữ venue ID qua recreation; loader có cancel/version guard/lifecycle close. Kiểm chứng runtime vẫn chưa diễn ra.
+- Không thêm dependency, đổi Gradle/SDK/Java cấu hình dự án hoặc sửa AndroidManifest. Không WebView/ảnh sơ đồ/logo/per-seat View; không nhập mã vendor.
+
+### File tạo/thay đổi
+
+Đường dẫn Java dưới `app/src/main/java/com/example/nbatickethub/`:
+
+- Sửa `MainActivity.java`, `data/ArenaDataValidator.java`.
+- Tạo `model/ArenaProfile.java`, `data/ArenaCatalog.java`, `data/ArenaCatalogReader.java`, `geometry/ArenaScene.java`, `geometry/ArenaSceneCompiler.java`.
+- Tạo `ui/arena/ArenaView.java`, `ui/arena/ArenaRenderData.java`, `ui/arena/ArenaPreviewLoader.java`.
+- Assets mới: `app/src/main/assets/venues/catalog.json` và `app/src/main/assets/mock/{msg,chase,crypto}.json`. Các fixture Phase 2 giữ nguyên.
+- Sửa `app/src/main/res/layout/activity_main.xml`, `app/src/main/res/values/strings.xml`; tạo `layout-land/activity_main.xml`, `drawable/preview_selector.xml`, `values/preview_colors.xml`.
+- Sửa `app/src/test/java/com/example/nbatickethub/data/ArenaDataTest.java`; tạo `ArenaPreviewDataTest.java` cùng package.
+- Tạo `app/src/androidTest/java/com/example/nbatickethub/ArenaPreviewInstrumentedTest.java` (hai ca mới, chưa chạy thiết bị).
+- Tạo `tools/generate-preview-assets.py`; mở rộng runner có sẵn `tools/test-foundation.ps1` để chạy test preview. `tools/` và `docs/sources/` đã là untracked từ đầu lượt; không xóa hoặc ghi đè các nguồn đề của người dùng.
+- Cập nhật `docs/DESIGN.md`, `docs/ROADMAP.md`, `docs/PROGRESS.md`, `docs/SOURCES.md`, `docs/AI_LOG.md`. Log/cache/SDK copy/build mirror ở `.gradle/` bị ignore, không đưa vào commit.
+
+### Kiểm chứng thực tế
+
+| Kiểm tra | Kết quả quan sát | Giới hạn |
+| --- | --- | --- |
+| JVM runner sau sửa | `OK (36 tests)`; lượt cuối 2.821 giây, gồm kiểm tra cạnh projected quad trong row | Java thuần, không phải UI |
+| Wrapper `assembleDebug testDebugUnitTest assembleDebugAndroidTest` | **BUILD SUCCESSFUL**, lượt cuối 53 giây; 67 task, 8 executed/59 up-to-date | Trong `.gradle/phase3a-project`, cùng source, chỉ local SDK path/cache/AAPT2 override khác do sandbox |
+| Gradle unit XML reports | 36 tests, 0 failures/errors/skipped; 6 suite; regression validator và ba venue dataset đạt | 35 test foundation/preview + 1 test mẫu; không bao gồm instrumented |
+| APK ứng dụng / APK test | Đã tạo `app-debug.apk` và `app-debug-androidTest.apk` trong mirror `app/build/outputs/apk/` | Build APK test không có nghĩa đã chạy test |
+| Wrapper `lintDebug` | **Không chạy được lint analysis**: thiếu `com.android.tools.lint:lint-gradle:32.4.1`; offline cache thiếu; lượt online `Permission denied: getsockopt` khi tải POM từ Google Maven | Không có báo cáo lint đạt; không suppress lỗi hoặc đổi version để vượt kiểm tra |
+| ADB `devices -l` | Lỗi fatal `Cannot mkdir '\.android': Permission denied` | Không liệt kê được thiết bị; không tuyên bố đã chạy hoặc xác minh không có thiết bị kết nối |
+| Connected tests/UI/FPS | **Chưa chạy/chưa đo** | Chưa xác nhận bố cục đẹp, gesture, accessibility hoặc hiệu năng trên emulator/device |
+
+Lượt build trước phát hiện gọi `WorldRect.width()/height()` không tồn tại; AI đã sửa dùng right-left/bottom-top và build lại đạt. Lượt combined có lint ban đầu dừng vì thiếu artifact; tách build/test APK để xác minh riêng. Lỗi truy cập SDK jar ở Phase 2 được tránh trong bản sao kiểm chứng bằng cách sao chép SDK jars/tools đã có vào workspace; không sửa SDK gốc hoặc `local.properties` gốc. Không coi đây là bằng chứng lệnh root plain chạy thành công trong sandbox.
+
+Lệnh JVM:
+
+```powershell
+./tools/test-foundation.ps1 -JdkPath 'C:/Program Files/Android/Android Studio/jbr'
+```
+
+Lệnh Wrapper thực tế ở mirror (các biến môi trường chỉ trong process kiểm tra):
+
+```powershell
+$repoRoot = $PWD.Path
+$mirror = Join-Path $repoRoot '.gradle/phase3a-project'
+$env:GRADLE_USER_HOME = Join-Path $repoRoot '.gradle/phase2-home'
+$env:ANDROID_USER_HOME = Join-Path $repoRoot '.gradle/android-user-home'
+$env:JAVA_TOOL_OPTIONS = "-Duser.home=$repoRoot/.gradle/runtime-home"
+# GRADLE_RO_DEP_CACHE không được đặt; dependencies có sẵn được copy vào cache writable.
+& "$mirror/gradlew.bat" -p $mirror --offline --no-daemon --no-configuration-cache `
+  "-Pandroid.aapt2FromMavenOverride=$repoRoot/.gradle/phase2-tools/aapt2.exe" `
+  assembleDebug testDebugUnitTest assembleDebugAndroidTest
+# lintDebug thử cả offline và online (bỏ --offline ở lượt online).
+```
+
+Log: `.gradle/phase3a-verified.log`, `.gradle/phase3a-lint.log`. Báo cáo JUnit: `.gradle/phase3a-project/app/build/test-results/testDebugUnitTest/`. APK preview: `.gradle/phase3a-project/app/build/outputs/apk/debug/app-debug.apk`. Mirror có settings/build/version catalog/Wrapper giống root; `local.properties` mirror trỏ `.gradle/sdk-mirror`. Không cần sao chép cấu hình kiểm chứng này vào dự án để Run từ Android Studio.
+
+### Cách người dùng chạy và review
+
+1. Mở **thư mục repository gốc** trong Android Studio. Giữ JDK/SDK/Gradle dự án đã chọn; Sync Gradle. Cần truy cập Google Maven để resolve lint artifact còn thiếu nếu chạy lint.
+2. Device Manager → khởi động emulator API 24 trở lên (hoặc thiết bị thật), chọn module `app`, bấm Run. MainActivity launcher mở Arena Preview, không cần Intent đặc biệt.
+3. Chờ counts hiện; lần lượt chọn MSG, Chase, Crypto. So sánh đường bao/tầng/gap/court angle và các counts ở trên; kiểm tra màu legend và nhãn SIM/*, court lines, section labels ở dọc/ngang. Xoay khi đang xem Crypto để xem có phục hồi đúng sân.
+4. 3A là preview tĩnh: không kiểm tra pan/pinch/tap chọn ghế tại mốc này; Reset và seat debug đang ghi phase sẽ bổ sung. Ghi lại screenshot/nhận xét để quyết định trước 3B.
+5. Ở môi trường truy cập SDK/network/device bình thường, chạy tại root:
+
+```powershell
+./gradlew.bat assembleDebug testDebugUnitTest lintDebug
+./gradlew.bat connectedDebugAndroidTest
+```
+
+Chỉ chạy connected khi emulator/device khả dụng. AI chưa chạy lượt connected; việc hướng dẫn không phải bằng chứng người dùng đã làm.
+
+**Điểm dừng:** chờ review giao diện và chấp nhận mức mô phỏng; còn thiếu lint/runtime inspection. Không tự triển khai 3B/3C/4, commit hoặc push. Đề xuất commit: `feat: add data-driven Canvas previews for three simulated NBA arenas`.
+
+Kiểm tra cuối 3A: SHA-256 và tập đường dẫn **76 file source/assets/resource/test** trong mirror giống root; **9 file Gradle/catalog/Wrapper** giống root (chỉ local.properties mirror khác có chủ đích). Resource XML parse đạt; 7 Markdown file có fence cân bằng và 28 link cục bộ tồn tại; `git diff --check` đạt, staged diff rỗng. APK cuối 7.003.344 byte, SHA-256 `86a697e0ffb45c4152ec5d845d2c520753ac14bbe0050489022c07c4da1bd701`. Đây là kiểm tra artifact/source, không phải kiểm tra giao diện.
+
+
+## Chẩn đoán treo emulator và HTML Preview — 2026-11-25
+
+### Báo cáo người dùng và mức kết luận
+
+Người dùng tự chạy ứng dụng trên Android Emulator và báo dialog **“Process system isn't responding”**. Đây là báo cáo runtime từ người dùng; AI chưa tự quan sát dialog hoặc tái hiện. Chưa có thời điểm chính xác so với boot/app launch/đổi sân, package gây ANR, stack hay system trace. **Chưa thể quy nguyên nhân cho ứng dụng, JSON, Canvas, GPU hoặc RAM; chưa tuyên bố đã sửa xong lỗi treo.** AI đã hỏi bổ sung thời điểm xuất hiện bằng câu hỏi tùy chọn, chưa nhận trả lời tại lúc ghi mục này.
+
+### Kiểm tra đã thực hiện
+
+| Hạng mục | Bằng chứng hiện tại | Kết luận/giới hạn |
+| --- | --- | --- |
+| Logcat | Chạy ADB devices và logcat system/events/crash, kể cả dùng Android user directory writable | Client lỗi `Cannot mkdir '\.android': Permission denied`; `.gradle/anr-logcat-attempt.txt` chỉ chứa lỗi công cụ, không phải Logcat thiết bị |
+| Android Studio | Phát hiện cửa sổ project, thử đọc qua computer-use | Công cụ trả `Computer Use app approval timed out`; không đọc được Logcat UI. Không đổi quyền máy hoặc giả vờ đã thấy stack |
+| IDE log lưu trên host | Thử tìm log, đọc thư mục Google dưới Local AppData | Bị AccessDenied; không kết luận “không có log” chỉ từ lỗi quyền |
+| Emulator/config | Lúc kiểm tra có Studio/adb, không thấy process emulator/qemu; đọc config.ini/hardware-qemu.ini của Medium_Phone | Profile API 37 x86_64/4 core; config RAM 2.048 MB/GPU auto, **runtime config gần nhất RAM 4.096 MB/GPU host**. Không sửa cấu hình; chưa biết mức RAM trống hoặc lỗi driver; CIM memory cũng bị AccessDenied |
+| JSON/main thread | MainActivity chỉ gọi loader; loader dùng single ExecutorService; AndroidAssetSource từ chối mở assets trên main Looper | Không tìm thấy đường JSON parsing/I/O main thread trong source. Catalog và arena load đều trên worker; instrumented test mới xác minh guard/worker/callback nhưng chưa chạy thiết bị |
+| Generation/validation | Compiler tạo từng row/seat; scene projection tiền tính bất biến trên worker. Mock JSON là cấu hình gọn, không khai báo 20k seat records để parse trực tiếp | O(N) phần generation/projection; validator dùng broad-phase grid + SAT, chi phí theo candidate chứ không bảo đảm tuyến tính worst-case. JVM timings không thay Android profile |
+| onDraw | Không JSON, sinh ghế/Path hay vòng request redraw; Paint/RectF/geometry cache | Vẫn vẽ toàn snapshot, O(số path + tổng độ phức tạp hình học + labels); ba drawPath lớn trước đây không có nghĩa công việc render O(1) |
+| Allocation/invalidate | Không new object theo ghế trong onDraw; chỉ một điểm invalidate ở setRenderData | Không có invalidate loop/postDelayed/animation loop trong source. Bổ sung guard cùng snapshot; slow-draw log tối đa một lần/snapshot, có tạo string chẩn đoán ở nhánh chậm đó |
+| Rủi ro tìm thấy | Bản cũ gộp toàn bộ ghế vào 3 Path trạng thái, hàng toàn sân vào 1 Path | Có khả năng chi phí tessellation/upload/texture lớn dù chuẩn bị trên worker. **Đây là giả thuyết/rủi ro render, không phải root cause ANR đã có stack xác nhận** |
+
+Các nguồn Android primary và giới hạn áp dụng được thêm vào SOURCES mục 8. Không giảm số ghế, tắt validation, đổi SDK/Gradle, vô hiệu hóa hardware acceleration hoặc tự sửa AVD để né lỗi.
+
+### Thay đổi trong tương tác này
+
+- `geometry/SeatPathBatches.java`: nhóm theo section/status, tối đa **256 ghế mỗi Path**, không bỏ hay gộp ghế thành đại diện. Các snapshot có 155/138/187 batch tương ứng MSG/Chase/Crypto. Test chứng minh mỗi index xuất hiện đúng một lần, section/status đúng, số ghế không đổi.
+- `geometry/ArenaOutlines.java`: sampling section/row và label point Java thuần dùng chung Android/HTML exporter. Không thay tọa độ ghế hoặc thuật toán projection.
+- Sửa `ui/arena/ArenaRenderData.java`: Path hàng theo section; ghế theo bounded batches. Tất cả chuẩn bị trên worker, không dựng lại trong onDraw.
+- Sửa `ui/arena/ArenaView.java`: vẽ các Path cache mới, bỏ invalidate khi snapshot không đổi, `Trace` section `ArenaView.draw`; warning tag `ArenaPipeline` khi CPU onDraw >32ms, tối đa một lần/snapshot. Warning là chẩn đoán, không phải FPS hay số đo toàn pipeline GPU.
+- Sửa `ui/arena/ArenaPreviewLoader.java`: assert không chạy arena pipeline trên main Looper; trace stage `Arena.loadValidateGenerate`, `Arena.project`, `Arena.paths`; Logcat timing `loadValidateGenerateMs/projectMs/pathsMs`, worker name và batch count sau load. Không log mỗi ghế/frame.
+- Sửa `ArenaPreviewDataTest.java`: thêm hai ca batch coverage/limits/status/section + cancellation/outlines. Sửa `ArenaPreviewInstrumentedTest.java`: thêm ca asset I/O guard, worker load, callback main và loại kết quả stale.
+- Tạo `tools/java/ArenaPreviewExport.java`, `tools/export-arena-preview.ps1`, `tools/test-arena-preview.cjs`, `preview/arena-preview.template.html`, `preview/README.md`, `preview/.gitignore`; sinh `preview/arena-preview.html` khoảng 7 MB (artifact bị ignore).
+- Cập nhật PROGRESS/AI_LOG theo yêu cầu; sửa bổ sung DESIGN/SOURCES để tài liệu pipeline và căn cứ rendering khớp code. Giữ các thay đổi Phase 3A/untracked có sẵn, không sửa model/dataset counts/giá/status đầu vào hoặc cấu hình Gradle.
+
+### HTML Preview và tính đồng nhất
+
+Mở trực tiếp [arena-preview.html](../preview/arena-preview.html) bằng Edge/Chrome/Firefox; không server/npm/CDN/mạng/emulator. Chọn sân, phóng đại rồi cuộn để xem ghế. Đây là công cụ review riêng, không thay Android Custom View/Canvas và không triển khai gesture/hit-testing của Android 3B/3C.
+
+Exporter gọi **chính** repository/compiler/validator/scene/outlines/batches Java, xuất mọi seat ID, row/section, status và 8 tọa độ quad. HTML không tự sinh tọa độ bằng thuật toán JavaScript khác. Test kiểm SHA-256 nguồn Java/JSON và hash byte float32 của toàn geometry so với Java scene; kiểm ID/FK/status, mỗi ghế xuất hiện đúng một lần. Dữ liệu vẫn là hình học mô phỏng: MSG 16.908, Chase 17.584, Crypto 19.056, tổng **53.548** ghế. Không nêu đây là seating chart chính thức.
+
+Sinh lại và kiểm tra khi đổi JSON/Java:
+
+```powershell
+./tools/export-arena-preview.ps1
+node tools/test-arena-preview.cjs
+```
+
+`preview/arena-preview.html` chứa snapshot lớn, bị ignore để không commit bản sao hình học; template/exporter/test/README là nguồn cần quản lý. File đã tồn tại trong workspace để người dùng mở ngay.
+
+### Kết quả kiểm tra thực tế
+
+- JVM runner: **38 test đạt**, JUnit 2.640 giây (37 foundation/preview + 1 mẫu). Hai test mới không chỉ kiểm đếm, mà kiểm coverage/status/section của mọi ghế và hủy preparation.
+- Export/Node verification: đạt cả **53.548 ghế**, SHA JSON/source/float32 geometry, batch coverage và script thật chạy với DOM/Canvas test double: đổi ba sân, zoom/reset/resize, coalesce requestAnimationFrame và không tự redraw khi idle. **Không phải browser screenshot, kiểm tra pixel/GPU hoặc FPS.** Browser access host không khả dụng; chưa kiểm tra trực quan trang bằng trình duyệt trong lượt này.
+- Các số timing exporter dưới đây là **một lượt Java CLI trên host/JBR**, gồm JIT/thứ tự load khác nhau, không warmup/benchmark chuẩn; `jvmCliThread=main` là thread CLI, **không phải Android UI main thread**:
+
+| Profile | load + validate + generate | Project | Batch indices | Ghế |
+| --- | --- | --- | --- | --- |
+| MSG | 352,0 ms | 39,0 ms | 22,3 ms | 16.908 |
+| Chase | 191,8 ms | 11,3 ms | 9,5 ms | 17.584 |
+| Crypto | 160,7 ms | 13,3 ms | 9,0 ms | 19.056 |
+
+Không đo chi phí Android Path build/tessellation bằng CLI này và không dùng timing host để kết luận emulator không thể treo. Android load/draw timing mới chỉ được instrument trong code, chưa có log runtime đọc được.
+
+### Thu thập chứng cứ khi lỗi tái diễn
+
+Ở PowerShell bình thường ngoài sandbox, với emulator đang kết nối, lấy serial thực từ devices. Không chỉ lọc theo package app vì sẽ mất system-server events:
+
+```powershell
+$adb = Join-Path $env:LOCALAPPDATA 'Android/Sdk/platform-tools/adb.exe'
+& $adb devices -l
+# Thay emulator-5554 bằng serial thực ở devices.
+& $adb -s emulator-5554 logcat -d -v threadtime -b main -b system -b events -b crash > .gradle/arena-logcat.txt
+& $adb -s emulator-5554 shell dumpsys activity lastanr > .gradle/arena-lastanr.txt
+& $adb -s emulator-5554 shell dumpsys gfxinfo com.example.nbatickethub framestats > .gradle/arena-framestats.txt
+& $adb -s emulator-5554 shell dumpsys meminfo com.example.nbatickethub > .gradle/arena-memory.txt
+```
+
+Các lệnh trên là **hướng dẫn chưa chạy thành công trong phiên AI**, không phải log đã thu được. Tìm `ANR in`, `am_anr`, `Input dispatching timed out`, `system_server`, `Choreographer`, `OpenGLRenderer`, `ArenaPipeline`; đối chiếu timestamp boot/mở app/đổi sân, main stack và RenderThread. Logcat tag ArenaPipeline của build mới giúp tách thời gian load/project/path với CPU onDraw. Nếu cần dùng bugreport/Perfetto theo nguồn Android, giữ artifact local, không tự upload log.
+
+**Trạng thái:** đã xử lý rủi ro Path lớn và tạo HTML review; chưa xác nhận lỗi hệ thống được khắc phục, chưa chạy connected tests/UI/FPS hoặc hoàn thành 3B/3C. Người dùng chưa review HTML trong tương tác này. Không commit/push. Đề xuất commit: `fix: bound arena render paths and add shared-geometry HTML preview`.
+
+### Kiểm chứng cuối của lượt chẩn đoán
+
+- Wrapper mirror `assembleDebug testDebugUnitTest assembleDebugAndroidTest`: **BUILD SUCCESSFUL**. Lượt có thay đổi chức năng/test chạy 57 giây (12 task executed); lượt cuối sau định dạng code chạy 35 giây (1 task executed, 66 up-to-date). XML reports xác nhận **38 test, 0 failure/error/skipped**. APK kiểm thử biên dịch thành công, không đồng nghĩa instrumentation đã chạy.
+- So SHA-256/tập đường dẫn **78 file app source/assets/resources/tests** và **9 file build/Wrapper** giữa root/mirror đều khớp; chỉ SDK path trong local.properties mirror khác. Không đổi cấu hình Gradle dự án gốc.
+- Node test cuối đạt cả hash template/source/JSON/float32, 53.548 seats và event/idle logic. HTML standalone 7.247.339 byte, SHA-256 `3d701d3e128965db202b7a7c82bec00311665e51f5b9f57f0c4b8b7c5bb6d635`; APK debug 7.004.164 byte, SHA-256 `b0f5d00fc0d4a4943d50aa9ad212df302b3da9428c548b26834f8fa9c4d46f11`. Không phải bằng chứng chất lượng hiển thị/FPS.
+- 8 Markdown files có fence cân bằng và 32 link cục bộ tồn tại; `git diff --check` đạt, staged diff rỗng; HTML output được gitignore như dự kiến. Các file/thay đổi có sẵn trước lượt giữ nguyên ngoài phần sửa được mô tả.
+- Lint **không chạy lại** trong lượt này; lỗi cache/mạng từ Phase 3A chưa được giải quyết. Chưa có Logcat/stack thiết bị, connected tests hoặc kiểm tra trực quan browser/emulator. Log build mới: `.gradle/arena-anr-build-final.log`; report XML/APK ở mirror như hướng dẫn trước.
+
+
+## Chỉnh Arena Geometry và Canvas sau review HTML — 2026-11-25
+
+**Người dùng đã review bản HTML trước và báo chưa đạt thẩm mỹ/độ chân thực.** Đó là phản hồi review, không phải nghiệm thu Phase 3A. Lượt này chỉ chỉnh preview 3A; chờ người dùng review lại bản mới.
+
+### Thay đổi và tiêu chí đối chiếu
+
+| Tiêu chí người dùng | Kết quả triển khai |
+| --- | --- |
+| Giảm khoảng trống, cân tỷ lệ court/stands | Level gap 12–25 world units; aisle chuẩn hóa theo bán kính. Court length 1130/1050/1160, kiểm cả apron không lấn khán đài. Không giảm ghế |
+| Section tự nhiên, bowl liên tục | Giao tia với superellipse tránh kéo giãn gần trục; cắt góc section không đều; kiểm full tier chiếm ít nhất 338° để tránh khe trang trí quá lớn |
+| Ba sân thực sự khác hình học | MSG n=4.6 + gallery; Chase n=2.5, oval và 3 tầng; Crypto n=3.6, bowl dài + 4 tầng. 42/34/50 section, 16.908/17.584/19.056 ghế MOCK |
+| Phân tầng, ghế và nhãn dễ nhận biết | Catalog palette cho fill/seat theo tầng; booked/locked màu chung; label nền sáng, chữ tối 9sp Android/9 CSS px HTML; nét hàng mảnh và nhạt hơn section; thêm chú giải SIM-tier trên Android dọc/ngang |
+| Chung nguồn dữ liệu, Android Canvas giữ nguyên | Java scene/outlines/batches → Android cached Paths và HTML export. Java style tokens gồm kích thước nhãn/nét; HTML không sinh lại seat geometry, có zoom review 100–600% |
+| Nguồn và dữ liệu trung thực | SOURCES §9 ghi trang official, nền tảng ticketing và giới hạn truy cập; tất cả geometry/section/inventory vẫn gắn SIMULATION |
+
+### File liên quan
+
+Lượt tiếp nối kế thừa các file Phase 3A chưa commit. Chỉnh trực tiếp: `tools/generate-preview-assets.py`; ba `assets/mock/{msg,chase,crypto}.json`, `assets/venues/catalog.json`; `geometry/ArenaRenderStyle.java`; `ui/arena/ArenaView.java`, `ArenaRenderData.java`; `MainActivity.java`; XML dọc/ngang và strings; `tools/java/ArenaPreviewExport.java`; template HTML; `ArenaPreviewDataTest.java`, `tools/test-arena-preview.cjs`; DESIGN/PROGRESS/SOURCES/AI_LOG và README preview. Renderer/compiler/profile/parser/palette đã có một phần chỉnh sửa ở trạng thái đầu lượt, không nhận là tất cả do lượt này tạo mới. `ArenaSceneCompiler` giao tia hiện tại được kiểm chứng và tài liệu công thức sửa lại cho khớp code.
+
+Sinh lại HTML và ba `preview/qa-*.png` để kiểm tra; HTML/PNG là output ignored, không tài nguyên Android. `tools/render-arena-review.py` dùng Pillow dựng ảnh từ snapshot Java, **không chứng minh browser/Android pixel parity**.
+
+### Kiểm chứng thực tế
+
+- `./tools/export-arena-preview.ps1`: thành công, đủ 53.548 ghế; bản đầu tăng court với oval mới bị validator từ chối `Court/apron outside central arena clearance`. Đã điều chỉnh court Chase/Crypto và chạy lại đạt, không bỏ validation.
+- `./tools/test-foundation.ps1 -JdkPath 'C:/Program Files/Android/Android Studio/jbr'`: **41 test đạt**, lượt cuối 4.901 giây JUnit; có assertion coverage góc tier đầy. Không dùng test mẫu làm bằng chứng chức năng.
+- `node tools/test-arena-preview.cjs`: đạt hash asset/Java/float32 geometry, toàn bộ ID/quan hệ/status/batch, palette/appearance, đổi ba sân, zoom 600/reset/resize/coalescing/idle qua DOM/Canvas test double.
+- Wrapper ở mirror `.gradle/phase3a-project` với cùng app source/build config, SDK/cache workspace và AAPT2 override như mốc trước: `assembleDebug testDebugUnitTest assembleDebugAndroidTest` **BUILD SUCCESSFUL**, 1 phút 7 giây; 67 tasks (19 executed). Log `.gradle/arena-visual-revision-build.log`. Không nhận plain root build đã đạt. Test assertion thêm sau build được chạy lại riêng bằng Wrapper, kết quả xác minh cuối bổ sung dưới đây.
+- `python tools/render-arena-review.py`: tạo ba ảnh QA; AI đã mở xem cả ba bowl để kiểm tra silhouette, gap, court, nhãn/palette. Đây là ảnh Pillow từ snapshot, không phải browser screenshots.
+- Computer-use inventory thấy Edge nhưng đọc window bị công cụ dừng: `could not determine the current browser URL on Windows with enough confidence to enforce policy`. Đã dừng thao tác browser, không thử vượt chặn; **chưa kiểm tra trực quan HTML trong browser trong lượt này**.
+- Chưa chạy connected tests/emulator/FPS; lint không chạy lại (giới hạn dependency/network lịch sử chưa xử lý). Không kết luận sửa ANR hoặc đạt hiệu năng Android.
+
+Mở lại [HTML Preview mới](../preview/arena-preview.html), chọn lần lượt MSG/Chase/Crypto; xem toàn cảnh, legend tầng, tăng zoom để xem ghế và cuộn, bấm Vừa khung. Nếu tab đang mở bản cũ cần reload file. Chỉ người dùng xác nhận lại mức thẩm mỹ/chấp nhận mô phỏng; chưa có phản hồi cho bản mới. Không triển khai 3B/3C, không stage/commit/push.
+
+Commit đề xuất: `feat: refine simulated arena geometry and shared Canvas styling`.
+
+Kiểm chứng cuối bản chỉnh geometry: Wrapper chạy lại `testDebugUnitTest` sau assertion coverage mới **BUILD SUCCESSFUL trong 50s** (2 executed/20 up-to-date). XML xác nhận **41 tests, 0 failure/error/skipped**. SHA-256/tập source kiểm tra 79 app files và 9 build/Wrapper files root/mirror khớp; chỉ local.properties mirror khác có chủ đích. Resource XML parse đạt, 8 Markdown files có fence cân bằng và 33 link local tồn tại. `git diff --check` đạt; staged diff rỗng; HTML và ba QA PNG được ignore.
+
+HTML mới 7.304.200 byte, SHA-256 `a8e4f0f0cce202819d23d5477e44de00d20d6ff0dd049826653890820076ee3e`; APK 8.321.318 byte, SHA-256 `9a4c51c3069a8423cf017fc031557f0cdb38f4187b3534122e982b038316dd66`. Log unit cuối `.gradle/arena-visual-revision-tests.log`. Đây là kiểm chứng nguồn/artifact, không phải nghiệm thu thẩm mỹ hoặc performance runtime. Không commit/push.
+
+
+## Phase 3A.1 — theme đội chủ nhà độc lập hình học — 2026-11-25
+
+**Đã triển khai ba demo; chờ người dùng review, chưa nghiệm thu và chưa sang 3B.** Người dùng giao bổ sung theme và tách geometry; chưa xác nhận đã xem bản theme mới. Chi tiết hợp đồng/ưu tiên cấu hình ở DESIGN §12, nguồn ở SOURCES §10.
+
+### Kết quả theo tiêu chí
+
+| Tiêu chí giao | Triển khai và bằng chứng |
+| --- | --- |
+| Geometry của sân, theme có thể đổi độc lập | ArenaGeometry không có màu/đội; ArenaTheme không có tọa độ. Catalog v2 tách geometry/themes/statusPalette. 3 hash float32 toàn ghế khớp bản v3 trước lượt này, đủ 53.548 ghế |
+| Theo đội nhà/cấu hình trận | resolveTheme nhận override; JSON có previewGameThemeId nullable; auto dùng đội nhà/fallback. Spinner Android/HTML cho review override, giữ arena và zoom; không gọi loader khi đổi theme |
+| Màu sân/ghế/tầng/nhãn theo dữ liệu | Court wood/alternate/lines/apron/paint/lettering/center và tên chữ baseline/center; tier section/seatBackground/accent; background/concourse/label/row/border palettes. Chữ kiểm contrast >=4.5:1; palette ghế mô phỏng |
+| Trạng thái nhất quán | Một seatStatusPalette chung; dấu tròn status trên nền ghế theo tier, legend lấy cùng dữ liệu. Marker coords do Java xuất; không làm màu đội thay nghĩa AVAILABLE/BOOKED/LOCKED |
+| Ba demo cùng hướng để review | Knicks/MSG, Warriors/Chase, Lakers/Crypto; ba card top-down chung khung và map lớn zoom 100–600%. Android Java Canvas, không WebView/ảnh sơ đồ/logo official |
+| Không sinh lại ghế khi đổi theme | Java RenderData không cache màu; setArenaTheme giữ scene/Path. HTML kiểm 9 arena×theme combinations, geometry hash/cache preparation count/zoom không đổi |
+
+### File tạo/sửa
+
+- Mới: `model/ArenaGeometry.java`, `ArenaTheme.java`, `SeatStatusPalette.java`; `geometry/ArenaSeatMarkers.java`; `androidTest/.../ui/arena/ArenaThemeInstrumentedTest.java`.
+- Sửa: `ArenaProfile`, `ArenaCatalog`, `ArenaCatalogReader`, `ArenaSceneCompiler`, `ArenaRenderStyle`; `ArenaRenderData`, `ArenaView`, `MainActivity`; XML dọc/ngang, strings; `ArenaPreviewDataTest`, `ArenaPreviewInstrumentedTest`.
+- Dữ liệu/tools: `assets/venues/catalog.json` (v2), generator assets; Java exporter; HTML template, test Node, tool QA, README preview. Ba mock manifest được generator ghi lại theo cùng cấu hình v3, không đổi số ghế/tọa độ.
+- Tài liệu: DESIGN/ROADMAP/PROGRESS/SOURCES/AI_LOG. Giữ các thay đổi cũ ngoài phạm vi; không thay SDK/Gradle/dependency, cấu hình máy hoặc Git history.
+- Output local ignored: HTML mới, ba QA PNG và `qa-themes.png`. Không nộp ảnh vào renderer Android.
+
+### Kiểm tra thực tế
+
+- `./tools/test-foundation.ps1 -JdkPath 'C:/Program Files/Android/Android Studio/jbr'`: **44 test đạt** ở lượt chức năng (3.765 giây); gồm theme priority/fallback, shared state palette, defensive tier list, từ chối màu/schema/provenance/contrast/reference sai, marker nằm trong mọi seat, cùng 41 test nền đã cập nhật schema. Kết quả cuối có ghi riêng bên dưới.
+- `./tools/export-arena-preview.ps1` và `node tools/test-arena-preview.cjs`: đủ 53.548 ghế, hashes nguồn/asset/float32, ID/FK/status/batch/marker data và theme RGB/strings bằng cấu hình sau Java validation. Script thật chạy qua test double kiểm ba card, 9 tổ hợp, không chuẩn bị lại Path, không đổi zoom và không redraw loop.
+- Lượt Node đầu so chuỗi hex bị fail do Java xuất lowercase còn JSON dùng uppercase; đã so theo RGB chuẩn hóa chỉ đối với chuỗi hex, không bỏ assertion equality. Không có khác biệt màu thực được che giấu.
+- Wrapper mirror `assembleDebug testDebugUnitTest assembleDebugAndroidTest`: **BUILD SUCCESSFUL trong 1 phút**, 67 tasks (22 executed). Không nhận lệnh root plain chạy đạt; mirror dùng cùng app/config, chỉ SDK/cache path/AAPT2 override như mốc trước. Đã thêm test và build lại cuối sau cấu hình previewGameThemeId, kết quả cuối ghi bên dưới.
+- `python tools/render-arena-review.py`: tạo ba QA map và contact sheet chung góc nhìn. AI đã mở xem contact sheet ba demo. Đây là Pillow từ Java snapshot/theme, không chứng minh browser/Android pixel parity.
+- CUA inventory lượt này báo `Browsers: Error: The browser access host is unavailable`. Không mở/điều khiển browser hoặc nhận đã xem HTML trực tiếp. Node không có playwright/puppeteer; không cài thêm phần mềm. Ba demo HTML và QA được bàn giao để người dùng mở.
+- Instrumentation kiểm bitmap/đổi theme/giữ Path và recreate override **đã viết và biên dịch, chưa chạy trên emulator/device**. Không chạy connected hoặc lint trong lượt này; giới hạn runtime/lint cũ chưa xử lý. Không tuyên bố hết ANR hoặc đo được FPS/memory Android.
+
+### Review bản mới
+
+Mở [HTML](../preview/arena-preview.html), reload nếu tab giữ bản cũ. Auto hiển thị ba home theme ở ba card; chọn từng arena xem map lớn. Chọn theme khác khi đang zoom để đối chiếu cùng geometry; chọn lại auto để về đội nhà/cấu hình trận. Android có spinner theme thứ hai và legend tương ứng. Có [ảnh so sánh QA](../preview/qa-themes.png) và ba QA từng sân (đều local/ignored).
+
+Màu ghế/tầng, ván gỗ và lettering là mô phỏng, không phải court edition/seating chính thức. Chờ người dùng review độ dễ nhìn của status dots, nhãn, các palette và ba court. Không cần quyết định thêm để hoàn thiện phần đã giao; không tự coi bản này được duyệt hay chuyển 3B/3C.
+
+Commit đề xuất: `feat: separate arena geometry from home-team themes`.
+
+### Kiểm chứng cuối Phase 3A.1
+
+Wrapper mirror `assembleDebug testDebugUnitTest assembleDebugAndroidTest`: **BUILD SUCCESSFUL trong 1m4s**, 67 tasks (18 executed, 49 up-to-date), log `.gradle/phase3a1-build-final.log`. XML xác nhận **44 tests, 0 failure/error/skipped**. JVM fallback cuối 44 tests đạt, 4.376 giây JUnit. So tập file/SHA-256: **84 app files và 9 build/Wrapper files** root/mirror khớp (local.properties mirror khác có chủ đích như trước).
+
+Export/Node cuối đạt: cả ba hash tọa độ float32 khớp baseline lưu trước theme refactor, mọi 53.548 seats và markers hợp lệ, theme RGB/strings khớp Java/JSON, status palette chung; chín tổ hợp arena/theme giữ cache/zoom. Ba comparison canvases có cùng viewport 480×360 và court angle 0°. Resource XML parse đạt, 8 Markdown files có fence cân bằng và 37 link local tồn tại; diff whitespace check đạt, staged diff rỗng. HTML/QA output ignored.
+
+HTML mới 8.986.318 byte, SHA-256 `d19f994c1830b3101b98ccc0832a14e5f2018c81c8744ed12c567437fc659abf`. APK mới 8.323.574 byte, SHA-256 `aa6c8257560e1997f9c1c89efbfa6c492a39166ee25bfcffa125933062e2ee3e`. Các kiểm tra là bằng chứng source/artifact/logic, không phải pixel parity, runtime performance hoặc nghiệm thu thẩm mỹ. Chưa chạy connected/lint; browser host không khả dụng. Không commit/push và chưa có review mới từ người dùng.
+
+
+## Phase 3A.1 — 30 thiết kế mặt sân, tách palette khán đài theo arenaId — 2026-11-25
+
+**Số đã triển khai: 30 court designs / 30 teamId, 3 arena geometries, 0 logo asset và 30 mã đội fallback.** Ba arena là MSG, Chase Center, Crypto.com Arena; không tuyên bố đã làm 30 geometry hoặc có dữ liệu ghế chính thức. Chờ người dùng nghiệm thu trực quan HTML. Không sang 3B/3C.
+
+### Phạm vi và kết quả
+
+- Mỗi court có hai lớp hình học riêng ngoài màu/logo: wood layout và decorative motif. Có bảng đủ 30 đội/hai đặc điểm tại DESIGN §13; dữ liệu vector thực do `tools/court_designs.py` sinh ra, không chỉ 30 bảng màu. Có key edge accents, trim và lettering dữ liệu theo teamId, vạch thi đấu rõ và chung geometry Java.
+- Catalog v3 tách `ArenaStands` theo arenaId khỏi theme court; đổi 30 đội trên từng arena giữ palette/seat geometry. Cả 53.548 seat quads vẫn khớp hash baseline trước thay đổi. Trạng thái vé dùng một palette + halo trắng, không đổi nghĩa theo màu ghế hoặc đội.
+- `CourtDesign.Logo` có slot asset/provenance, fallback code, width/height riêng, fit ảnh giữ tỷ lệ và đúng tâm. Hiện không có asset official được xác minh nên dùng mã đội, không giả là đã tích hợp 30 logo. Mã/ảnh được vẽ trước lớp vạch sân. Unit test kiểm fit landscape/portrait; luồng ảnh thật chưa được chạy trên thiết bị vì bản demo không có asset ảnh.
+- HTML chọn được đủ 30 đội, mặc định court-only/ẩn tên-mã-logo; có gallery 30 mặt sân cùng backing 480×280 và công tắc palette trung tính. Bỏ ẩn danh để thấy tên trong dropdown; bấm card cập nhật court lớn phía trên. Không tự gán 27 đội vào venue home chưa có geometry.
+- Behance mở trực tiếp lỗi 403; tìm được hai image index cùng project nhưng raw ảnh cache miss. SOURCES §11 ghi giới hạn này, không bịa đã xem toàn bộ nguồn/tác giả/license. Dùng phong cách phân lớp đồ họa làm tham khảo giới hạn, tự thiết kế vector, không sao chép ảnh/logo.
+
+### Files
+
+- Mới: `model/CourtDesign.java`, `ArenaStands.java`; `geometry/CourtMarkings.java`; `ui/arena/CourtRenderData.java`; `tools/court_designs.py`, `court_review_renderer.py`, `render-court-review.py`, `tools/.gitignore`.
+- Sửa: ArenaTheme/Profile/CatalogReader; ArenaView/RenderData/PreviewLoader/MainActivity; `assets/venues/catalog.json`, asset generator; Java exporter, HTML template/Node test, các test JVM/instrumentation; QA arena tool; docs DESIGN/ROADMAP/PROGRESS/SOURCES/AI_LOG và preview README. Source trong mock manifests/seat counts không thay đổi về nội dung geometry.
+- Output ignored: HTML mới, `qa-courts30.png`, `qa-courts30-blind.png` và QA ba arena. Cache `tools/__pycache__` được ignore, không xóa cache hoặc thêm nó vào Git. Không thay SDK/Gradle/dependency/framework/cấu hình máy.
+
+### Kiểm tra thực tế
+
+- `./tools/test-foundation.ps1 -JdkPath 'C:/Program Files/Android/Android Studio/jbr'`: **47 test đạt**, lượt cuối 5.061 giây JUnit. Ba test mới kiểm 30 nhóm wood và 30 nhóm decor đã bỏ màu/identity, center fit và vạch chung; các test cũ được cập nhật cho contract palette arena/schema v3. Lượt compile đầu trong quá trình migration lỗi 22 chỗ test còn tham chiếu `theme.tier`/constructor cũ; đã cập nhật theo hợp đồng mới rồi chạy lại đạt, không bỏ các assert chức năng.
+- Export + `node tools/test-arena-preview.cjs`: đạt theme/artwork Java ↔ JSON sau chuẩn hóa RGB/float32, 30 lựa chọn và 30 thumbnail đều 480×280, ẩn danh không draw chữ/mã, neutral mode, mark trước competition lines, **90 arena×court combinations** giữ world hash/seat palette/cache/zoom; reset/resize/coalescing/idle đạt qua test doubles.
+- Wrapper mirror `assembleDebug testDebugUnitTest assembleDebugAndroidTest`: **BUILD SUCCESSFUL trong 55s**, 67 tasks (14 executed/53 up-to-date). Log `.gradle/courts30-build.log`; app và instrumentation APK compile được. Mirror/source equality và XML test results kiểm cuối bên dưới; không nhận plain root build hoặc connected test đã chạy.
+- `python tools/render-court-review.py`: tạo và AI đã mở xem bảng named/blind-neutral 30 court. 30 chữ ký wood và 30 decor khác nhau sau bỏ màu; ảnh blind-neutral có minimum pairwise mean RGB difference 6.6314/255 (cặp 04/14). Đây chỉ là QA ảnh từ vector, không thước đo độ đẹp/độ chân thực hoặc nghiệm thu browser. `python tools/render-arena-review.py` cũng sinh lại ba QA arena với artwork mới và palette theo arena.
+- CUA lần đầu báo kernel reset, retry inventory trả `The browser access host is unavailable`. Không thao tác browser tiếp; **chưa chạy kiểm tra pixel/thao tác trực quan trong browser thực**. Logic HTML được kiểm qua script thật với DOM/Canvas test double; cần người dùng mở file để nghiệm thu thị giác.
+- Chưa chạy connected tests, Android runtime/bitmap checks, FPS/heap hoặc lint trong lượt này. Không kết luận đã sửa dialog hệ thống cũ hoặc mọi P0 đã hoàn tất. Không stage/commit/push.
+
+### Cách review và điểm dừng
+
+Mở [HTML mới](../preview/arena-preview.html), reload nếu đang giữ bản cũ. Mặc định ẩn tên để so bố cục; bỏ ẩn tên để chọn đội theo tên. Bật “Trung tính màu” để so 30 court không dựa vào màu/logo, bấm từng card để xem lớn. Bỏ “Chỉ xem mặt sân” để đối chiếu court trên 3 arena mô phỏng, kiểm màu ghế giữ nguyên khi đổi đội.
+
+Có [bảng QA có tên](../preview/qa-courts30.png) và [bảng QA ẩn tên/trung tính](../preview/qa-courts30-blind.png), không phải browser screenshot. Chờ người dùng đánh giá tính khác biệt và thẩm mỹ; chưa nghiệm thu 30 court mới. Giữ Phase 3A.1, không tự chuyển phase.
+
+Commit đề xuất: `feat: add 30 distinct court concepts and blind comparison preview`.
+
+### Kiểm chứng cuối — bản 30 court
+
+Đọc XML Gradle xác nhận **47 tests, 0 failure/error/skipped**. Mirror khớp **88 app files và 9 build/Wrapper files** với root; cấu hình SDK/local.properties mirror khác có chủ đích như các mốc trước. APK chứa đúng byte catalog 30 theme hiện tại và DEX có CourtRenderData/CourtMarkings, không chỉ kiểm sự tồn tại file APK. Build log `.gradle/courts30-build.log` ghi BUILD SUCCESSFUL 55s.
+
+Node cuối đạt cả 30 wood/30 decor signatures đã bỏ màu/identity, 30 option/card, kích thước 480×280, hidden/neutral và 90 tổ hợp giữ arena palette/world hash/cache/zoom. Cả ba hash geometry ghế khớp baseline trước theme. XML resource parse đạt; 8 Markdown files có fence cân bằng và 41 link cục bộ tồn tại. `git diff --check` đạt, staged diff rỗng; HTML/QA và Python cache được ignore.
+
+HTML 9.168.848 byte, SHA-256 `e2ebe976e7156a17a85a3b87e049c1565cbf0f5da0e5a0d3f0148e5671524bfa`; APK 8.323.574 byte, SHA-256 `e2ac95178d99d8b7df057683676cf2977c47b0533a6ecaa28a4444bfb2e4d68e`. Không có browser/device visual verification hoặc nghiệm thu người dùng mới trong lượt này. Không commit/push, giữ Phase 3A.1.
+
+## Phase 3A.1 — 30 khán đài sân nhà, palette theo teamId — 2026-11-25
+
+**Đã triển khai và kiểm host logic: 30/30 đội → 30 cấu hình arena riêng; 30 court designs giữ nguyên; 626.904 ghế mô phỏng; 0 logo assets / 30 mã đội fallback. Toàn bộ 30 khán đài còn dùng hình học MOCK. Chưa nghiệm thu trực quan.** Quy tắc palette theo arenaId ở các mốc trước được thay bằng yêu cầu mới: màu ghế theo theme đội, geometry theo arena.
+
+### Mục tiêu, phạm vi và kết quả
+
+- Kiểm `git status --short --branch`/diff sau interrupt: giữ working tree cũ; không nhận toàn bộ diff tích lũy là thay đổi của lượt này. Prompt HTML tên/logo trước đó bị interrupt khi mới đọc/kiểm tra, chưa lưu thay đổi hiển thị. Bản mới mặc định hiện tên đầy đủ/mã đội bằng dữ liệu có sẵn, vẫn giữ hide-identity để review ẩn danh.
+- Thêm 27 geometry profile với tỷ lệ/độ bo, độ sâu tầng, section cuts, aisle width, hàng và số ghế riêng. Ba mock manifests MSG/Chase/Crypto giữ **nguyên byte**, toàn bộ seat quads vẫn đúng ba hash baseline cũ. So hash riêng từng `court` và tên theme xác nhận giữ cả 30 thiết kế, logo slot/fallback/size và tên đội. Không thêm/xóa logo asset.
+- Schema v4 có home mapping đầy đủ, kể cả khả năng dùng chung arena. 30 home mappings hiện tại khác nhau; shared-home fixture đổi NYK/GSW cùng Chase giữ tọa độ/Paths/zoom nhưng đổi palette và court. Đây là fixture test, không mapping NBA thật.
+- `ArenaTheme.seatTier` tạo section/seat/accent từ hai màu theme đã có, đậm nhạt theo tầng. Cả Android Canvas và HTML dùng kết quả Java này. Trạng thái giữ palette chung và halo trắng; label vẫn nền/ink cố định tương phản. UI ghi rõ màu ghế thiết kế theo theme đội, không màu ghế vật lý xác minh.
+- HTML chọn đủ 30 đội, tự cập nhật home arena/title/court/palette. Mặc định hiện toàn arena và tên/code. Danh sách thiếu logo gồm cả 30 đội hiện trong HTML. 30 thumbnail outline cùng frame; tải chi tiết ghế cho sơ đồ lớn qua local companion scripts, cache tối đa hai arena. Court-only/ẩn danh/trung tính vẫn hoạt động với 30 court cùng kích thước.
+- Android chọn theme đồng bộ venue và load geometry bằng worker; cùng arena đổi theme dùng lại Paths. Giữ Java Canvas, kiến trúc data-driven, SDK/Gradle/dependency/config máy. Không triển khai Android pan/pinch, hit-testing, chọn ghế hoặc phase mới.
+- Sources §12 liệt kê đủ 30 sân/nguồn/mức mô phỏng. Directory NBA dùng cho identity; Philadelphia dùng tên Xfinity trên venue site thay tên Wells Fargo còn cũ trong directory. Chart reference không được coi là tọa độ xác minh. Không có ảnh venue/chart/logo ngoài được nhập vào app.
+
+### File tạo hoặc sửa trong nhiệm vụ
+
+- Mới: `tools/arena_layouts.py`; 27 `app/src/main/assets/mock/{arenaId}.json` tương ứng bảng SOURCES §12.
+- Sửa dữ liệu/model: `assets/venues/catalog.json`; `ArenaCatalog.java`, `ArenaCatalogReader.java`; `ArenaProfile.java`, `ArenaTheme.java`, `ArenaStands.java`.
+- Sửa hiển thị: `MainActivity.java`, `ui/arena/ArenaView.java`, `res/values/strings.xml`; `preview/arena-preview.template.html`, `.gitignore`, `README.md`.
+- Sửa authoring/export/QA/test: `tools/generate-preview-assets.py`, `court_designs.py`, `java/ArenaPreviewExport.java`, `render-arena-review.py`, `test-arena-preview.cjs`; `ArenaPreviewDataTest.java`, `ArenaPreviewInstrumentedTest.java`.
+- Tài liệu: SOURCES/PROGRESS/AI_LOG/DESIGN/ROADMAP. Output ignored: HTML, 30 `arena-data/*.js`, QA images và helper/log/build trong `.gradle`. Các thay đổi cũ khác tiếp tục được giữ nguyên.
+
+### Kiểm chứng thực tế và giới hạn
+
+- `./tools/test-foundation.ps1 -JdkPath 'C:/Program Files/Android/Android Studio/jbr'`: **48 tests đạt**, lần chạy trước tối ưu bộ nhớ của test signature, JUnit 28.588s. Gradle chạy lại source cuối như bên dưới. Test mới kiểm 30 home mappings, 30 full-coordinate signatures riêng, màu theo tầng, shared-home fixture và map thiếu đội bị từ chối. Các assertions ba manifest cũ giữ nguyên; test scenes mở rộng từ 3 lên 30, không giảm yêu cầu containment/ID/trạng thái.
+- `./tools/export-arena-preview.ps1` và `node tools/test-arena-preview.cjs`: **PASS**, 30/30 đội/sân, tổng **626.904** ghế, full float32 geometry SHA-256 và batches/markers hợp lệ; 30 wood + 30 decor layouts không màu/identity. Kiểm title/code defaults, logo dưới vạch, ẩn danh/trung tính, shared-home palette/Path/zoom, stale loads, lỗi thiếu payload/retry, cache ≤2, reset/resize/idle. DOM/Canvas là doubles, không browser pixel proof.
+- Gradle Wrapper ở mirror `.gradle/phase3a-project`: `assembleDebug testDebugUnitTest assembleDebugAndroidTest` **BUILD SUCCESSFUL** lần đầu 1m22s, 21 executed/46 up-to-date (`.gradle/stands30-build.log`). XML xác nhận **48 tests, 0 failures/errors/skipped**. APK instrumentation chỉ được compile, chưa chạy trên thiết bị. Kết quả xác minh artifact cuối được bổ sung ở cuối mục.
+- `python tools/render-arena-review.py` và `python tools/render-court-review.py`: sinh bảng 30 home arenas, ba demo và 30 court named/blind-neutral từ dữ liệu xuất Java. AI đã xem QA ba demo và bảng 30 sân, không thay nghiệm thu của người dùng. Court blind minimum RGB difference vẫn 6.6314/255 (04/14), chỉ sanity check chứ không điểm thẩm mỹ.
+- Computer Use: browser inventory báo host unavailable; native Edge AX đọc được. Click tab lỗi `coordinate input geometry is unavailable`; thử mở file bằng keyboard bị công cụ **dừng do không xác định URL Windows đủ tin cậy để áp dụng policy**. Dừng UI automation, không vượt chặn; chưa xác minh ảnh browser hoặc chạy chọn 30 đội bằng trình duyệt thật.
+- `adb devices -l` trong sandbox lỗi tạo `\.android`; retry được cấp quyền trả danh sách **không có thiết bị**. Không chạy `connectedDebugAndroidTest`. Không đo Android FPS/heap/ANR; không tuyên bố đã sửa nguyên nhân dialog trước. Không chạy lại lint do giới hạn artifact môi trường đã ghi ở mốc trước.
+
+### Review và điểm dừng
+
+Mở [HTML Preview](../preview/arena-preview.html) với thư mục `arena-data` cạnh nó; reload tab cũ. Chọn 30 đội hoặc bấm 30 card; xem ghế chi tiết ở sơ đồ lớn/zoom. [QA 30 sân](../preview/qa-homearenas30.png) giúp so palette/độ bo/tầng, [QA ba demo](../preview/qa-themes.png) cho Knicks/Warriors/Lakers. Tất cả 30 sân trong bảng SOURCES §12 vẫn mô phỏng; chưa có sân nào được nghiệm thu là seating chart chính thức.
+
+PROGRESS/SOURCES/AI_LOG đã cập nhật; DESIGN §14 và ROADMAP ghi hợp đồng mới. Chưa có xác nhận review/kiểm thử mới từ người dùng. Không cần quyết định bổ sung để hoàn thành phần được giao; chờ review hình ảnh và mức khác biệt của 30 khán đài. **Dừng ở 3A.1; không commit/push.** Commit đề xuất: `feat: add 30 home arena layouts with team seat palettes`.
+
+### Kiểm chứng artifact cuối — 30 sân nhà
+
+Phát hiện unit tests đọc JSON trực tiếp nhưng Gradle chưa khai báo các asset là input, khiến lượt build chỉ đổi metadata có thể giữ kết quả test `UP-TO-DATE`. Đã bổ sung `inputs.dir("src/main/assets")` cho task Test trong `app/build.gradle.kts`, không thay phiên bản/dependency/toolchain. Lần build sau bổ sung này **thực sự chạy lại testDebugUnitTest**: BUILD SUCCESSFUL **1m22s**, 1 task executed/66 up-to-date (`.gradle/stands30-build-inputs.log`); XML mới xác nhận **48 tests, 0 failure/error/skipped**. Đây là file build duy nhất sửa thêm trong nhiệm vụ để theo dõi input kiểm thử.
+
+Đối chiếu cuối: **115 app files + 9 build/Wrapper files** root/mirror trùng byte, bao gồm rule input mới; nguồn SDK/local.properties mirror vẫn khác có chủ đích như các mốc trước. APK chứa đúng byte catalog v4 và đủ 30 mock manifests hiện tại; DEX có court renderer/markings/seatTier. 8 Markdown files có fence cân bằng và 48 link local tồn tại; XML resources parse được, `git diff --check` đạt, staged diff rỗng. Node cuối PASS, gồm thêm assertion **30 palette ghế riêng** ngoài 30 geometry riêng. So baseline court/name/logo-slot và ba manifest/seat hashes cũ tiếp tục PASS.
+
+HTML 1,451,214 byte, SHA-256 `a54c2f1ff768c297b4c0a1a632ff2cac41bcf48de1c1f9a24b9203dcd889d5a3`; 30 local payload tổng 108,932,826 byte, mỗi file có hash đối chiếu Java exporter. Chỉ payload sân được chọn được tải; cần giữ thư mục arena-data cạnh HTML. APK 8,325,538 byte, SHA-256 `d5dc1831f98aaffc63103efbafec0390e4eaab82b2576ed47779a6e3a03fd429`. Lượt assemble/unit/instrumentation-assemble cuối dùng chính source này; instrumentation chưa chạy vì ADB không có thiết bị. Không có browser pixel/Android runtime acceptance mới; chờ người dùng review. Không commit/push.
+
+## Phase 3B — Android Matrix, gesture và mức chi tiết (2026-11-25)
+
+**Đã triển khai, đã kiểm build/unit/lint; chưa nghiệm thu gesture hoặc hiệu năng thiết bị.** Người dùng xác nhận duyệt 3A trong prompt giao 3B. Không triển khai hit-testing, highlight hay chọn ghế của 3C/4.
+
+### Thay đổi và tiêu chí
+
+- `ViewportTransform` quản lý Android Matrix và inverse duy nhất cho world → View-local. Fit 90% vùng View đã trừ padding, xử lý bounds có gốc khác 0. Min zoom = fit; max zoom đủ để cạnh ghế nhỏ nhất đạt 24dp, không khóa cứng 8×fit. Mỗi trục nhỏ hơn viewport căn giữa; trục lớn hơn clamp không để kéo mất sơ đồ. Resize cùng View giữ tâm world và tỷ lệ so với fit; đổi dataset luôn fit mới.
+- Pan một ngón có touch slop. Pinch tính span và midpoint của hai pointer ID, inverse điểm giữa cũ rồi neo tại điểm giữa mới; dùng scale thực sau clamp. Rebase khi thêm/bớt ngón, kể cả nhấc ngón đầu hoặc ngón thứ hai, để không lấy delta cũ. CANCEL giải phóng gesture, parent không giành gesture đang chạy. Đây là triển khai REQ-04/05, còn chờ kiểm chứng runtime.
+- “Vừa khung” được nối ở MainActivity, chỉ bật khi có dữ liệu; animation 250ms về camera fit, chạm mới/đổi sân/resize/detach hủy animation. Tắt animation hệ thống được tôn trọng; cùng arena đổi theme vẫn giữ camera. REQ-09 đã triển khai, còn chờ Samsung xác nhận.
+- LOD theo cạnh ghế nhỏ nhất chiếu ra dp: section/nhãn ở xa, thêm đường hàng quanh 6dp, từng ghế quanh 16dp; hysteresis 15%. LOD chỉ thay lệnh vẽ, không thay tọa độ, palette hay inventory. Ghế giữ đúng nền, halo và status-dot cũ khi hiện chi tiết.
+- Worker chuẩn bị AABB section/batch và danh sách batch theo section từ các Path hiện có. Inverse viewport lấy vùng world, thêm lề bảo thủ cho nhãn/nét; bỏ section ngoài vùng và chỉ xét batch của section còn thấy. Overview không duyệt/vẽ seat batches. Canvas còn clip vùng View. Tái dùng Paint, RectF, Matrix, mảng và Paths; không I/O/sinh ghế trong onDraw. Đây là phần cache/LOD/culling của REQ-13; chưa có bằng chứng FPS/GPU đạt trên Samsung.
+- `screenToWorld`, `worldToScreen`, `visibleWorld` sẵn cho 3C, dùng cùng Matrix với Canvas. REQ-06 mới có nền biến đổi; chưa có hit-testing và không tuyên bố hoàn tất REQ-06.
+
+### File thuộc nhiệm vụ này
+
+Tạo `app/src/main/java/com/example/nbatickethub/ui/arena/ViewportTransform.java` và hai test `app/src/androidTest/java/com/example/nbatickethub/ui/arena/ViewportTransformInstrumentedTest.java`, `ArenaCameraInstrumentedTest.java`.
+
+Sửa `ArenaView.java`, `ArenaRenderData.java` cùng package; `MainActivity.java`; `res/layout/activity_main.xml`, `res/layout-land/activity_main.xml`, `res/values/strings.xml`; `ArenaPreviewInstrumentedTest.java` (Reset nay được bật theo hành vi 3B); `docs/PROGRESS.md`, `docs/AI_LOG.md`, `docs/ROADMAP.md`. Không sửa assets, compiler/model, CourtRenderData, HTML/tools, Gradle hoặc AGENTS trong 3B. Các thay đổi có sẵn từ trước nhiệm vụ được giữ lại.
+
+### Kiểm chứng thực tế
+
+- Root `./gradlew.bat assembleDebug testDebugUnitTest lintDebug assembleDebugAndroidTest --no-configuration-cache`: **BUILD SUCCESSFUL**. Lượt đầu online 1m29s; lượt source cuối 38s (27 executed/49 up-to-date), log `.gradle/phase3b/verified-build.log`. Không dùng mirror cho bằng chứng 3B.
+- XML unit test xác nhận **48 tests, 0 failures/errors/skipped**. Đây là kiểm tra hồi quy data/geometry hiện có; không thay cho test Android Matrix/gesture. Test mới gồm 5 ca Matrix (fit/round-trip, moving focal/clamp, limits/reset, resize/new bounds, animated-reset endpoint) và 1 ca ArenaView (nhấc từng ngón, kéo tiếp, LOD/culling/cache). Các ca Android đã compile vào test APK, **chưa chạy**.
+- Lint cuối: **0 errors, 7 warnings** (phiên bản AGP mới, plurals, overdraw nền và hai màu chưa dùng). Không đổi AGP/SDK/dependency để xử lý cảnh báo.
+- Root build trong sandbox ban đầu không tạo được lock ở `C:\.gradle`; retry ngoài sandbox. Offline lint thiếu `graphics-shapes-desktop:1.0.1`; lượt online tải dependency và thành công. Không thay cấu hình máy/dự án để vượt lỗi đó.
+- `adb devices` ngoài sandbox trả danh sách rỗng. **Không chạy connectedDebugAndroidTest**; chưa có Android runtime, kiểm ngón tay thật, frame timing/GPU/heap hoặc bằng chứng sửa ANR cũ. Giữ trace `ArenaView.draw`, thời gian CPU onDraw và số section/batch thực sự vẽ để kiểm trên thiết bị; không suy diễn đây là FPS.
+- So SHA-256 với baseline chụp đầu 3B: **34 asset files và CourtRenderData trùng byte** (tổng 35 file). Như vậy JSON geometry, màu ghế, tên đội, logo slot/fallback và 30 court designs không đổi; logic camera không ghi vào seat quads. Staged rỗng; không commit/push.
+
+APK: `app/build/outputs/apk/debug/app-debug.apk`. Test APK: `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`. Khi có Samsung kết nối/ủy quyền ADB, chạy `./gradlew.bat connectedDebugAndroidTest` để thực thi các ca Android đã biên dịch.
+
+### Checklist Samsung — người dùng thực hiện, chưa có kết quả
+
+- Mở app: thấy trọn sân, ở giữa, không mất khán đài ngoài cùng; thử cả dọc/ngang.
+- Pinch gần một section và di chuyển đồng thời hai ngón: nội dung đi theo tâm; zoom tới min/max không lật/biến mất. Ở biên, clamp có quyền dịch anchor để giữ sân trong vùng truy cập.
+- Lần lượt nhấc ngón trái/phải sau pinch, giữ ngón còn lại đứng yên rồi kéo tiếp: không nhảy vị trí; thử thêm ngón thứ ba rồi bỏ ra, ngắt gesture và làm lại.
+- Khi zoom gần, kéo hết bốn hướng: tới được các khán đài nhưng không kéo mất cả sơ đồ. Thu nhỏ thấy section/nhãn; zoom gần thấy ghế, màu nền/halo/status-dot đúng; không có vùng ghế biến mất sai khi kéo qua mép.
+- Bấm “Vừa khung” sau pan/zoom: trở lại đúng góc mở đầu; chạm giữa animation rồi kéo tiếp không giật về fit. Thử khi animation hệ thống tắt.
+- Đổi nhiều sân có tỷ lệ khác nhau (MSG/Chase/Crypto và các đội khác): fit mới, đúng tên/mặt sân/màu ghế, không giữ độ phóng đại của sân cũ. Ghi lại sân và thao tác nếu có giật/đơ/sai vùng vẽ.
+
+Chờ người dùng review 3B và cung cấp kết quả Samsung; chưa xác nhận các mục checklist. Không chuyển phase. Commit đề xuất: `feat: add bounded arena camera gestures and viewport detail rendering`.
+
+Kiểm tra cuối: XML resources parse đạt; 8 Markdown files có code fence cân bằng và 48 link cục bộ tồn tại; `git diff --check` đạt, staged rỗng. APK thực tế chứa đúng byte cả 34 asset files hiện tại và DEX có ViewportTransform. APK **8.469.554 byte**, SHA-256 `8aa7d6f35f6294e1361f969c59b0a8633a2a297b1c9e88ae53d459ea20bd6137`. Không coi APK/hash hoặc test APK compile là bằng chứng gesture đã đạt.
+
+## Phase 3C — hit-testing và kiểm tra một ghế (2026-11-25)
+
+**Đã triển khai và kiểm JVM/build/lint; chờ test Android/Samsung và nghiệm thu chung 3B+3C.** Người dùng giao rõ 3C, chưa xác nhận đã test hoặc nghiệm thu runtime 3B. Không làm chọn nhiều ghế, Bottom Sheet, giá/tổng hoặc đặt vé.
+
+### Triển khai và tiêu chí tương ứng
+
+- REQ-06: tap hợp lệ dùng chính `ViewportTransform.screenToWorld()` (inverse Matrix đang dùng để concat Canvas), rồi `SeatHitTester.find()` trên `ArenaScene.seats` world cuối. Không áp lại projection hoặc dùng geometry canonical cũ.
+- `SeatHitTester` Java thuần: worker dựng AABB và sparse grid riêng theo section; mỗi quad có mặt trong mọi cell AABB chạm tới. Query chỉ xét section chứa điểm, một cell/section và kiểm chính xác point-in-convex-quad. Lối đi/court/khoảng trống không snap sang ghế gần nhất. Quad dùng cạnh đóng, không mở rộng epsilon; nếu có cạnh chung, geometry index nhỏ hơn thắng, đã có test biên. Index và seat-ID lookup publish cùng ArenaRenderData, không dựng lại khi pan/zoom/theme.
+- ArenaView chỉ dò khi frame gần nhất đã vẽ ghế (LOD 2), thuộc đúng dataset và khớp scale/translation hiện hành; không dò ghế còn ẩn hoặc frame camera chưa vẽ. Một ghế trúng được viền trắng/tối trên Canvas, giữ màu ghế và status-dot; hiện **khu / hàng / số ghế** từ dataset trong TextView hiện có. Tap trống ở LOD ghế xóa debug highlight và không trả ghế. Đổi dataset hoặc dỡ sân xóa highlight/thông tin cũ. Đây là focus tạm để kiểm tra, chưa phải selection nhiều ghế/ViewModel Phase 4.
+- REQ-04/05/06, biên gesture: giữ pointer-ID/rebase của 3B. Tap bị hủy vĩnh viễn trong gesture sau POINTER_DOWN/UP, kéo vượt slop, CANCEL hoặc giữ quá long-press timeout. Kiểm slop cả ACTION_UP (khi không có MOVE) và historical samples của event gộp; pinch nhấc ngón không trở thành tap. Tọa độ dùng View-local, loại vùng ngoài padding viewport.
+- REQ-13: index dựng trên worker và có cancellation; highlight Path/mảng touch/Paint tái sử dụng. Cập nhật Path highlight khi xử lý tap/đổi dataset, không trong onDraw; không I/O/query/index build trong onDraw. Chưa có số đo FPS/GPU trên Samsung.
+
+### File của nhiệm vụ này
+
+Tạo:
+
+- `app/src/main/java/com/example/nbatickethub/geometry/SeatHitTester.java`.
+- `app/src/test/java/com/example/nbatickethub/geometry/SeatHitTesterTest.java`.
+- `app/src/androidTest/java/com/example/nbatickethub/ui/arena/SeatInspectionInstrumentedTest.java`.
+
+Sửa: `ui/arena/ArenaView.java`, `ui/arena/ArenaRenderData.java`, `MainActivity.java` trong Java package hiện tại; `res/values/strings.xml`, `res/values/preview_colors.xml`; `tools/test-foundation.ps1` để runner fallback không bỏ qua test mới; `docs/PROGRESS.md`, `docs/AI_LOG.md`, `docs/ROADMAP.md`. Tổng 12 file thuộc 3C. Không sửa assets, 30 thiết kế đội, compiler/model, Matrix camera, layout, HTML hoặc cấu hình Gradle/SDK. Giữ các thay đổi 3A/3B có sẵn, không stage/commit/push.
+
+### Kết quả thực tế
+
+- **Trước sửa:** root `./gradlew.bat assembleDebug testDebugUnitTest lintDebug assembleDebugAndroidTest --no-configuration-cache` đạt trong 2s (1 executed/75 up-to-date), log `.gradle/phase3b/pre3c-build.log`. Không thấy lỗi build còn sót từ 3B; kết quả cache không phải kiểm tra gesture runtime.
+- **Bản 3C cuối:** cùng lệnh Wrapper trên root **BUILD SUCCESSFUL, 52s**, 19 executed/57 up-to-date, log `.gradle/phase3c/final-build.log`. XML: **54 tests, 0 failures/errors/skipped**. Lint **0 errors, 7 warnings** (AGP mới, plurals, overdraw nền, hai màu chưa dùng), không đổi toolchain để xử lý cảnh báo.
+- 6 test JVM mới: quad xoay và khoảng trống trong AABB; cạnh/góc và ownership; ghế cắt nhiều grid cells; 5.000 điểm synthetic đối chiếu ray-crossing độc lập; **626.904 tâm ghế ở 30/30 sân** tìm đúng index, 30 điểm court + 30 điểm lối đi không hit và 3.000 điểm world ngẫu nhiên đối chiếu oracle; cancellation worker. Đây là kiểm chứng world-space/index, không chứng minh inverse Android/tap đã chạy.
+- Fallback `./tools/test-foundation.ps1 -JdkPath 'C:/Program Files/Android/Android Studio/jbr'`: **OK (54 tests)**, JUnit 45.181s, log `.gradle/phase3c/foundation.log`. Không dùng fallback thay bằng chứng build Wrapper.
+- 2 test Android tích hợp mới đã compile: inverse tap theo đúng ID trước/sau pan/zoom, metadata và highlight, overview/camera-chưa-vẽ không query, lối đi và đổi ba sân; drag/CANCEL/UP không MOVE/historical excursion, nhấc từng ngón sau pinch không tap, gesture mới tap lại bình thường. **Chưa chạy** vì `adb devices` trả danh sách rỗng; không chạy connectedDebugAndroidTest. Chưa có kiểm tra trực quan, thao tác Samsung, frame/GPU hoặc bằng chứng sửa ANR cũ.
+- Đối chiếu baseline đầu 3C: toàn bộ 34 assets, CourtRenderData và ViewportTransform (36 file) không đổi byte; các app source có sẵn chỉ đổi 5 file đã liệt kê. APK chứa đúng 34 assets và SeatHitTester trong DEX. APK **8.470.614 byte**, SHA-256 `23450ca323ecd8fabb349ebac88f9168719336f693a10aa63e94d973126ce364`.
+
+APK để test: `app/build/outputs/apk/debug/app-debug.apk`. Khi có Samsung kết nối và đã ủy quyền ADB: `./gradlew.bat connectedDebugAndroidTest` để chạy bộ test Android (gồm cả các ca 3B chưa chạy).
+
+### Checklist Samsung — chưa có kết quả người dùng
+
+- Mở sân ở góc vừa khung, chạm khu/ghế đang ẩn: không dò/highlight ghế. Zoom gần cho hiện từng ghế rồi chạm: viền đúng một ghế, khu/hàng/số ghế đúng vị trí.
+- Kéo và pinch quanh ghế, chạm lại chính ghế đó: thông tin vẫn đúng; thử ghế ở nhiều tầng và sát mép viewport.
+- Chạm lối đi, khoảng giữa ghế và mặt sân: không nhận ghế; debug highlight cũ được xóa khi tap trống ở mức ghế.
+- Kéo xong thả ngón; pinch rồi lần lượt nhấc ngón trái/phải; thử CANCEL/ngắt thao tác: không có hit mới. Sau đó tap riêng một ghế vẫn hoạt động.
+- Bấm Vừa khung rồi zoom lại; đổi MSG/Chase/Crypto hoặc đội khác: fit đúng, không giữ highlight/nhãn từ sân cũ. Thử dọc/ngang; ghi lại sân/thao tác nếu lệch ghế hoặc giật/đơ.
+
+Chờ người dùng test/review 3C; chưa nghiệm thu toàn Phase 3, không chuyển Phase 4. Commit đề xuất: `feat: add indexed arena seat hit testing and inspection highlight`.
+
+Kiểm tra cuối 3C: XML resources parse đạt; 8 Markdown files có fence cân bằng, 48 link cục bộ tồn tại; `git diff --check` đạt và staged rỗng. So baseline app/src xác nhận chỉ 5 file có sẵn được sửa đúng danh sách, cộng 3 file mới của 3C; các app files còn lại giữ nguyên. Không có kết quả Android runtime hoặc người dùng nghiệm thu mới.

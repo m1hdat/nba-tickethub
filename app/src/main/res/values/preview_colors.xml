@@ -1,0 +1,9 @@
+<resources>
+    <color name="arena_hit_outline">#142D52</color>
+    <color name="preview_surface">#F5F7FA</color>
+    <color name="preview_selector_surface">#FFFFFF</color>
+    <color name="preview_border">#CCD6DF</color>
+    <color name="preview_text">#24394B</color>
+    <color name="preview_muted">#617487</color>
+    <color name="preview_accent">#94703B</color>
+</resources>

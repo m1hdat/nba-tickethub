@@ -1,3 +1,22 @@
 <resources>
     <string name="app_name">Nba TicketHub</string>
+    <string name="preview_eyebrow">NBA TICKETHUB · ARENA LAB / 3C</string>
+    <string name="preview_title">Arena Preview</string>
+    <string name="tier_legend_item">● %1$s</string>
+    <string name="arena_selector">Chọn sân để xem sơ đồ mô phỏng</string>
+    <string name="preview_loading">Đang chuẩn bị sơ đồ…</string>
+    <string name="preview_counts">%1$,d section · %2$,d ghế mô phỏng</string>
+    <string name="simulation_notice">MÔ PHỎNG · Màu ghế thiết kế theo theme đội (không phải màu ghế thực tế), chấm giữa ghế chỉ trạng thái. * Mã section tự đặt. Bố cục, số ghế, màu và trạng thái không phải sơ đồ bán vé chính thức.</string>
+    <string name="seat_legend"><font color="#347DB7">● Trống</font>　<font color="#A4AFBA">● Đã đặt</font>　<font color="#667789">● Khóa</font> · mô phỏng</string>
+    <string name="seat_debug_pending">Phóng to đến khi thấy từng ghế, rồi chạm để kiểm tra khu / hàng / số ghế.</string>
+    <string name="seat_debug_empty">Chưa có ghế được đánh dấu. Phóng to và chạm đúng ghế để kiểm tra.</string>
+    <string name="seat_debug_hit">Khu %1$s · Hàng %2$s · Ghế %3$d (kiểm tra, chưa đặt vé)</string>
+    <string name="preview_error">Không thể tải sơ đồ. Chọn lại sân hoặc mở lại ứng dụng.</string>
+    <string name="arena_description">Sơ đồ mô phỏng %1$s, %2$d section, %3$d ghế. Kéo một ngón, chụm hai ngón để thu phóng, dùng Vừa khung để xem toàn sân.</string>
+    <string name="theme_selector">Theme mô phỏng theo đội nhà hoặc cấu hình trận</string>
+    <string name="theme_home_team">Theme: theo cấu hình trận / đội nhà</string>
+    <string name="status_available">● Trống</string>
+    <string name="status_booked">● Đã đặt</string>
+    <string name="status_locked">● Khóa</string>
+    <string name="reset_view">Vừa khung</string>
 </resources>

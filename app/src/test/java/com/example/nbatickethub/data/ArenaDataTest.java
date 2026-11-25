@@ -210,6 +210,24 @@ public class ArenaDataTest {
         } finally { Thread.interrupted(); }
     }
 
+    @Test
+    public void rejectsQuadWithVerticesInsideButEdgeCrossingInnerHole() throws IOException {
+        ArenaDataset data = TestAssets.small();
+        double angle = Math.toRadians(22.5);
+        float[] vertices = new float[8];
+        double[] radial = {339.9, 340.5, 340.5, 339.9};
+        double[] tangent = {-12, -12, 12, 12};
+        for (int i = 0; i < 4; i++) {
+            vertices[i * 2] = (float) (1200 + radial[i] * Math.cos(angle) - tangent[i] * Math.sin(angle));
+            vertices[i * 2 + 1] = (float) (1200 + radial[i] * Math.sin(angle) + tangent[i] * Math.cos(angle));
+        }
+        List<SeatGeometry> geometry = new ArrayList<>(data.geometry);
+        geometry.set(0, new SeatGeometry(vertices));
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> copy(data, data.seatOrder, geometry, offers(data)));
+        assertTrue(error.getMessage().contains("Seat edge outside row"));
+    }
+
     private List<GameSeat> offers(ArenaDataset data) {
         List<GameSeat> result = new ArrayList<>();
         data.inventory.values().forEach(map -> result.addAll(map.values()));
