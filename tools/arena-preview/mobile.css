@@ -6,3 +6,27 @@
 
 /* Phase 4 match calendar: same compact mobile structure as Android. */
 .phone{max-width:390px}.home-intro{padding:18px 20px 14px}.home-intro h1{font-size:28px;margin:8px 0}.home-intro p{font-size:12px}.match-filters{padding:8px 18px 0;display:grid;gap:6px}.match-period,.match-calendar{display:flex;gap:6px}.match-period button{flex:1}.match-period button[aria-pressed=true]{background:#163e6e;color:#fff}.match-calendar label{flex:1;font-size:11px;color:#526779;display:flex;align-items:center;gap:8px}.match-calendar input{min-width:0;flex:1;height:44px;border:1px solid #cbd7e4;border-radius:8px;padding:6px;font:inherit;background:white;color:#183650}.match-calendar button{font-size:12px}.match-filters>button{display:flex;align-items:center;gap:10px;justify-content:flex-start;background:white;border:1px solid #cbd7e4}.match-filters label:has(input[type=checkbox]){display:flex;min-height:44px;align-items:center;gap:8px}.match-filters p{font-size:11px;line-height:1.5;color:#526779}.match-filters #match-empty{font-size:14px;padding:16px;background:white;border-radius:8px}.match-day-heading{font-size:15px;color:#24394b;margin-top:8px}.team-badge{width:44px;height:44px;object-fit:contain;flex-shrink:0}.fallback{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:white;color:var(--badge-team);font-weight:900;font-size:12px}.match-pair{display:flex;align-items:center;gap:8px;padding:10px 16px}.match-pair>div{flex:1;text-align:center}.match-pair .team-badge{margin-bottom:8px}.match-pair h2{font-size:18px;min-height:42px}.versus{font-size:20px}#match-team .team-badge,#team-options .team-badge{width:32px;height:32px;font-size:10px}#team-dialog{width:min(380px,calc(100vw - 20px));max-height:85dvh;padding:14px;border:1px solid #cbd7e4;border-radius:12px;color:#183650}#team-dialog header{display:flex;align-items:center;justify-content:space-between;gap:8px}#team-dialog h2{font-size:17px}#team-options{max-height:60dvh;overflow:auto;margin-top:12px}#team-options button{display:flex;align-items:center;gap:12px;width:100%;background:white;text-align:left;border-bottom:1px solid #e7edf4;min-height:48px}.badge-notice{font-size:11px;color:#526779;margin-top:10px}#team-dialog::backdrop{background:#0b213d99}
+
+/* Phase 6A: native-flow review, simulated local orders. */
+.booking-continue{width:100%;min-height:52px;flex-shrink:0;background:var(--team);color:var(--ink);font-weight:800}
+.booking-dialog{box-sizing:border-box;width:min(100%,430px);max-height:95dvh;padding:16px;border:0;border-radius:20px;background:#f3f6fa;color:#10283f}
+.booking-dialog>button{min-height:48px;width:100%;margin:6px 0}
+#booking-confirm{background:var(--team);color:var(--ink);font-weight:800;position:sticky;bottom:0}
+.booking-card{background:white;color:#10283f;border:2px solid;border-radius:16px;padding:16px;margin:12px 0;overflow-wrap:anywhere}
+.booking-card h2{font-size:22px;line-height:1.2}.booking-card strong{font-size:22px}
+.browse-nav button{padding:4px;font-size:12px}
+.seat-sheet{bottom:76px;max-height:calc(100% - 124px)}
+.booking-dialog{width:min(390px,calc(100vw - 16px))}
+/* 6B keeps the Canvas visible above a compact, independently scrolling panel. */
+.finder-panel { position:absolute; z-index:30; bottom:62px; left:8px; right:8px; max-height:56%; background:#f5f7fc; color:#10283f; border:2px solid var(--team); border-radius:18px; box-shadow:0 6px 25px #10283f30; overflow:hidden; }
+.finder-panel[hidden] { display:none; }
+.finder-panel header { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; }
+.finder-panel h2 { margin:0; font-size:20px; }
+.finder-scroll { overflow:auto; max-height:calc(45vh - 30px); padding:8px 12px; }
+.finder-fields { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.finder-fields label { display:flex; flex-direction:column; gap:4px; font-size:12px; }
+.finder-fields input,.finder-fields select { width:100%; min-width:0; height:44px; border:1px solid #c4cedc; border-radius:8px; background:white; color:#10283f; padding:6px; }
+.finder-card { margin:10px 0; padding:10px; border-radius:12px; background:white; border:1px solid #d1dbea; }
+.finder-card button { width:100%; margin-top:6px; }
+.finder-card .finder-preview { text-align:left; white-space:pre-line; background:white; color:#10283f; }
+@media (orientation:landscape) { .finder-panel { left:auto; width:46%; max-height:72%; } .finder-scroll { max-height:48vh; } }

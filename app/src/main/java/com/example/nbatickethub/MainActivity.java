@@ -29,6 +29,8 @@ public class MainActivity extends AppCompatActivity {
     private ArenaPreviewLoader loader;
     private com.example.nbatickethub.ui.arena.MatchPickerController matchPicker;
     private com.example.nbatickethub.ui.arena.BrowseController browse;
+    private com.example.nbatickethub.ui.arena.BookingController booking;
+    private com.example.nbatickethub.ui.arena.SeatFinderController finder;
     private ArenaView arenaView;
     private TextView title, subtitle, status;
     private String selectedId;
@@ -49,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
         });
         arenaView = findViewById(R.id.arena_view);
         sheet = new com.example.nbatickethub.ui.arena.SeatSheetController(this, model, arenaView);
+        finder = new com.example.nbatickethub.ui.arena.SeatFinderController(this, model, arenaView, sheet);
         filters = new com.example.nbatickethub.ui.arena.ArenaFilterController(this, model);
         arenaView.setSectionListener(id -> {
             if (currentRender == null) { return; }
@@ -70,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
         title = findViewById(R.id.venue_title);
         subtitle = findViewById(R.id.venue_subtitle);
         status = findViewById(R.id.preview_status);
-        loader = new ArenaPreviewLoader(new AndroidAssetSource(getApplicationContext().getAssets()));
+        loader = new ArenaPreviewLoader(new AndroidAssetSource(getApplicationContext().getAssets()), getApplicationContext());
         loader.catalog((catalog, error) -> {
             if (error != null) { showFailure(error); return; }
             arenaCatalog = catalog;
@@ -87,6 +90,10 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             model.navigation.page = restoredPage;
+            booking = new com.example.nbatickethub.ui.arena.BookingController(this, model, catalog,
+                    () -> { if (currentGame != null) { com.example.nbatickethub.model.Game game = currentGame; currentGame = null; selectMatch(game); } },
+                    () -> browse.tab(com.example.nbatickethub.state.BrowseNavigation.Page.TICKETS));
+            browse.setTicketsAction(() -> booking.tickets());
             browse.render();
         });
     }
@@ -118,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
         selectedId = game.arenaId; model.arenaId = selectedId;
         ArenaProfile profile = arenaCatalog.byId.get(selectedId);
         status.setText(R.string.preview_loading);
+        findViewById(R.id.booking_continue).setEnabled(false);
         currentRender = null; filters.setData(null); sheet.setData(null, null); arenaView.setRenderData(null);
         findViewById(R.id.reset_view).setEnabled(false);
         loader.arena(profile, game, arenaCatalog, (data, error) -> {
@@ -127,6 +135,7 @@ public class MainActivity extends AppCompatActivity {
             if (profile.id.equals(model.cameraArenaId) && model.camera != null) { arenaView.restoreCamera(model.camera); }
             filters.setData(data); sheet.setData(data, loader.court(arenaView.displayedThemeId()));
             renderSelection(); findViewById(R.id.reset_view).setEnabled(true);
+            if (model.finderOpen) finder.show();
             arenaView.setContentDescription(getString(R.string.arena_description, profile.venueName, data.sectionCount(), data.seatCount()));
         });
     }
@@ -146,6 +155,11 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.reset_view).setBackgroundTintList(android.content.res.ColorStateList.valueOf(theme.primaryColor));
         ((android.widget.Button) findViewById(R.id.reset_view)).setTextColor(ink);
         sheet.setAccent(theme.primaryColor, ink);
+        finder.setAccent(theme.primaryColor);
+        findViewById(R.id.suggest_seats).setBackgroundTintList(android.content.res.ColorStateList.valueOf(theme.primaryColor));
+        ((android.widget.Button) findViewById(R.id.suggest_seats)).setTextColor(ink);
+        findViewById(R.id.booking_continue).setBackgroundTintList(android.content.res.ColorStateList.valueOf(theme.primaryColor));
+        ((android.widget.Button) findViewById(R.id.booking_continue)).setTextColor(ink);
         arenaView.setArenaTheme(theme, loader.court(theme.id));
         arenaView.setBackground(com.example.nbatickethub.ui.arena.TeamAppearance.background(theme, true));
         findViewById(R.id.arena_screen).setBackground(com.example.nbatickethub.ui.arena.TeamAppearance.background(theme, true));
@@ -184,6 +198,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void renderSelection() {
         if (currentRender == null) { return; }
+        if (booking != null) booking.selectionChanged();
         filters.refresh();
         com.example.nbatickethub.state.ArenaSelection state = model.selection;
         arenaView.setFilter(state.levelId(), state.sectionId());
@@ -202,6 +217,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override protected void onSaveInstanceState(Bundle state) {
+        finder.saveState();
         float[] snapshot = arenaView.cameraSnapshot();
         if (snapshot != null) { model.camera = snapshot; model.cameraArenaId = selectedId; }
         model.arenaId = selectedId; model.themeId = themeOverride;
@@ -225,6 +241,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override protected void onDestroy() {
         if (matchPicker != null) matchPicker.close();
+        if (booking != null) booking.close();
+        if (finder != null) finder.close();
         if (sheet != null) { sheet.close(); }
         if (loader != null) { loader.close(); }
         super.onDestroy();

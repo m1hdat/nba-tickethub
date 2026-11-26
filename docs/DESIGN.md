@@ -1,4 +1,17 @@
-# Thiết kế NBA TicketHub — Phase 5 khám phá trận và luồng chọn ghế
+# Thiết kế NBA TicketHub — Phase 6A đặt vé và 6B gợi ý ghế mô phỏng
+
+## Phạm vi hiện hành 6A — 2026-11-26
+
+Người dùng giao xác nhận đặt vé mô phỏng và Vé của tôi trên Android, tái sử dụng Phase 4–5 ở HEAD `88c511a`. Phần mô tả Phase 5/chưa đặt vé bên dưới là lịch sử. Dừng 6A; không triển khai 6B, thanh toán thật, tài khoản hoặc backend.
+
+- `BookingStore` dùng SQLiteOpenHelper sẵn trong Android, không dependency mới. Chưa có persistence đơn phù hợp trong checkout trước nhiệm vụ. `orders` lưu snapshot JSON; `tickets` có PRIMARY KEY `(match_id, seat_id)` và foreign key order. Transaction kiểm tất cả trạng thái gốc và toàn bộ ghế đã đặt đúng matchId trước khi ghi; bất kỳ conflict/lỗi ghi nào rollback cả order và tickets. Thứ tự transaction SQLite cùng unique key bảo vệ cả hai helper cạnh tranh.
+- Mỗi lần mở xác nhận sinh một request ID UUID; retry cùng ID trả lại đơn cũ khi matchId/tập ghế khớp. ViewModel giữ draft/busy/result qua configuration recreation; chặn xác nhận lặp ở UI và ViewModel. Worker thực hiện mọi đọc/ghi SQLite; không I/O trên main thread hoặc onDraw. Đơn chỉ công bố sau khi transaction commit.
+- Snapshot giữ tên hai đội, homeTeamId, thời điểm, sân, khu/hàng/ghế, tiền minor units/currency, giá từng vé và tổng. Vé của tôi đọc snapshot đã lưu, không tra lại lịch/giá tương đối lúc mở ứng dụng. Sơ đồ đọc overlay BOOKED trên worker trước compile render data, chỉ cho game tương ứng. Ghế đã đặt không chọn được; trận khác cùng sân không dùng chung tồn kho.
+- `BookingController` dựng native Views: xác nhận có thẻ trắng, viền/màu CTA đội nhà; quay lại giữ selection, success có mã đơn và Xem vé; conflict nêu mọi ghế bận và chọn lại. Nút Tiếp tục nằm trong thanh tóm tắt của sheet để không thu hẹp Canvas/list. Tab thứ tư Vé của tôi có empty/loading/error. Đóng màn thành công/conflict tải lại inventory, bind loại ghế bận và giữ ghế còn trống/camera/filter.
+- HTML `tools/arena-preview/index.html` mô phỏng cùng luồng; localStorage riêng trình duyệt, một lần setItem lưu cả snapshot và Web Locks khi có để tuần tự hóa tab. Không phải persistence Android; khi trình duyệt không hỗ trợ Web Locks chưa bảo đảm cạnh tranh nhiều tab. Giữ renderer/geometry/home theme hiện có; không WebView.
+
+Kết quả và giới hạn nghiệm thu được ghi ở mục 6A của PROGRESS. Chưa xác nhận Samsung, process-death của draft đang sửa hoặc hiệu năng quy mô lớn.
+
 
 ## Phạm vi bổ sung Phase 5 — 2026-11-26
 
@@ -621,3 +634,17 @@ Yêu cầu trực tiếp mới của người dùng thay hợp đồng preview/s
 - Nhận diện mobile dùng chung layout cho 30 đội: nền nhạt, họa tiết đường chéo/vòng sân, màu chính/phụ và nhóm font tiêu đề do app thiết kế; font nội dung Android hỗ trợ tiếng Việt. Đây không phải font thương hiệu NBA chính thức. Vé nền trắng, giá nhấn đậm/xanh đậm, CTA 48dp. Lọc loại/ngân sách làm mờ ghế/khu không khớp; chỉ vài nhãn giá được cache, không quét inventory hoặc tạo chuỗi trong onDraw.
 
 Bằng chứng build/test/ảnh và các giới hạn nghiệm thu được ghi tại mục bàn giao mới trong PROGRESS. HTML prototype chỉ là tham khảo; phiên này sửa Android, không chuyển sang WebView và không sửa prototype.
+
+
+## 17. Phase 6B — bảng Gợi ý ghế chung (2026-11-26)
+
+Đây là tính năng bổ sung do người dùng trực tiếp giao, không phải yêu cầu bắt buộc tự suy ra từ PDF. Tái dùng nền 6A đang có trong worktree; không đổi Canvas, geometry, assets, toolchain hoặc kho đặt vé.
+
+- Một bảng cho N=1 và N>1, ngân sách tối đa mỗi vé (USD, minor units), tầng/khu, loại vé kế thừa bộ lọc sơ đồ và có thể sửa; ưu tiên Giá thấp hoặc Gần sân. Tìm theo AVAILABLE trong inventory[matchId] đã overlay BookingStore, tối đa ba kết quả. Không có kết quả giữ nguyên truy vấn. Nhóm chỉ dùng vị trí SEATED, không gọi vị trí đứng là nhóm ghế liền nhau.
+- SeatFinder Java thuần duyệt range SeatRow trong bố cục compiler hiện có. Cùng hàng đồng thời cùng section, không nối đầu/cuối các khu qua lối đi. Kiểm khoảng góc giữa tâm quad trong hệ world so với pitch=(end-start)/seatCount, chặn khoảng trống vượt 1,5 slot; số ghế in trên vé không phải bằng chứng liền kề. Bố cục hiện hành có các slot đều trong mỗi hàng và lối đi giữa khu; nếu đổi compiler sang hàng bất quy tắc phải cập nhật hợp đồng topology, không suy diễn ghế thật.
+- Giá thấp xếp tổng tiền trước, khoảng cách sau; Gần sân đảo thứ tự. Khoảng cách là trung bình khoảng cách từ tâm ghế đến biên court hình chữ nhật trong geometry logic hiện có, không phải mét/sightline thật. Tie-break theo seatId để lặp lại được. Mỗi thẻ hiển thị từng khu/hàng/ghế, từng giá, tổng và lý do.
+- SeatFinderController dùng BottomSheetDialog kéo/thu, giới hạn 42% chiều cao màn hình; khu vực nội dung tự cuộn. Nút/thẻ mang accent đội nhà. Tìm và đọc SQLite trên worker, callback có generation/match/lifecycle guard. Truy vấn đang mở được giữ trong ViewModel qua recreation; chưa hỗ trợ process death.
+- Chạm thẻ đặt candidate và focus bằng ArenaView hiện có, mở góc nhìn Canvas có sẵn. Đóng góc nhìn quay về bảng kết quả để Chọn cả nhóm. Nhóm được kiểm lại bằng overlay SQLite mới trước khi thêm tất cả ID vào selection; nếu một ghế bận không đổi lựa chọn/tổng/replacement cũ. Ghế cũ ngoài nhóm được giữ, ID không trùng. Đây là chọn cục bộ, chưa giữ chỗ; transaction checkout 6A tiếp tục là nơi xác nhận đặt vé và chống bán trùng.
+- HTML index dùng cùng payload Canvas đã xuất, tồn kho PreviewBookings theo matchId, bảng và luồng tương ứng. HTML tính khoảng cách trên quad đã project, Android tìm trên geometry logic: không hứa hai renderer có cùng thứ tự tie/ranking hình học. HTML nghịch chuẩn hóa tỉ lệ envelope để kiểm pitch trong row. Không tạo dữ liệu tọa độ/giá NBA thật hoặc thay Android bằng WebView.
+
+Bằng chứng build/unit/emulator/preview và giới hạn browser/Samsung được ghi tại PROGRESS mục 6B. Chờ người dùng review, không chuyển phase hay commit/push.

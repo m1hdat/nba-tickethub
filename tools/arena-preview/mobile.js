@@ -114,17 +114,18 @@
     }
     function back(){navigate(route==='arena'?arenaOrigin:route==='detail'?detailOrigin:'home');}
     function navigate(name) {
-        if(!['home','schedule','teams','detail','arena'].includes(name))throw Error('Unknown page');
+        if(!['home','schedule','teams','detail','arena','tickets'].includes(name))throw Error('Unknown page');
         pageScrolls.set(route,(route==='detail'?$('detail-scroll'):$(route)).scrollTop);
         route=name;
-        for(const id of ['home','schedule','teams','detail','arena'])$(id).hidden=route!==id;
+        for(const id of ['home','schedule','teams','detail','arena','tickets'])$(id).hidden=route!==id;
         $('browse-nav').hidden=route==='arena'||route==='detail';
-        for(const id of ['home','schedule','teams'])$('nav-'+id).setAttribute('aria-current',route===id?'page':'false');
+        for(const id of ['home','schedule','teams','tickets'])$('nav-'+id).setAttribute('aria-current',route===id?'page':'false');
+        if(route==='tickets')renderMyTickets();
         if(route==='arena')resize();
         else {if(route==='schedule')renderMatches();if(route==='home')renderLanding();(route==='detail'?$('detail-scroll'):$(route)).scrollTop=pageScrolls.get(route)||0;}
-        $(route==='detail'?'detail-title':route==='arena'?'arena-title':route==='teams'?'teams-title':route==='schedule'?'schedule-title':'home-title').focus({preventScroll:true});
+        $(route==='detail'?'detail-title':route==='arena'?'arena-title':route==='tickets'?'tickets-title':route==='teams'?'teams-title':route==='schedule'?'schedule-title':'home-title').focus({preventScroll:true});
     }
-    for(const page of ['home','schedule','teams'])$('nav-'+page).addEventListener('click',()=>navigate(page));
+    for(const page of ['home','schedule','teams','tickets'])$('nav-'+page).addEventListener('click',()=>navigate(page));
     $('all-matches').addEventListener('click',()=>navigate('schedule'));
     $('detail-back').addEventListener('click',back);$('arena-back').addEventListener('click',back);
     $('detail-seats').addEventListener('click',()=>{if(detailGame)selectGame(detailGame.id);});
@@ -163,6 +164,7 @@
         const previous=model,oldGame=game,sameArena=loaded&&game?.arenaId===match.arenaId, savedCamera={...camera};
         const previousExpanded=sheetExpanded;
         const version = ++generation;
+        $('finder-panel').hidden=true;
         game = match; theme = source.themes.find(t=>t.teamId===game.homeTeamId);
         document.documentElement.style.setProperty('--team',theme.primaryColor);
         document.documentElement.style.setProperty('--ink',ink(theme.primaryColor));
@@ -182,7 +184,7 @@
             if (version !== generation) return;
             model=new window.PreviewSelection(value,game);
             if(sameArena&&previous){for(const key of ['levelId','sectionId','category','budget','browsing'])model[key]=previous[key];}
-            data={...value,renderKey:game.id,sections:value.sections.map(v=>({...v,label:v.label.replace(/\*/g,'')})),seats:value.seats.map(seat=>{const copy=seat.slice();copy[2]=model.info(seat[0]).status;return copy;}),batches:[]};
+            data={...value,renderKey:game.id+':'+generation,sections:value.sections.map(v=>({...v,label:v.label.replace(/\*/g,'')})),seats:value.seats.map(seat=>{const copy=seat.slice();copy[2]=model.info(seat[0]).status;return copy;}),batches:[]};
             for(const batch of value.batches){const groups=[[],[],[]];for(const index of batch.slice(1))groups[data.seats[index][2]].push(index);groups.forEach((indices,status)=>{if(indices.length)data.batches.push([status,...indices]);});}
             paths=renderer.prepare(data);
             buildHitIndex(); loaded = true; loading = false;
@@ -254,10 +256,17 @@
         }
         const focus=model.candidate||model.focused;focusPath=focus&&model.matches(focus)?renderer.polygon(data.seats[model.indices.get(focus)][3]):null;
     }
+    let customBudgetOption;
     function renderUI() {
         if(!model)return;
+        $('booking-continue').disabled=!model.selected.size;
         visible=model.visibleSections();rebuildOverlays();
-        $('type-filter').value=model.category||'';$('budget-filter').value=String(model.budget);
+        $('type-filter').value=model.category||'';
+        if(customBudgetOption){customBudgetOption.remove();customBudgetOption=null;}
+        if(![Infinity,10000,25000,50000].includes(model.budget)){
+            customBudgetOption=node('option','Đến '+money(model.budget));customBudgetOption.value=String(model.budget);$('budget-filter').append(customBudgetOption);
+        }
+        $('budget-filter').value=String(model.budget);
         $('filter-status').textContent=model.replacing?'Đang đổi ghế · Giữ ghế cũ đến khi xác nhận':'Dữ liệu mẫu · Chạm khu để xem góc nhìn và vé';
         const section=model.sections.get(model.browsing),tickets=model.browsing?model.tickets():[],candidate=model.candidate?model.info(model.candidate):null;
         $('seat-sheet').hidden=!section;
@@ -279,7 +288,7 @@
         const list=tickets.map(id=>{
             const info=model.info(id),li=node('li');li.classList.toggle('candidate',id===model.candidate);li.classList.toggle('unavailable',info.status!==0);
             const row=node('button',describe(id),'seat-row');row.setAttribute('aria-pressed',String(id===model.candidate));
-            row.append(node('small',({VIP:'VIP',STANDARD:'Tiêu chuẩn',STANDING:'Khu đứng'})[info.kind]+' · '+['Trống','Đã bán','Khóa'][info.status]),node('strong',money(info.priceMinor)));
+            row.append(node('small',({VIP:'VIP',STANDARD:'Tiêu chuẩn',STANDING:'Khu đứng'})[info.kind]+' · '+['Trống','Đã đặt','Khóa'][info.status]),node('strong',money(info.priceMinor)));
             row.addEventListener('click',()=>{model.preview(id);renderUI();});li.append(row);
             if(model.selected.has(id)){const remove=node('button','Bỏ','remove-row');remove.setAttribute('aria-label','Bỏ '+describe(id));remove.addEventListener('click',()=>{model.remove(id);renderUI();});li.append(remove);}
             return li;
@@ -397,7 +406,95 @@
     canvas.addEventListener('lostpointercapture',e=>{pointers.delete(e.pointerId);tapAllowed=false;baseline();});
     canvas.addEventListener('wheel',event=>{if(!loaded)return;event.preventDefault();const p=local(event);zoom(Math.exp(-event.deltaY*.003),p.x,p.y);},{passive:false});
     canvas.addEventListener('keydown',event=>{if(event.key==='+'||event.key==='=')zoom(2);else if(event.key==='-')zoom(.5);else if(event.key==='0')fit();else if(event.key==='Enter')inspectAt(width/2,height*.25);else return;event.preventDefault();});
-    window.MobilePreview={selectGame,navigate,openDetail,chooseTeam,back,startingPrice,focusSeat,inspectAt,hitWorld,screenForSeat,whenReady:()=>ready,
+    let bookingDraft, bookingSaved=false, bookingBusy=false;
+    function orderCard(order){
+        const card=node('article',undefined,'booking-card');
+        const team=source.themes.find(t=>t.teamId===order.homeTeamId);
+        card.style.borderColor=team.primaryColor;
+        card.append(node('b','Đặt vé mô phỏng'),node('p','Mã đơn: '+order.id),node('h2',order.match),node('p',order.time),node('p',order.venue));
+        for(const ticket of order.tickets)card.append(node('p','Khu / Hàng / Ghế: '+ticket.label+' · '+money(ticket.price)));
+        card.append(node('strong','Tổng tiền: '+money(order.total)));return card;
+    }
+    function renderMyTickets(){
+        const list=$('my-tickets');list.replaceChildren();
+        try {const orders=window.PreviewBookings.list();if(!orders.length)list.append(node('p','Bạn chưa có vé mô phỏng. Chọn trận, chọn ghế và xác nhận để lưu vé.'));for(const order of orders)list.append(orderCard(order));}
+        catch(error){list.append(node('p','Không tải được vé: '+error.message));}
+    }
+    function beginBooking(){
+        if(!model?.selected.size)return;
+        const tickets=[...model.selected].map(id=>{const i=model.info(id);return{seatId:id,label:i.sectionCode+' / '+i.rowLabel+' / '+i.number,price:i.priceMinor};});
+        bookingDraft={id:'SIM-'+(window.crypto?.randomUUID?.()||Date.now()+'-'+Math.random().toString(16).slice(2)),matchId:game.id,homeTeamId:game.homeTeamId,match:source.themes.find(t=>t.teamId===game.awayTeamId).name+' @ '+theme.name,venue:game.venue,time:game.displayTime,startsAt:game.startsAt,tickets,total:model.totalMinor(),currency:'USD'};
+        bookingSaved=false;$('booking-content').replaceChildren(orderCard(bookingDraft));$('booking-message').textContent='Kiểm tra ghế và giá trước khi xác nhận.';
+        $('booking-confirm').textContent='Xác nhận đặt vé';$('booking-confirm').disabled=false;$('booking-back').textContent='Quay lại sơ đồ';$('booking-dialog').showModal();
+    }
+    async function confirmBooking(){
+        if(bookingBusy)return;
+        if(bookingSaved){$('booking-dialog').close();navigate('tickets');return;}
+        bookingBusy=true;$('booking-confirm').disabled=true;
+        try{
+            const commit=()=>window.PreviewBookings.save(bookingDraft,id=>model.info(id));
+            // Web Locks serialize preview tabs when supported; Android's guarantee is SQLite.
+            if(window.navigator?.locks)await window.navigator.locks.request('tickethub-preview-booking',commit);else commit();
+            bookingSaved=true;$('booking-message').textContent='Đã lưu đơn mô phỏng. Mã đơn: '+bookingDraft.id;
+            $('booking-confirm').textContent='Xem vé';
+            const bookedIds=new Set(bookingDraft.tickets.map(t=>t.seatId));
+            await selectGame(game.id,true);
+            for(const id of bookedIds)model.selected.delete(id);renderUI();
+        }catch(error){$('booking-message').textContent=error.message;$('booking-back').textContent='Chọn lại ghế';}
+        finally{bookingBusy=false;$('booking-confirm').disabled=false;}
+    }
+    $('booking-continue').addEventListener('click',beginBooking);
+    $('booking-confirm').addEventListener('click',confirmBooking);
+    $('booking-back').addEventListener('click',()=>{if(!bookingBusy){$('booking-dialog').close();if(!bookingSaved&&$('booking-back').textContent==='Chọn lại ghế')selectGame(game.id,true);}});
+    $('booking-dialog').addEventListener('cancel',event=>{if(bookingBusy)event.preventDefault();});
+    function finderOptions(id, values, all, current) {
+        const options=[node('option',all)]; options[0].value='';
+        for(const value of values){const option=node('option',value.code);option.value=value.id;options.push(option);}
+        $(id).replaceChildren(...options);$(id).value=current||'';
+    }
+    function openFinder() {
+        if(!loaded)return;
+        $('finder-people').value='1';$('finder-budget').value=Number.isFinite(model.budget)?String(model.budget/100):'';
+        finderOptions('finder-level',game.levels,'Mọi tầng',model.levelId);
+        finderOptions('finder-section',game.sections,'Mọi khu',model.sectionId);
+        $('finder-category').value=model.category||'';$('finder-priority').value='price';
+        $('finder-results').replaceChildren();$('finder-message').textContent='Dữ liệu mô phỏng · Chạm thẻ để xem góc nhìn.';
+        $('finder-panel').hidden=false;showSheet(false);
+    }
+    function finderRequest() {
+        const raw=$('finder-budget').value.trim(),value=raw===''?Infinity:Number(raw)*100;
+        if(raw!==''&&(!Number.isFinite(value)||value<0||Math.abs(value-Math.round(value))>1e-6))throw Error('Ngân sách cần từ 0 và tối đa 2 chữ số thập phân.');
+        return {people:Number($('finder-people').value),budget:Math.round(value),levelId:$('finder-level').value||null,
+            sectionId:$('finder-section').value||null,category:$('finder-category').value||null,priority:$('finder-priority').value};
+    }
+    function findSeats() {
+        if(!loaded)return;
+        $('finder-results').replaceChildren();
+        try {
+            const request=finderRequest(),results=window.SeatFinder.search(model,request);
+            $('finder-message').textContent=results.length?'Tối đa 3 kết quả · Chạm thẻ để xem góc nhìn.':'Không có dãy phù hợp. Chỉnh bộ lọc và tìm lại.';
+            for(const result of results){
+                const card=node('article',undefined,'finder-card'),preview=node('button',result.ids.map(id=>describe(id)+' · '+money(model.info(id).priceMinor)).join('\n'),'finder-preview');
+                const applyFilters=()=>{model.filterLevel(request.levelId);model.filterSection(request.sectionId);model.category=request.category;model.budget=request.budget;renderFilters();};
+                preview.addEventListener('click',()=>{applyFilters();model.preview(result.ids[0]);focusSeat(model.indices.get(result.ids[0]));renderUI();$('large-view-title').textContent=describe(result.ids[0]);$('view-dialog').showModal();drawPerspective(true);});
+                card.append(preview,node('strong','Tổng '+money(result.total)),node('p',(request.priority==='court'?'Gần biên sân theo hình học.':'Ưu tiên tổng giá thấp trong ngân sách.')+(request.people>1?' Cùng khu, cùng hàng, không qua lối đi.':'')));
+                const select=node('button',request.people>1?'Chọn cả nhóm':'Chọn ghế','accent');
+                select.addEventListener('click',()=>{
+                    if(window.SeatFinder.select(model,result)){applyFilters();$('finder-panel').hidden=true;renderUI();showSheet(true);}
+                    else {$('finder-results').replaceChildren();$('finder-message').textContent='Một ghế đã bận. Giữ nguyên lựa chọn cũ; hãy Tìm ghế lại.';}
+                });card.append(select);$('finder-results').append(card);
+            }
+            return results;
+        } catch(error){$('finder-message').textContent=error.message;return [];}
+    }
+    $('suggest-seats').addEventListener('click',openFinder);
+    $('finder-close').addEventListener('click',()=>{$('finder-panel').hidden=true;});
+    $('finder-search').addEventListener('click',findSeats);
+    let finderDragY;
+    $('finder-panel').addEventListener('pointerdown',event=>{finderDragY=event.clientY;});
+    $('finder-panel').addEventListener('pointerup',event=>{if(event.target.closest('header')&&event.clientY-finderDragY>45)$('finder-panel').hidden=true;});
+    $('finder-level').addEventListener('change',()=>finderOptions('finder-section',game.sections.filter(s=>!$('finder-level').value||s.levelId===$('finder-level').value),'Mọi khu',null));
+    window.MobilePreview={openFinder,findSeats,beginBooking,confirmBooking,selectGame,navigate,openDetail,chooseTeam,back,startingPrice,focusSeat,inspectAt,hitWorld,screenForSeat,whenReady:()=>ready,
         state:()=>({matchFilters:{...matchFilters},visibleMatches:window.MatchList.filter(source.games,matchFilters).map(g=>g.id),route,detailMatchId:detailGame?.id,arenaOrigin,loaded,gameId:game?.id,arenaId:game?.arenaId,themeId:theme?.id,homeTeamId:game?.homeTeamId,camera:{...camera},lod,helperIndex,sheetExpanded,sheetDock,
             selected:model?[...model.selected]:[],focused:model?.focused,replacing:model?.replacing,levelId:model?.levelId,sectionId:model?.sectionId,browsing:model?.browsing,candidate:model?.candidate,ticketCount:model?.browsing?model.tickets().length:0,totalMinor:model?.totalMinor(),info:model?.focused?model.info(model.focused):null})};
     navigate('home');

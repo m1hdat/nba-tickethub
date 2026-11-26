@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="theme-color" content="#102c50">
-    <title>NBA TicketHub · Preview Phase 5</title>
+    <title>NBA TicketHub · Preview Phase 6B</title>
     <link rel="stylesheet" href="mobile.css">
     <link rel="stylesheet" href="browse.css">
     <script src="source-data.js" defer></script>
@@ -13,15 +13,17 @@
     <script src="selection-model.js" defer></script>
     <script src="seat-perspective.js" defer></script>
     <script src="match-list.js" defer></script>
+    <script src="booking-store.js" defer></script>
+    <script src="seat-finder.js" defer></script>
     <script src="mobile.js" defer></script>
 </head>
 <body>
 <main class="phone">
-    <div class="preview-banner">Preview <span>Phase 5 · HTML mô phỏng Android</span></div>
+    <div class="preview-banner">Preview <span>Phase 6B · HTML mô phỏng Android</span></div>
     <section id="home" class="screen browse-page" aria-labelledby="home-title">
         <header class="browse-intro"><span class="eyebrow">NBA TICKETHUB · LỊCH MẪU</span><h1 id="home-title" tabindex="-1">Sẵn sàng vào sân.</h1></header>
         <div id="featured-match" class="featured-match"></div>
-        <div class="browse-section"><h2>Trận sắp tới</h2><div id="upcoming-matches"></div><button id="all-matches">Xem toàn bộ lịch đấu</button><h2>Khám phá theo đội</h2><div id="home-team-grid" class="team-grid"></div><p class="browse-notice">Lịch, giá và tình trạng vé đều mô phỏng. Chưa đặt vé hoặc thanh toán.</p></div>
+        <div class="browse-section"><h2>Trận sắp tới</h2><div id="upcoming-matches"></div><button id="all-matches">Xem toàn bộ lịch đấu</button><h2>Khám phá theo đội</h2><div id="home-team-grid" class="team-grid"></div><p class="browse-notice">Lịch, giá và tình trạng vé đều mô phỏng. Đặt vé mô phỏng, lưu riêng trong trình duyệt này.</p></div>
     </section>
     <section id="teams" class="screen browse-page" aria-labelledby="teams-title" hidden><header class="browse-intro"><span class="eyebrow">NBA TICKETHUB</span><h1 id="teams-title" tabindex="-1">Đội bóng</h1><p>30 đội · Xem cả trận sân nhà và sân khách.</p></header><div id="team-grid" class="team-grid browse-section"></div></section>
     <section id="detail" class="screen detail-page" aria-labelledby="detail-title" hidden>
@@ -39,13 +41,30 @@
             <p id="match-summary" role="status"></p><p id="match-empty" hidden>Không có trận chưa bắt đầu khớp bộ lọc. Hãy đổi ngày, đội hoặc xóa lọc.</p>
         </div>
         <div id="games" class="game-list"></div>
-        <aside class="review-note"><b>Bản duyệt giao diện · 390 px</b><p>Kéo/zoom, bộ lọc, lựa chọn và sheet chạy bằng HTML để mô phỏng hành vi Android. Không đặt vé hay thanh toán.</p></aside>
+        <aside class="review-note"><b>Bản duyệt giao diện · 390 px</b><p>Kéo/zoom, bộ lọc, lựa chọn và sheet chạy bằng HTML để mô phỏng hành vi Android. Đặt vé mô phỏng, không thanh toán thật.</p></aside>
     </section>
     <section id="arena" class="screen arena-screen" aria-labelledby="arena-title" hidden>
         <header id="arena-header" class="arena-header"><div><h1 id="arena-title" tabindex="-1">Sơ đồ sân</h1><p id="arena-subtitle">Trận mô phỏng</p></div><button id="arena-back" aria-label="Quay lại màn trước">‹</button><button id="choose-game">Đổi trận</button></header>
         <div class="filters"><label><span class="sr-only">Loại ghế</span><select id="type-filter" aria-label="Loại ghế"><option value="">Mọi loại</option><option>VIP</option><option value="STANDARD">Tiêu chuẩn</option><option value="STANDING">Khu đứng</option></select></label><label><span class="sr-only">Ngân sách</span><select id="budget-filter" aria-label="Ngân sách"><option value="Infinity">Mọi giá</option><option value="10000">Đến 100 USD</option><option value="25000">Đến 250 USD</option><option value="50000">Đến 500 USD</option></select></label><label><span class="sr-only">Lọc tầng</span><select hidden id="level-filter" aria-label="Lọc tầng"><option value="">Mọi tầng</option></select></label><label><span class="sr-only">Lọc khu</span><select hidden id="section-filter" aria-label="Lọc khu"><option value="">Mọi khu</option></select></label><button id="clear-filter">Xóa lọc</button><button id="fit" class="accent">Vừa khung</button></div>
+        <button id="suggest-seats" class="accent">Gợi ý ghế</button>
+        <aside id="finder-panel" class="finder-panel" hidden aria-label="Gợi ý ghế">
+            <header><h2>Gợi ý ghế</h2><button id="finder-close">Thu bảng</button></header>
+            <div class="finder-scroll">
+                <div class="finder-fields">
+                    <label>Số người<input id="finder-people" type="number" min="1" step="1" value="1"></label>
+                    <label>Tối đa mỗi vé (USD)<input id="finder-budget" type="number" min="0" step="0.01" placeholder="Mọi giá"></label>
+                    <label>Tầng<select id="finder-level"></select></label>
+                    <label>Khu<select id="finder-section"></select></label>
+                    <label>Loại vé<select id="finder-category"><option value="">Mọi loại</option><option>VIP</option><option value="STANDARD">Tiêu chuẩn</option><option value="STANDING">Khu đứng</option></select></label>
+                    <label>Ưu tiên<select id="finder-priority"><option value="price">Giá thấp</option><option value="court">Gần sân</option></select></label>
+                </div>
+                <button id="finder-search" class="accent">Tìm ghế</button>
+                <p id="finder-message" role="status">Dữ liệu mô phỏng · Chạm thẻ để xem vị trí và góc nhìn.</p>
+                <div id="finder-results"></div>
+            </div>
+        </aside>
         <p id="filter-status" class="filter-status" role="status">Đang tải dữ liệu…</p>
-        <div class="legend" aria-label="Chú giải trạng thái"><span><i id="available"></i>Trống</span><span><i id="booked"></i>Đã bán</span><span><i id="locked"></i>Khóa</span><span><i class="selected-dot"></i>Đã chọn</span></div>
+        <div class="legend" aria-label="Chú giải trạng thái"><span><i id="available"></i>Trống</span><span><i id="booked"></i>Đã đặt</span><span><i id="locked"></i>Khóa</span><span><i class="selected-dot"></i>Đã chọn</span></div>
         <div id="arena-stage" class="arena-stage">
             <canvas id="arena-canvas" tabindex="0" aria-label="Sơ đồ ghế. Kéo để di chuyển, chụm hai ngón hoặc dùng nút cộng để phóng to. Chạm ghế khi hiện chi tiết."></canvas>
             <div class="map-tools"><span id="zoom-label">Toàn sân</span><div><button id="zoom-out" aria-label="Thu nhỏ">−</button><button id="zoom-in" aria-label="Phóng to">+</button></div></div>
@@ -66,12 +85,15 @@
                 </div>
                 <div id="sheet-actions" class="sheet-actions" hidden><button id="change-seat" class="accent" disabled>Đổi ghế</button><button id="toggle-seat" class="accent" disabled>Bỏ ghế</button></div>
             </aside>
-        <footer class="arena-footer">Mô phỏng sheet/lựa chọn Android bằng HTML · Không đặt vé</footer>
+        <button id="booking-continue" class="booking-continue" disabled>Tiếp tục</button>
+        <footer class="arena-footer">Mô phỏng sheet/lựa chọn Android bằng HTML · Đặt vé mô phỏng</footer>
     </section>
-    <nav id="browse-nav" class="browse-nav" aria-label="Điều hướng chính"><button id="nav-home">Trang chủ</button><button id="nav-schedule">Lịch đấu</button><button id="nav-teams">Đội bóng</button></nav>
+    <section id="tickets" class="screen browse-page" hidden><header class="browse-intro"><h1 id="tickets-title" tabindex="-1">Vé của tôi</h1><p>Đặt vé mô phỏng · Lưu trong trình duyệt này</p></header><div id="my-tickets" class="browse-section"></div></section>
+    <nav id="browse-nav" class="browse-nav" aria-label="Điều hướng chính"><button id="nav-home">Trang chủ</button><button id="nav-schedule">Lịch đấu</button><button id="nav-teams">Đội bóng</button><button id="nav-tickets">Vé của tôi</button></nav>
 </main>
 <dialog id="team-dialog"><header><h2>Chọn đội · 30 đội NBA</h2><button id="close-teams">Đóng</button></header><div id="team-options"></div><p class="badge-notice">Logo đội dùng offline; mã đội là dự phòng khi thiếu ảnh.</p></dialog>
 <dialog id="view-dialog" class="view-dialog"><header><div><span class="eyebrow">GÓC NHÌN MÔ PHỎNG</span><h2 id="large-view-title">Từ vị trí ghế</h2></div><button id="close-view">Đóng</button></header><canvas id="large-perspective" aria-label="Góc nhìn mô phỏng xem lớn"></canvas><p>Cùng vị trí và công thức phối cảnh của SeatPerspective Android. HTML dùng mesh Canvas để mô phỏng; không phải ảnh thật.</p></dialog>
+<dialog id="booking-dialog" class="booking-dialog"><button id="booking-back">Quay lại sơ đồ</button><div id="booking-content"></div><p id="booking-message" role="status"></p><button id="booking-confirm">Xác nhận đặt vé</button></dialog>
 <noscript>Preview cần bật JavaScript.</noscript>
 </body>
 </html>

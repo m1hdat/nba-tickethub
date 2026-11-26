@@ -1,5 +1,104 @@
 # Tiến độ thực tế
 
+## Phase 6B — bảng Gợi ý ghế dùng chung (2026-11-26)
+
+**Đã triển khai 6B và kiểm thử bản sửa sau QA; chưa nghiệm thu người dùng/Samsung.** Trước sửa đã đọc AGENTS/tài liệu và `git status --short --branch`: branch main có nhiều thay đổi 6A chưa commit và file untracked có trước. Giữ nguyên chúng; không reset/clean/stage/commit/push. Mục 6A phía dưới giữ nguyên làm lịch sử.
+
+### Phạm vi và tiêu chí tương ứng
+
+| Yêu cầu được giao | Kết quả 6B |
+| --- | --- |
+| Một bảng cho đơn/nhóm, lấy lọc ban đầu và cho sửa | BottomSheetDialog chung: số người, ngân sách USD mỗi vé, tầng/khu/loại vé, Giá thấp/Gần sân; query giữ qua recreate trong ViewModel. Bộ lọc sơ đồ hiển thị được ngân sách tùy nhập |
+| Đúng trận, ghế trống, thỏa ngân sách/khu/tầng, tối đa 3 | SeatFinder dùng inventory[matchId] sau overlay SQLite; lọc trước xếp hạng, giữ truy vấn khi rỗng. Giá thấp theo tổng; Gần sân theo khoảng cách hình học từ tâm ghế tới biên court logic |
+| Nhóm N cùng hàng/khu/đoạn, không qua lối đi | Duyệt row range của layout; kiểm khoảng góc tâm quad so với pitch hàng. Không nối hai section và không chỉ xét số ghế. Nhóm chỉ dùng ghế SEATED; kiểm tra missing slot bằng số ghế liên tiếp nhưng geometry cách hai slot |
+| Từng giá, tổng, lý do và xem góc nhìn | Từng khu/hàng/ghế, giá đủ 2 chữ số thập phân, tổng minor units, lý do; chạm thẻ focus ArenaView rồi mở góc nhìn Canvas đã có. Đóng góc nhìn vẫn giữ bảng kết quả |
+| Chọn đủ nhóm sau kiểm lại; ghế bận giữ lựa chọn cũ | Đọc lại BookingStore trên worker, kiểm toàn bộ trước khi thêm ID. Xung đột không sửa selection/tổng/replacement; tìm lại loại ghế vừa bận. Không giữ chỗ: checkout 6A vẫn recheck/transaction |
+| Theme, bảng gọn, tiếp tục 6A | Accent đội nhà cho nút mở bảng/nút thao tác; bảng kéo/thu tối đa 42% màn hình, nội dung tự cuộn, còn thấy phần sơ đồ phía trên. Chọn nhóm thêm vào selection cũ không trùng ID; Tiếp tục dùng BookingController 6A |
+| HTML cho bấm thử | Cập nhật tools/arena-preview/index.html thành 6B; cùng payload hình học cũ, PreviewBookings và checkout 6A, cùng các trường và tối đa 3 kết quả. HTML dùng quad đã project để xếp gần sân; không nhận pixel/ranking parity tuyệt đối với geometry logic Android |
+
+### File thuộc thay đổi 6B
+
+- Tạo: `app/src/main/java/com/example/nbatickethub/state/SeatFinder.java`, `app/src/main/java/com/example/nbatickethub/ui/arena/SeatFinderController.java`, `app/src/test/java/com/example/nbatickethub/state/SeatFinderTest.java`, `app/src/androidTest/java/com/example/nbatickethub/SeatFinderInstrumentedTest.java`, `tools/arena-preview/seat-finder.js`.
+- Sửa Android: `app/src/main/java/com/example/nbatickethub/MainActivity.java`; `state/ArenaSelection.java`, `state/ArenaSelectionViewModel.java`, `ui/arena/ArenaFilterController.java`, `ui/arena/SeatSheetController.java` trong cùng Java root; `app/src/main/res/layout/activity_main.xml`, `layout-land/activity_main.xml`, `values/strings.xml`.
+- Sửa preview: `tools/arena-preview/index.html`, `mobile.js`, `mobile.css`, `test-preview.cjs`, `README.md`.
+- Tài liệu: `docs/PROGRESS.md`, `AI_LOG.md`, `DESIGN.md` mục 17, `ROADMAP.md` cập nhật phạm vi 6B theo lệnh người dùng. Không sửa assets/geometry/logo/dependency/toolchain; các thay đổi 6A có trước vẫn được giữ và không nhận là mới làm trong 6B.
+
+### Kết quả kiểm chứng bản cuối
+
+- Wrapper: `./gradlew.bat assembleDebug testDebugUnitTest lintDebug connectedDebugAndroidTest '-Pandroid.testInstrumentationRunnerArguments.class=com.example.nbatickethub.SeatFinderInstrumentedTest' --no-configuration-cache` → **BUILD SUCCESSFUL 1m36s**; log `.gradle/phase6b-final.log`.
+- **88 JVM tests, 0 failures/errors/skipped**, gồm 7 SeatFinderTest mới: giá/ngân sách, gần sân, nhóm 3/tổng, không nối lối đi/missing slot dù số liên tiếp, rỗng/khu/tầng, atomic selection khi có ghế bận, idempotent và đúng tồn kho hai trận MSG/stale match. XML ở `app/build/test-results/testDebugUnitTest/`.
+- **Lint: 0 errors, 68 warnings**, không suppress hoặc thay dependency để làm qua. Báo cáo `app/build/reports/lint-results-debug.sarif`.
+- **2 UI 6B tests, 0 failures/errors/skipped**, emulator Medium Phone API 37, 1080×2400px / 420dpi (~411×914dp), không thay kích thước máy. Test bấm/scroll bảng thực, nhập 3, recreation giữ query, chạm thẻ xem Canvas perspective, đóng rồi Chọn cả nhóm, checkout có đủ 3 vé đúng match; helper SQLite khác đặt một ghế sau lúc tìm, chọn nhóm báo xung đột và giữ selection cũ; ngân sách 0 cho rỗng và giữ giá trị. XML lưu riêng [native-final.xml](../tmp/phase6b/native-final.xml).
+- Node: `node tools/arena-preview/test-preview.cjs` **PASS**, gồm hồi quy 4–6A và 6B: đơn/nhóm, giá/gần sân, adjacency theo quad, không nối khu/missing slot, từng giá/tổng, preview, nhóm vào checkout, conflict sau search không chọn một phần, tìm lại loại booked, rỗng/invalid và hai trận cùng sân. Log `.gradle/phase6b-preview.log`. Đây là DOM/Canvas/storage doubles, không phải kiểm browser pixel. `node --check` mobile.js và seat-finder.js đạt.
+- Đã xem ảnh emulator sau sửa: [nhóm 3 và sơ đồ phía trên](../tmp/phase6b/phase6b-qa/group-results.png), [góc nhìn Canvas](../tmp/phase6b/phase6b-qa/perspective.png), [ghế bận](../tmp/phase6b/phase6b-qa/conflict.png), [rỗng giữ ngân sách 0](../tmp/phase6b/phase6b-qa/empty.png). Nhóm L10/R1/14–16 hiển thị từng vé **86,25 US$**, tổng **258,75 US$**, đúng phần cent. Chưa coi ảnh này là nghiệm thu Samsung/người dùng.
+- Hồi quy cuối chạy riêng `./gradlew.bat connectedDebugAndroidTest '-Pandroid.testInstrumentationRunnerArguments.class=CLASS' --no-configuration-cache`: **3 PhaseFour tests** đạt (1m27s, `.gradle/phase6b-regression4.log`, [XML](../tmp/phase6b/regression4.xml)); **2 PhaseSix tests** đạt (58s, `.gradle/phase6b-PhaseSixInstrumentedTest.log`, [XML](../tmp/phase6b/PhaseSixInstrumentedTest.xml)); **6 BookingStore tests** đạt (22s, `.gradle/phase6b-BookingStoreInstrumentedTest.log`, [XML](../tmp/phase6b/BookingStoreInstrumentedTest.xml)). CLASS tương ứng là `com.example.nbatickethub.ui.arena.PhaseFourInstrumentedTest`, `com.example.nbatickethub.PhaseSixInstrumentedTest`, `com.example.nbatickethub.BookingStoreInstrumentedTest`. Tất cả log **BUILD SUCCESSFUL**, XML 0 failures/errors/skipped. Tổng **13 Android tests distinct** gồm 2 ca mới 6B + 11 ca hồi quy. Không coi lượt nhiều class ban đầu (thực tế chỉ 2 tests) là đã chạy hết hồi quy.
+- Hồi quy PhaseFour giữ nguyên các assertion vùng vé/CTA nhìn thấy, candidate/filter/camera, đổi hai trận cùng sân/khác sân, perspective, recreate và ngang/dọc; nhóm PhaseSix giữ back/double confirm/reopen/conflict. Storage kiểm transaction rollback, concurrency, unique matchId + seatId, snapshot và tồn kho riêng cùng sân. Chưa chạy lại toàn bộ camera/scale suite hoặc PhaseFive trong 6B.
+- XML resource, dependency JS/CSS của index.html và toàn bộ local links mới của mục 6B đã kiểm **PASS**; `git diff --check` đạt (chỉ cảnh báo line ending ở AI_LOG). `git diff -- app/src/main/assets` rỗng; staged paths **0**. PowerShell có thể hiển thị NativeCommandError cho stderr cảnh báo deprecated Java; kết luận dựa trên Gradle SUCCESSFUL và XML thật, không bỏ qua test thất bại.
+
+- [APK debug 6B](../app/build/outputs/apk/debug/app-debug.apk): **10466270 byte**, SHA-256 `0ee7cdce9e9d3f7f7667d2918da9c079bc0d25600f0a24aa09652da9f9b4fab5`. Đây là bản mô phỏng cục bộ.
+
+### Lỗi phát hiện, giới hạn và cách mở
+
+Lần QA ảnh đầu bảng 58% che vùng sân và formatter currency mặc định làm tròn cent; đã sửa còn 42%, giữ 2 chữ số thập phân và màu nút đội nhà, chạy lại 2 UI tests và xem ảnh cuối. Cache sandbox thiếu dependency; dùng cache Gradle user hiện có qua quyền công cụ, không đổi cấu hình máy. Lượt test mới ban đầu lỗi import closeSoftKeyboard và tham số Gradle chưa quote, đã sửa; không sửa assertion để che lỗi nghiệp vụ.
+
+Browser host unavailable; auto-review từ chối chọn cửa sổ Edge vì đang chứa trang cá nhân ngoài phạm vi 6B. AI đã hỏi quyền dùng cửa sổ đó, chưa nhận phản hồi tại thời điểm ghi. **Chưa bấm/QA pixel browser 6B**, không suy từ Node hoặc QA 6A cũ. Chưa thử Samsung, 360dp/ngang cho bảng 6B, font lớn, process death hoặc FPS/heap. Các ghế, giá, booking và khoảng cách đều mô phỏng; dữ liệu không phải giao dịch NBA thật.
+
+Mở thử: Edge/Chrome → Ctrl+O → `D:\24tn-fitus\project\nba-tickethub\tools\arena-preview\index.html` → Ctrl+F5 → chọn trận → Chọn ghế → **Gợi ý ghế** → nhập 1 hoặc 3 người/ngân sách/khu/tầng/ưu tiên → **Tìm ghế**. Chạm thẻ xem góc nhìn, đóng rồi Chọn cả nhóm → Tiếp tục để thử checkout 6A. Không cần server; giữ JS/CSS và thư mục dữ liệu đi kèm. Hướng dẫn tại [README preview](../tools/arena-preview/README.md).
+
+Đã cập nhật PROGRESS/AI_LOG/DESIGN/ROADMAP. Chưa có xác nhận nghiệm thu; không có vấn đề phạm vi cần quyết định thêm. Dừng trong 6B để người dùng review. Commit đề xuất: `feat: add shared single and group seat recommendations`.
+
+## Phase 6A — đặt vé mô phỏng và Vé của tôi (2026-11-26)
+
+**Đã triển khai và kiểm thử 6A; chưa nghiệm thu người dùng/Samsung.** Bắt đầu từ `main` / HEAD `88c511a`, không có tracked diff, chỉ có các file untracked sẵn có (sources và công cụ preview cũ); giữ nguyên chúng. Không stage/commit/push.
+
+### Yêu cầu được giao và kết quả triển khai
+
+| Yêu cầu 6A | Kết quả |
+| --- | --- |
+| Tiếp tục → xác nhận, quay lại giữ ghế | Native Views với cặp đấu, giờ/múi giờ, sân, khu/hàng/số, từng giá và tổng; nhãn Đặt vé mô phỏng, theme đội nhà; CTA đặt trong summary sheet |
+| Kiểm tra trống đúng trận, không đặt trùng | SQLite transaction kiểm toàn bộ selection; nêu ghế bận; unique `(match_id,seat_id)`, request ID idempotent, busy state; lỗi ghi rollback toàn bộ |
+| Thành công và Vé của tôi | Mã đơn UUID, Xem vé, tab điều hướng và empty/loading/error; thẻ vé đọc snapshot đã chốt, lưu DB riêng trên thiết bị |
+| Sơ đồ sau đặt và hai trận cùng sân | Worker overlay BOOKED trước render; không chọn lại ghế đã đặt; chỉ overlay inventory đúng matchId |
+| Preview | Cập nhật index.html đang có; localStorage của trình duyệt riêng Android, nhãn mô phỏng, không thanh toán |
+
+### File tạo/sửa trong nhiệm vụ
+
+- Mới: `data/BookingStore.java`, `state/BookingViewModel.java`, `ui/arena/BookingController.java` trong Java root; Android tests `BookingStoreInstrumentedTest.java`, `PhaseSixInstrumentedTest.java`; `tools/arena-preview/booking-store.js`.
+- Sửa Java: `MainActivity`, `state/BrowseNavigation`, `ui/arena/ArenaPreviewLoader`, `ui/arena/BrowseController`.
+- Sửa XML/resources: `layout/activity_main.xml`, `layout-land/activity_main.xml`, `layout/browse_shell.xml`, `values/strings.xml`.
+- Sửa preview: `index.html`, `mobile.js`, `mobile.css`, `selection-model.js`, `test-preview.cjs`, `README.md`.
+- Tài liệu: `PROGRESS.md`, `AI_LOG.md`, `DESIGN.md`, `ROADMAP.md`. Scripts/log/ảnh trong `tmp/phase6` và `.gradle/phase6*` là artifact QA cục bộ, không stage.
+
+### Kiểm chứng đã quan sát
+
+- Wrapper `assembleDebug testDebugUnitTest lintDebug assembleDebugAndroidTest --no-configuration-cache`: BUILD SUCCESSFUL ở lượt đầu; 81 JVM tests, lint 0 errors/68 warnings. Không đổi SDK/AGP/Java/dependency.
+- SQLite thật trên emulator: **6 tests / 0 failures/errors/skipped**, gồm đơn nhiều ghế thành công/giá/tổng, retry cùng request + duplicate request khác, một ghế bận và trạng thái gốc BOOKED/LOCKED, đóng/mở DB giữ snapshot, hai match MSG dùng cùng seatId, hai helper cạnh tranh, trigger lỗi ghi ticket thứ hai rollback cả order/ticket thứ nhất. Lượt chạy class list chỉ công bố XML 6 ca repository; không tính UI/hồi quy chưa xuất hiện trong XML là đã chạy.
+- UI lượt trước chỉnh bố trí summary: **1 test 411dp đạt** (`tmp/phase6/ui-411.xml`) và **1 test 360dp đạt** (`tmp/phase6/PhaseSixInstrumentedTest-360.xml` trước lượt mới). Kiểm quay lại giữ selection, recreate confirmation, xác nhận lặp, Xem vé, Activity đóng/mở lại và chặn chọn ghế đã đặt. Test setup ban đầu chờ game trong ViewModel quá sớm sau recreate; sửa chờ catalog/controller sẵn sàng, không nới assertion nghiệp vụ.
+- Hồi quy phát hiện lỗi thật ở 360dp: thanh Tiếp tục độc lập làm danh sách không còn 48dp; **2/3 PhaseFour đạt, 1 ca fit thất bại**. Đã chuyển CTA vào summary để giữ bounds Canvas/list; kết quả chạy lại được ghi dưới đây. Ảnh native cũng phát hiện heading Vé của tôi tối trên nền tối; đã đổi chữ trực tiếp trên list sang resource browse_text, giữ chữ thẻ nền trắng.
+- HTML host `node tools/arena-preview/test-preview.cjs` PASS: hồi quy 4–5, xác nhận/back/double-confirm, snapshot, storage reload, BOOKED, conflict không lưu một phần, hai trận cùng sân. DOM/Canvas/storage doubles là bằng chứng logic, không thay browser/Android. `node --check` mobile.js/booking-store.js đạt.
+- **Bấm thật Edge file://** trên khung phone mặc định 390 CSS px, browser zoom sẵn có 75%: chọn trận BOS@NYK, khu L05, R1 ghế 9, 86,25 US$; quay lại giữ 1 ghế; xác nhận double-click tạo đúng 1 thẻ trong Vé của tôi; reload trang rồi mở Vé của tôi vẫn giữ mã đơn, giờ và giá cũ. Phát hiện/sửa sheet che Tiếp tục (đưa sheet cao hơn 52px); đã bấm trọn luồng sau sửa, CTA và thẻ trong khung nhìn thấy. Không phải DevTools viewport 390×844 được đo trong lượt này; không suy ra Samsung hoặc pixel parity.
+
+### Kết quả cuối trên bản bàn giao 6A
+
+- **Build/JVM/lint/storage:** Wrapper `./gradlew.bat assembleDebug testDebugUnitTest lintDebug connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.example.nbatickethub.BookingStoreInstrumentedTest --no-configuration-cache`: **BUILD SUCCESSFUL, 1m20s**; **81 JVM tests, 0 failures/errors/skipped**, lint **0 errors/68 warnings**, **6 SQLite Android tests, 0 failures/errors/skipped**. Log `.gradle/phase6-final.log`, XML `tmp/phase6/storage-final.xml`. PowerShell có exit code 1 do native stderr cảnh báo Java deprecated được bọc thành NativeCommandError; Gradle cuối log báo SUCCESSFUL và XML tất cả ca đạt. Không ghi shell exit này thành lỗi nghiệp vụ hoặc bỏ qua test thất bại.
+- **UI 6A cuối, 360×640dp** (945×1680px, 420dpi): **2 tests, 0 failures/errors/skipped**, BUILD SUCCESSFUL 1m23s. XML `tmp/phase6/PhaseSixInstrumentedTest-360.xml`, log `.gradle/phase6-PhaseSixInstrumentedTest-360.log`. Luồng back/selection, chờ CTA thực sự nhìn thấy đủ ít nhất 47dp, recreate dialog, xác nhận lặp, mã đơn/Xem vé, Activity reopen và BOOKED; ca mới cố ý đặt một ghế qua helper thứ hai trong khi đang xem draft, xác nhận báo đúng ghế, không thêm đơn, giữ ghế còn trống khi chọn lại. Lượt trung gian test assertion CTA chạy trong cùng frame vừa đổi GONE→VISIBLE; đã chờ layout và giữ thêm assertion 47dp, không giảm yêu cầu vùng nhìn thấy.
+- **Hồi quy cuối ở 360dp:** chạy riêng `connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.example.nbatickethub.ui.arena.PhaseFourInstrumentedTest` → **3/3 đạt**, BUILD SUCCESSFUL 1m57s; `...class=com.example.nbatickethub.PhaseFiveInstrumentedTest` → **2/2 đạt**, BUILD SUCCESSFUL 1m23s. Cả hai thêm `--no-configuration-cache`; XML/log tương ứng trong `tmp/phase6/*-360.xml` và `.gradle/phase6-*-360.log`. Giữ nguyên assertion list vé nhìn thấy ≥48dp, preview 16:9 và CTA cũ. Rotation/selection/filter/camera, home/detail/navigation/30 đội vẫn qua các ca đã có; đây không phải chạy toàn bộ camera/scale suite.
+- Tổng nhóm Android cuối: **13 ca distinct (6 storage + 2 UI 6A + 3 Phase 4 + 2 Phase 5), không failures/errors/skipped**. Lượt UI 411dp trước sửa summary chỉ là bằng chứng phiên bản trung gian, không gộp vào 13 ca cuối. Emulator đã xác minh khôi phục **1080×2400px / 420dpi**, không còn override size.
+- Ảnh đã xem: [xác nhận](../tmp/phase6/qa-360/confirmation.png), [thành công](../tmp/phase6/qa-360/success.png), [Vé của tôi](../tmp/phase6/qa-360/my-tickets.png), [ghế bận](../tmp/phase6/qa-360/conflict.png). Heading Vé của tôi sáng trên nền tối sau sửa; thẻ/giá/tổng và cảnh báo ghế bận đọc được ở 360dp. Chưa phải review Samsung/người dùng.
+- `node tools/arena-preview/test-preview.cjs` đạt cả empty state và luồng 6A/hồi quy; cú pháp JS, parse resource XML, dependency HTML và `git diff --check` đạt. Git chỉ cảnh báo LF/CRLF ở file cũ, không lỗi whitespace. Source assets không có diff; không sinh lại geometry/court/logo.
+- [APK debug](../app/build/outputs/apk/debug/app-debug.apk): **9204158 byte**, SHA-256 `1d27bb3e91e6786609a9bc02bd20583f0d80617fbf577dbdaa5d2ee829de10de`. Đây là bản debug mô phỏng; không thanh toán thật.
+
+Đã cập nhật PROGRESS/AI_LOG/DESIGN/ROADMAP và README preview theo phạm vi được giao. Staged paths **0**; không commit/push. Dừng 6A, chờ người dùng review; Samsung và các hạn chế nêu ở dưới còn chưa kiểm chứng.
+
+### Cách mở preview và điểm dừng
+
+Chrome/Edge → Ctrl+O → `D:\24tn-fitus\project\nba-tickethub\tools\arena-preview\index.html` → Ctrl+F5. Không cần server. Giữ JS/CSS, payload `preview/arena-data` và logo assets đi kèm ở vị trí hiện tại. Chọn trận → khu → vé trống → Chọn ghế → Tiếp tục → Xác nhận đặt vé → Xem vé. Tab Vé của tôi dùng dữ liệu lưu riêng của trình duyệt; không đồng bộ SQLite Android. Browser không có Web Locks chưa bảo đảm cạnh tranh nhiều tab, Android có SQLite constraint/transaction.
+
+**Chưa thử trên Samsung thật**, chưa đo FPS/heap/GPU, font scale lớn, chưa nghiệm thu process death khi đang chỉnh draft/xác nhận chưa commit; persistence đơn đã commit được kiểm độc lập qua DB reopen và Activity reopen. Không coi build/test là nghiệm thu thẩm mỹ hoặc review của người dùng. Chỉ 6A, không có 6B/thanh toán thật/tài khoản/backend. Không có câu hỏi phạm vi cần xin phép thêm; chờ người dùng review giao diện và thử trên Samsung.
+
+Commit đề xuất: `feat: add atomic simulated bookings and persistent my tickets`.
+
+
 ### Cho phép đưa Phase 4–5 lên GitHub — 2026-11-26
 
 Người dùng yêu cầu “push phase 4 5 len”, cho phép commit/push phần đã làm. Giữ nhánh main/origin hiện có, không force push. Gói source gồm Android Phase 4–5, tests, logo/provenance, HTML preview và exporter Java/template cần thiết để tái tạo payload. Không đưa tmp, log/ảnh QA, APK/build/cache, PDF đầu vào hoặc asset HTML sinh tự động (~109 MB) vào Git. Hướng dẫn clone → export một lần → mở HTML ở tools/arena-preview/README.md. Các dòng “không commit/push” phía dưới là điểm dừng lịch sử trước yêu cầu mới; không được sửa thành người dùng đã nghiệm thu mọi giao diện. SHA và trạng thái remote được kiểm tra/báo trong bàn giao Git, không suy ra thành công từ việc chỉ tạo commit.
@@ -902,3 +1001,8 @@ Lượt này tiếp tục phần bị ngắt, chỉ QA preview hiện có; khôn
 Mở lại: Chrome → Ctrl+O → chọn `D:\24tn-fitus\project\nba-tickethub\tools\arena-preview\index.html` → F12, bật Device Toolbar và đặt 390 × 844; Ctrl+F5 nếu đang giữ trang cũ. Không cần local server; giữ nguyên các file JS/CSS và thư mục dữ liệu đi kèm.
 
 Chỉ cập nhật `docs/PROGRESS.md`, `docs/AI_LOG.md` trong lượt QA này. Dừng chờ review, không commit/push. Commit đề xuất cho phần ghi nhận QA: `docs: record Phase 4 mobile preview QA`.
+
+
+## Yêu cầu xuất bản main sau 6B — 2026-11-26
+
+Người dùng yêu cầu `push len main`, cho phép commit/push gói source/resource/test/HTML/tài liệu 6A+6B (6B phụ thuộc nền 6A còn local). Giữ nguyên lịch sử điểm dừng trước đó; yêu cầu mới không đồng nghĩa nghiệm thu browser/Samsung. Gói 33 file theo allowlist, loại PDF/công cụ cũ/generated output/cache/bí mật. Kết quả kiểm thử cùng source ở mục 6B; remote được kiểm SHA sau khi push. Tiêu đề README preview và DESIGN cập nhật phản ánh 6B.

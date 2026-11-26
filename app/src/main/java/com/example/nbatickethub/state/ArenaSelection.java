@@ -144,6 +144,17 @@ public final class ArenaSelection {
         recalculate();
     }
     public void clearSelection() { selected.clear(); focusedId = replacingId = null; totalMinor = 0; }
+    /** Validate the complete proposal before mutating any previous selection. */
+    public boolean selectSuggestion(SeatFinder.Suggestion suggestion, java.util.function.Predicate<String> stillAvailable) {
+        if (!game.id.equals(suggestion.matchId) || suggestion.ids.isEmpty()) return false;
+        for (String id : suggestion.ids) {
+            if (!available(id) || !stillAvailable.test(id)) return false;
+        }
+        selected.addAll(suggestion.ids);
+        replacingId = null;
+        preview(suggestion.ids.get(0)); focusedId = candidateId;
+        recalculate(); return true;
+    }
     public void focus(String id) {
         if (!selected.contains(id)) { return; }
         cancelReplace();

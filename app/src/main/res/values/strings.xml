@@ -47,7 +47,7 @@
     <string name="seat_sheet_details">%1$s\n%2$s · %3$s</string>
     <string name="status_selected">◎ Đã chọn</string>
     <string name="available_plain">Ghế trống · Mô phỏng</string>
-    <string name="booked_plain">Đã bán · Không thể chọn</string>
+    <string name="booked_plain">Đã đặt · Không thể chọn</string>
     <string name="locked_plain">Đang khóa · Không thể chọn</string>
     <string name="blocked_seat">Ghế đã bán hoặc bị khóa. Giữ nguyên ghế cũ.</string>
     <string name="duplicate_replacement">Ghế này đã có trong danh sách. Hãy chọn một ghế mới.</string>
@@ -119,5 +119,50 @@
     <string name="browse_team_schedule">Xem lịch %1$s</string>
     <string name="browse_price">Từ %1$s</string>
     <string name="browse_detail_hint">Chọn khu trên toàn sân để xem góc nhìn mô phỏng và vé. Bạn chỉ xác nhận ghế sau khi xem hàng, số ghế và giá.</string>
-    <string name="browse_mock_notice">Lịch, giá và tình trạng vé đều mô phỏng. Chưa đặt vé hoặc thanh toán.</string>
+    <string name="browse_mock_notice">Lịch, giá và tình trạng vé đều mô phỏng. Đặt vé mô phỏng, lưu trên thiết bị này.</string>
+    <string name="booking_continue">Tiếp tục</string>
+    <string name="booking_confirm">Xác nhận đặt vé</string>
+    <string name="booking_simulated">Đặt vé mô phỏng</string>
+    <string name="booking_my_tickets">Vé của tôi</string>
+    <string name="booking_back">Quay lại sơ đồ</string>
+    <string name="booking_view_tickets">Xem vé</string>
+    <string name="booking_order">Mã đơn: %1$s</string>
+    <string name="booking_seat">Khu / Hàng / Ghế: %1$s</string>
+    <string name="booking_total">Tổng tiền: %1$s</string>
+    <string name="booking_empty">Bạn chưa có vé mô phỏng. Chọn trận, chọn ghế và xác nhận để lưu vé trên thiết bị này.</string>
+    <string name="booking_success">Đã lưu đơn mô phỏng trên thiết bị.</string>
+    <string name="booking_saving">Đang lưu đơn…</string>
+    <string name="booking_loading">Đang tải vé…</string>
+    <string name="booking_error">Chưa xác nhận được đơn. Hãy thử lại; cùng yêu cầu sẽ không tạo thêm đơn.</string>
+    <string name="booking_load_error">Không tải được vé. Hãy mở lại Vé của tôi để thử lại.</string>
+    <string name="booking_conflict">Ghế không còn trống (Khu / Hàng / Ghế): %1$s. Chưa lưu đơn này. Quay lại để chọn lại.</string>
+    <string name="booking_reselect">Chọn lại ghế</string>
+    <item name="booking_confirm" type="id" />
+    <string name="finder_title">Gợi ý ghế</string>
+    <string name="finder_priority">Ưu tiên</string>
+    <string name="finder_custom_budget">Đến %1$s USD</string>
+    <item name="finder_people_input" type="id" />
+    <item name="finder_budget_input" type="id" />
+    <item name="finder_search_button" type="id" />
+    <item name="finder_message" type="id" />
+    <item name="finder_results" type="id" />
+    <item name="finder_preview_first" type="id" />
+    <item name="finder_select_first" type="id" />
+    <string name="finder_people">Số người</string>
+    <string name="finder_budget">Ngân sách tối đa mỗi vé (USD)</string>
+    <string name="finder_unlimited">Để trống: mọi giá</string>
+    <string name="finder_price">Giá thấp</string>
+    <string name="finder_court">Gần sân</string>
+    <string name="finder_search">Tìm ghế</string>
+    <string name="finder_close">Thu bảng</string>
+    <string name="finder_hint">Dữ liệu mô phỏng · Chỉnh bộ lọc rồi tìm ghế.</string>
+    <string name="finder_invalid">Nhập số người từ 1 và ngân sách hợp lệ, tối đa 2 chữ số thập phân.</string>
+    <string name="finder_empty">Không có dãy ghế phù hợp. Giữ bộ lọc để bạn chỉnh và tìm lại.</string>
+    <string name="finder_results">Tối đa 3 kết quả · Chạm thẻ để định vị và xem góc nhìn.</string>
+    <string name="finder_reason_price">Ưu tiên tổng giá thấp, trong ngân sách mỗi vé.</string>
+    <string name="finder_reason_court">Ưu tiên khoảng cách hình học từ ghế đến biên sân nhỏ.</string>
+    <string name="finder_reason_group">Cùng khu, cùng hàng và đoạn ghế; không qua lối đi.</string>
+    <string name="finder_select_group">Chọn cả nhóm</string>
+    <string name="finder_conflict">Một ghế đã bận. Giữ nguyên lựa chọn cũ; hãy Tìm ghế lại.</string>
+    <string name="finder_error">Không đọc được tồn kho. Hãy thử lại.</string>
 </resources>

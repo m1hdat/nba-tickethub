@@ -16,6 +16,7 @@ public final class ArenaFilterController {
     private ArenaRenderData data;
     private String levelKey;
     private boolean binding;
+    private long displayedBudget = Long.MIN_VALUE;
 
     public ArenaFilterController(Activity activity, ArenaSelectionViewModel model) {
         this.activity = activity; this.model = model;
@@ -29,7 +30,8 @@ public final class ArenaFilterController {
             @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (data == null || binding) return;
                 String category = new String[]{null, "VIP", "STANDARD", "STANDING"}[types.getSelectedItemPosition()];
-                long budget = new long[]{Long.MAX_VALUE, 10000, 25000, 50000}[budgets.getSelectedItemPosition()];
+                int budgetIndex = budgets.getSelectedItemPosition();
+                long budget = budgetIndex >= 4 ? model.selection.budget() : new long[]{Long.MAX_VALUE, 10000, 25000, 50000}[Math.max(0, budgetIndex)];
                 if (Objects.equals(category, model.selection.category()) && budget == model.selection.budget()) return;
                 model.selection.filterTickets(category, budget); model.changed();
             }
@@ -90,6 +92,16 @@ public final class ArenaFilterController {
         String[] categories = {null, "VIP", "STANDARD", "STANDING"};
         for (int i = 0; i < categories.length; i++) { if (Objects.equals(categories[i], model.selection.category())) types.setSelection(i); }
         long[] limits = {Long.MAX_VALUE, 10000, 25000, 50000};
+        if (displayedBudget != model.selection.budget()) {
+            List<String> labels = new ArrayList<>(Arrays.asList(activity.getString(R.string.all_budgets), activity.getString(R.string.budget_100),
+                    activity.getString(R.string.budget_250), activity.getString(R.string.budget_500)));
+            boolean custom = true;
+            for (long limit : limits) if (limit == model.selection.budget()) custom = false;
+            if (custom) labels.add(activity.getString(R.string.finder_custom_budget, java.math.BigDecimal.valueOf(model.selection.budget(), 2).toPlainString()));
+            budgets.setAdapter(new ArrayAdapter<>(activity, android.R.layout.simple_spinner_dropdown_item, labels));
+            if (custom) budgets.setSelection(4);
+            displayedBudget = model.selection.budget();
+        }
         for (int i = 0; i < limits.length; i++) { if (limits[i] == model.selection.budget()) budgets.setSelection(i); }
         select(levels, model.selection.levelId()); select(sections, model.selection.sectionId());
         binding = false;

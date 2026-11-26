@@ -19,6 +19,7 @@
             <Button android:id="@+id/clear_filter" android:layout_width="48dp" android:layout_height="48dp" android:text="@string/clear_filter_short" android:contentDescription="@string/clear_filter" android:padding="0dp" />
             <Button android:id="@+id/reset_view" android:layout_width="80dp" android:layout_height="48dp" android:text="@string/reset_view" android:padding="0dp" android:textSize="12sp" />
         </LinearLayout>
+        <Button android:id="@+id/suggest_seats" android:layout_width="match_parent" android:layout_height="48dp" android:text="@string/finder_title" />
         <TextView android:id="@+id/preview_status" android:layout_width="match_parent" android:layout_height="28dp" android:textSize="11sp" android:paddingHorizontal="12dp" android:textColor="@color/preview_text" android:accessibilityLiveRegion="polite" />
         <TextView android:id="@+id/status_legend" android:layout_width="match_parent" android:layout_height="28dp" android:textSize="11sp" android:paddingHorizontal="12dp" android:textColor="@color/preview_text" />
         <TextView android:id="@+id/tier_legend" android:layout_width="match_parent" android:layout_height="wrap_content" android:visibility="gone" />
@@ -29,6 +30,7 @@
                     <TextView android:id="@+id/selection_summary" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:textSize="15sp" android:textStyle="bold" android:textColor="#10283F" />
                     <Button android:id="@+id/cancel_change" android:layout_width="wrap_content" android:layout_height="48dp" android:text="@string/cancel_change" android:visibility="gone" android:textSize="12sp" />
                     <Button android:id="@+id/toggle_sheet" android:layout_width="wrap_content" android:layout_height="48dp" android:text="@string/details" android:textSize="12sp" />
+                    <Button android:id="@+id/booking_continue" android:layout_width="96dp" android:layout_height="48dp" android:text="@string/booking_continue" android:textSize="12sp" android:visibility="gone" android:enabled="false" />
                 </LinearLayout>
                 <LinearLayout android:id="@+id/ticket_body" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="vertical">
                 <ListView android:id="@+id/selected_list" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:dividerHeight="1dp" android:background="#FFFFFF" android:contentDescription="@string/section_tickets" />

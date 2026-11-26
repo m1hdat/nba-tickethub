@@ -37,10 +37,14 @@
                 <Button android:id="@+id/detail_choose_seats" android:layout_width="wrap_content" android:layout_height="56dp" android:minWidth="144dp" android:text="@string/browse_choose_seats" android:backgroundTint="@color/browse_accent" android:textColor="@color/browse_background" />
             </LinearLayout>
         </LinearLayout>
+        <ScrollView android:id="@+id/my_tickets" android:layout_width="match_parent" android:layout_height="match_parent" android:visibility="gone">
+            <LinearLayout android:id="@+id/my_tickets_list" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp" />
+        </ScrollView>
     </FrameLayout>
     <LinearLayout android:id="@+id/browse_nav" android:layout_width="match_parent" android:layout_height="64dp" android:gravity="center_vertical" android:background="@color/browse_surface">
         <Button android:id="@+id/nav_home" style="@style/BrowseNav" android:text="@string/nav_home" />
         <Button android:id="@+id/nav_schedule" style="@style/BrowseNav" android:text="@string/nav_schedule" />
         <Button android:id="@+id/nav_teams" style="@style/BrowseNav" android:text="@string/nav_teams" />
+        <Button android:id="@+id/nav_tickets" style="@style/BrowseNav" android:text="@string/booking_my_tickets" />
     </LinearLayout>
 </LinearLayout>

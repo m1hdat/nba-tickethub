@@ -11,15 +11,17 @@ const html=fs.readFileSync(path.join(here,'index.html'),'utf8');
 for(const [,id] of html.matchAll(/\bid="([^"]+)"/g))elements.set(id,new Element(id));
 let sandbox;
 const document={getElementById:id=>{assert.ok(elements.has(id),'Missing DOM: '+id);return elements.get(id);},createElement:tag=>new Element(tag),documentElement:new Element('root'),head:{append(script){vm.runInContext(fs.readFileSync(path.resolve(here,script.src),'utf8'),sandbox);script.onload();}}};
-const window={document,devicePixelRatio:1,innerHeight:800,addEventListener(){},dispatchEvent(){},setTimeout:()=>0,clearTimeout(){}};
+const storage=new Map();
+const window={localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},document,devicePixelRatio:1,innerHeight:800,addEventListener(){},dispatchEvent(){},setTimeout:()=>0,clearTimeout(){}};
 sandbox=vm.createContext({window,document,console,Intl,Math,Number,Map,Set,Promise,Event:class{},Image:class{},requestAnimationFrame:f=>frames.push(f),Path2D:class{moveTo(){}lineTo(){}closePath(){}ellipse(){}arc(){}addPath(){}}});
-for(const file of ['source-data.js','team-logos.js','arena-renderer.js','selection-model.js','seat-perspective.js','match-list.js','mobile.js'])vm.runInContext(fs.readFileSync(path.join(here,file),'utf8'),sandbox,{filename:file});
+for(const file of ['source-data.js','team-logos.js','arena-renderer.js','selection-model.js','seat-perspective.js','match-list.js','booking-store.js','seat-finder.js','mobile.js'])vm.runInContext(fs.readFileSync(path.join(here,file),'utf8'),sandbox,{filename:file});
 const source=window.MobileArenaSource,$=id=>elements.get(id),app=window.MobilePreview,plain=v=>JSON.parse(JSON.stringify(v));
 function flush(){let count=0;while(frames.length){assert.ok(count++<100);frames.shift()();}}
 function payload(id){const text=fs.readFileSync(path.resolve(here,source.games.find(g=>g.arenaId===id).dataScript),'utf8');return JSON.parse(text.slice('window.ArenaPreviewData.receive('.length,-2));}
 (async()=>{
  assert.equal(source.games.length,33);assert.equal(new Set(source.games.map(g=>g.homeTeamId)).size,30);
  assert.equal(app.state().route,'home');assert.equal($('team-grid').children.length,30);
+ app.navigate('tickets');assert.ok($('my-tickets').children[0].textContent.includes('chưa có vé'));app.navigate('home');
  for(const team of source.themes){assert.ok(fs.existsSync(path.resolve(here,team.teamBadgeUrl)));assert.ok(!team.logoImage||Array.isArray(team.logoImage.bounds),'Poster marks must not overwrite the court logo contract');}
  assert.equal($('featured-match').children[0].dataset.matchId,'sample-nyk-bos');
  $('featured-match').children[0].click();assert.equal(app.state().route,'detail');assert.equal(app.state().detailMatchId,'sample-nyk-bos');
@@ -56,5 +58,60 @@ function payload(id){const text=fs.readFileSync(path.resolve(here,source.games.f
  $('type-filter').value='VIP';$('type-filter').listeners.get('change')();flush();
  const saved={...app.state().camera};await app.selectGame(source.games[1].id);flush();assert.equal(app.state().browsing,section.id);assert.equal($('type-filter').value,'VIP');assert.equal(app.state().selected.length,0);assert.deepEqual(plain(app.state().camera),saved);
  await app.selectGame(source.games[2].id);flush();assert.equal(app.state().arenaId,'chase');assert.equal(app.state().homeTeamId,'gsw');assert.equal(app.state().browsing,null);assert.equal(app.state().camera.scale,app.state().camera.min);
- console.log('PASS: Phase 5 home/detail/direct CTA/30 teams/away arena/back/scroll; 33 relative games / 30 themes; calendar filters; preview-confirm-blocked; overview/list/fullscreen; same-arena camera/filter; new-arena reset. DOM/Canvas doubles only.');
+ // Phase 6A: run the actual preview buttons and retain localStorage across reloading its store module.
+ await app.selectGame(source.games[0].id);flush();
+ app.inspectAt(section.labelPoint[0]*app.state().camera.scale+app.state().camera.x,section.labelPoint[1]*app.state().camera.scale+app.state().camera.y);flush();
+ $('selected-list').children[index].children[0].click();$('toggle-seat').click();flush();
+ const selected=plain(app.state().selected);assert.equal(selected.length,1);
+ $('booking-continue').click();assert.equal($('booking-dialog').open,true);$('booking-back').click();assert.deepEqual(plain(app.state().selected),selected);
+ $('booking-continue').click();await Promise.all([app.confirmBooking(),app.confirmBooking()]);flush();
+ assert.equal(window.PreviewBookings.list().length,1);assert.equal(app.state().selected.length,0);assert.ok($('booking-message').textContent.includes('Mã đơn'));
+ $('booking-confirm').click();assert.equal(app.state().route,'tickets');assert.equal($('my-tickets').children.length,1);
+ const order=window.PreviewBookings.list()[0];
+ vm.runInContext(fs.readFileSync(path.join(here,'booking-store.js'),'utf8'),sandbox);
+ assert.equal(window.PreviewBookings.list()[0].id,order.id);
+ const reloaded=new window.PreviewSelection(raw,source.games[0]);assert.equal(reloaded.info(selected[0]).status,1);
+ const freeIds=raw.seats.map(s=>s[0]).filter(id=>reloaded.info(id).status===0).slice(0,2);
+ const partial={...order,id:'SIM-partial',tickets:[{seatId:freeIds[0],label:'free'},{seatId:selected[0],label:'busy'}]};
+ assert.throws(()=>window.PreviewBookings.save(partial,id=>reloaded.info(id)),/busy/);assert.equal(window.PreviewBookings.list().length,1);assert.equal(reloaded.info(freeIds[0]).status,0);
+ const sameSeat=raw.seats.map(s=>s[0]).find(id=>reloaded.info(id).status===0&&second.info(id).status===0);
+ window.PreviewBookings.save({...order,id:'SIM-a',tickets:[{seatId:sameSeat}]},id=>reloaded.info(id));
+ window.PreviewBookings.save({...order,id:'SIM-b',matchId:source.games[1].id,tickets:[{seatId:sameSeat}]},id=>second.info(id));
+ assert.equal(window.PreviewBookings.list().length,3);
+ // 6B: run the shared panel with actual exported geometry and recheck competing bookings.
+ await app.selectGame(source.games[0].id);flush();
+ app.openFinder();$('finder-people').value='3';$('finder-budget').value='500';
+ const groups=app.findSeats();assert.equal(groups.length,3);assert.equal(groups[0].ids.length,3);
+ const m=new window.PreviewSelection(raw,source.games[0]);
+ for(const group of groups){
+   assert.equal(group.total,group.ids.reduce((v,id)=>v+m.info(id).priceMinor,0));
+   const row=raw.seats[m.indices.get(group.ids[0])][1];
+   for(let i=0;i<group.ids.length;i++){
+     const seat=raw.seats[m.indices.get(group.ids[i])];assert.equal(seat[1],row);assert.equal(m.info(seat[0]).status,0);
+     if(i)assert.ok(window.SeatFinder.adjacent(m,raw.seats[m.indices.get(group.ids[i-1])],seat));
+   }
+ }
+ const firstCard=$('finder-results').children[0];firstCard.children[0].click();flush();assert.equal($('view-dialog').open,true);assert.equal(app.state().candidate,groups[0].ids[0]);$('close-view').click();
+ firstCard.children[3].click();flush();assert.equal(app.state().selected.length,3);assert.equal($('finder-panel').hidden,true);
+ $('booking-continue').click();assert.equal($('booking-dialog').open,true);assert.equal($('booking-content').children[0].children.length>0,true);$('booking-back').click();
+ app.openFinder();$('finder-people').value='1';$('finder-budget').value='';$('finder-priority').value='price';
+ const cheap=app.findSeats();assert.equal(cheap.length,3);assert.ok(cheap[0].total<=cheap[1].total);
+ $('finder-priority').value='court';const near=app.findSeats();assert.ok(near[0].distance<=cheap[0].distance);assert.ok(near[0].distance<=near[1].distance);
+ // Even consecutive seat numbers cannot cross a geometrically missing slot.
+ const a=raw.seats[0],third=raw.seats[2],gap=[a[0]+':gap',a[1],0,third[3]];
+ assert.equal(window.SeatFinder.adjacent(m,a,gap),false);
+ const otherSection=raw.seats.find(s=>m.info(s[0]).sectionId!==m.info(a[0]).sectionId);assert.equal(window.SeatFinder.adjacent(m,a,otherSection),false);
+ const previous=plain(app.state().selected);
+ app.openFinder();$('finder-people').value='3';const proposal=app.findSeats()[0],button=$('finder-results').children[0].children[3];
+ window.PreviewBookings.save({...order,id:'SIM-finder-conflict',matchId:source.games[0].id,tickets:[{seatId:proposal.ids[1]}]},id=>m.info(id));
+ button.click();assert.deepEqual(plain(app.state().selected),previous);assert.ok($('finder-message').textContent.includes('Giữ nguyên'));
+ assert.ok(app.findSeats().every(g=>!g.ids.includes(proposal.ids[1])));
+ $('finder-budget').value='0';assert.equal(app.findSeats().length,0);assert.equal($('finder-budget').value,'0');assert.equal($('finder-people').value,'3');
+ $('finder-budget').value='';$('finder-people').value='1000';assert.equal(app.findSeats().length,0);
+ $('finder-people').value='1.5';assert.equal(app.findSeats().length,0);
+ const nextModel=new window.PreviewSelection(raw,source.games[1]);
+ const q={people:3,budget:Infinity,priority:'price'};
+ const otherGroups=window.SeatFinder.search(nextModel,q);assert.ok(otherGroups.length);assert.ok(otherGroups.every(g=>g.matchId===source.games[1].id&&g.ids.every(id=>nextModel.info(id).status===0)));
+ assert.equal(window.SeatFinder.select(nextModel,proposal),false);
+ console.log('PASS: Phase 4–6A regression and 6B price/court, 3 seats, aisle geometry, totals, preview, atomic conflict, empty/invalid and independent matches. DOM/Canvas/storage doubles only.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

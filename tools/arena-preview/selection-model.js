@@ -21,7 +21,7 @@
             const info={id, index: this.indices.get(id), sectionId: section.id, sectionCode: section.code,
                 levelId: level.id, levelOrder: level.order, rowOrder: Number(row[0].match(/:R(\d+)$/)[1]),
                 rowLabel: row[0].match(/:R\d+$/)[0].slice(1), number: Number(id.match(/:S(\d+)$/)[1]),
-                status: bucket<8?2:bucket<26?1:0, kind:section.category==='STANDING'?'STANDING':mod(rotated^hash(id),7)===0?'VIP':section.category, currency: section.currencyCode,
+                status: window.PreviewBookings?.booked(this.game.id,id)?1:bucket<8?2:bucket<26?1:0, kind:section.category==='STANDING'?'STANDING':mod(rotated^hash(id),7)===0?'VIP':section.category, currency: section.currencyCode,
                 // Same integer half-up rule as MockArenaJsonReader, using existing mock manifest prices.
                 priceMinor: Math.floor((Math.floor((section.mockBasePriceMinor * this.game.priceFactorPercent + 50) / 100)*(85+mod(salt,56))+50)/100)};
             this.infoCache.set(id,info);return info;

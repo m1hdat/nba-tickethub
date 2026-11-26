@@ -11,6 +11,8 @@ public final class ArenaSelectionViewModel extends ViewModel {
     public int matchListScroll;
     public java.util.List<com.example.nbatickethub.model.Game> sampleGames;
     public final ArenaSelection selection = new ArenaSelection();
+    public boolean finderOpen;
+    public final java.util.Map<String, String> finderDraft = new java.util.HashMap<>();
     private final MutableLiveData<Integer> revision = new MutableLiveData<>(0);
     public String arenaId, themeId, cameraArenaId;
     public float[] camera;

@@ -178,7 +178,7 @@ public final class SeatSheetController {
             list.post(() -> restoring = false);
         }
     }
-    private void openLargePreview() {
+    public void openLargePreview() {
         if (data == null || model.selection.representative() == null) { return; }
         largePreview = new Dialog(activity, android.R.style.Theme_Material_Light_NoActionBar_Fullscreen);
         LinearLayout content = new LinearLayout(activity); content.setOrientation(LinearLayout.VERTICAL); content.setBackgroundColor(0xff10283f);

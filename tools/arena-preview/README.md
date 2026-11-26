@@ -1,4 +1,4 @@
-# NBA TicketHub · Preview Phase 5
+# NBA TicketHub · Preview Phase 6B
 
 **Hướng dẫn hiện hành — 2026-11-26.** Các mục bên dưới giữ mô tả bản cũ để đối chiếu; kết quả mới nằm tại PROGRESS.
 
@@ -19,9 +19,9 @@ Exporter dùng JAVA_HOME hoặc JDK đi kèm Android Studio tại `C:/Program Fi
 3. Đội bóng: 30 đội. Chọn Knicks thấy cả nhà/khách và ngoài 7 ngày. NYK @ BOS phải vào sân/theme Boston. So BOS @ NYK và LAL @ GSW để duyệt hai nhận diện.
 4. Đổi BOS @ NYK → MIA @ NYK giữ khu/lọc/camera, xóa ghế cũ và tải giá/vé mới. Đổi sân vừa khung; thu/mở sheet không tự zoom.
 
-33 trận dùng ngày tương đối khi mở trang; lịch/giá/trạng thái vé đều mô phỏng. Chưa có đặt vé/thanh toán. Android dùng Java/Views/Canvas; HTML là bản duyệt, không nhúng bằng WebView.
+33 trận dùng ngày tương đối khi mở trang; lịch/giá/trạng thái vé đều mô phỏng. Có đặt vé mô phỏng cục bộ theo mục 6A cuối trang; không thanh toán thật. Android dùng Java/Views/Canvas; HTML là bản duyệt, không nhúng bằng WebView.
 
-`node tools/arena-preview/test-preview.cjs` dùng DOM/Canvas doubles và payload sân để kiểm logic, không thay QA pixel. Kết quả Chrome 390px/emulator và giới hạn Samsung ở `docs/PROGRESS.md`, mục Phase 5 ngày 2026-11-26. Chờ người dùng review.
+`node tools/arena-preview/test-preview.cjs` dùng DOM/Canvas doubles và payload sân để kiểm logic, không thay QA pixel. Kết quả Chrome 390px/emulator và giới hạn Samsung ở `docs/PROGRESS.md`, mục Phase 6A ngày 2026-11-26. Chờ người dùng review.
 
 ## Mô tả lịch sử Mobile Arena Lab
 
@@ -43,3 +43,24 @@ Mở `index.html` trực tiếp bằng Chrome/Edge (giữ các JS/CSS và `../..
 Thử BOS @ NYK → chạm vùng hoặc nhãn khu từ toàn cảnh → xem ảnh/vé → chạm vé → Chọn ghế. Đổi ghế giữ ghế cũ đến xác nhận; ghế bán/khóa chỉ được xem. Đổi sang MIA @ NYK giữ khu/lọc/camera, xóa ghế cũ; sang Warriors mở toàn sân và đổi theme. Có lọc loại/ngân sách, góc nhìn 16:9/fullscreen và tiện ích tìm khu thấp/cao cho QA. Toàn bộ 31 trận, giá và trạng thái là dữ liệu mẫu.
 
 `node tools/arena-preview/test-preview.cjs` kiểm state/luồng với dữ liệu hình học thật của prototype và DOM/Canvas doubles; không chứng minh pixel hoặc runtime Android. Browser host của phiên này không khả dụng, nên cần người dùng QA trực quan ở 360–412px. Chưa nghiệm thu HTML/Android pixel parity.
+
+
+## Phase 6A — đặt vé mô phỏng
+
+Mở trực tiếp `D:\24tn-fitus\project\nba-tickethub\tools\arena-preview\index.html` bằng Ctrl+O trong Chrome/Edge, Ctrl+F5. Không cần server, giữ toàn bộ JS/CSS và payload/logo tại vị trí đang có. Chọn trận → khu → ghế trống → Chọn ghế → Tiếp tục → Xác nhận đặt vé → Xem vé. Quay lại xác nhận giữ ghế; tab Vé của tôi lưu snapshot trên localStorage của trình duyệt này và vẫn còn sau reload. Android dùng SQLite riêng, không đồng bộ preview.
+
+Tất cả đơn/vé/giá/tồn kho là mô phỏng. Không thanh toán thật. Web Locks tuần tự hóa tab khi trình duyệt hỗ trợ; fallback localStorage chỉ bảo đảm cả snapshot trong một lần ghi, chưa có bảo đảm cạnh tranh nhiều tab. Không xóa storage nếu muốn giữ đơn demo. Mã đơn chỉ xuất hiện ở thẻ preview trước xác nhận là mã yêu cầu dự kiến; chỉ được lưu sau khi xác nhận thành công.
+
+Kiểm tra logic: `node tools/arena-preview/test-preview.cjs`. Đây là test doubles, tách biệt với QA UI thật.
+
+
+## Phase 6B — bảng Gợi ý ghế
+
+Mở trực tiếp `D:\24tn-fitus\project\nba-tickethub\tools\arena-preview\index.html` bằng Edge/Chrome (Ctrl+O rồi chọn file). Nhấn Ctrl+F5 nếu đang mở bản 6A; giữ nguyên JS/CSS và thư mục `preview/arena-data` của repo. Không cần server hoặc npm.
+
+1. Chọn một trận → Chọn ghế → Gợi ý ghế. Bảng lấy ngân sách/loại/tầng/khu của sơ đồ làm giá trị đầu.
+2. Nhập 1 hoặc 3 người; để ngân sách trống cho mọi giá hoặc nhập USD mỗi vé. Chọn khu/tầng, Giá thấp/Gần sân rồi Tìm ghế.
+3. Mỗi kết quả có giá từng vé, tổng và lý do. Chạm thẻ xem highlight/góc nhìn mô phỏng; đóng góc nhìn rồi Chọn cả nhóm. Tiếp tục dùng checkout 6A.
+4. Thử ngân sách 0, nhóm lớn hơn số ghế một hàng và đổi khu/tầng: bảng giữ truy vấn khi rỗng. Đổi BOS@NYK/MIA@NYK cùng MSG để thử tồn kho riêng.
+
+`node tools/arena-preview/test-preview.cjs` kiểm hồi quy 4–6A cùng các ca 6B bằng DOM/Canvas/storage doubles. Các test không chứng minh pixel browser hoặc Android; bằng chứng thực tế xem PROGRESS mục 6B. Toàn bộ ghế/giá/booking là mô phỏng.

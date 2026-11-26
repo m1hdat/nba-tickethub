@@ -23,6 +23,8 @@ public final class BrowseController {
     private final Consumer<Game> seats;
     private final Runnable beforeNavigate, refreshCalendar;
     private BrowseNavigation.Page lastPage;
+    private Runnable ticketsAction = () -> { };
+    public void setTicketsAction(Runnable action) { ticketsAction = action; }
 
     public BrowseController(Activity activity, ArenaSelectionViewModel model, ArenaCatalog catalog,
                             ArenaPreviewLoader loader, List<Game> games, Consumer<Game> seats,
@@ -33,6 +35,7 @@ public final class BrowseController {
         activity.findViewById(R.id.nav_home).setOnClickListener(v -> tab(HOME));
         activity.findViewById(R.id.nav_schedule).setOnClickListener(v -> tab(SCHEDULE));
         activity.findViewById(R.id.nav_teams).setOnClickListener(v -> tab(TEAMS));
+        activity.findViewById(R.id.nav_tickets).setOnClickListener(v -> tab(TICKETS));
         activity.findViewById(R.id.browse_all_matches).setOnClickListener(v -> tab(SCHEDULE));
         activity.findViewById(R.id.detail_back).setOnClickListener(v -> back());
         activity.findViewById(R.id.detail_choose_seats).setOnClickListener(v -> {
@@ -63,10 +66,12 @@ public final class BrowseController {
         visible(R.id.browse_home, n.page == HOME);
         visible(R.id.game_picker, n.page == SCHEDULE);
         visible(R.id.browse_teams, n.page == TEAMS);
+        visible(R.id.my_tickets, n.page == TICKETS);
+        if (n.page == TICKETS) ticketsAction.run();
         visible(R.id.browse_detail, n.page == DETAIL);
         visible(R.id.browse_nav, n.page != DETAIL);
-        int[] ids = {R.id.nav_home, R.id.nav_schedule, R.id.nav_teams};
-        BrowseNavigation.Page[] pages = {HOME, SCHEDULE, TEAMS};
+        int[] ids = {R.id.nav_home, R.id.nav_schedule, R.id.nav_teams, R.id.nav_tickets};
+        BrowseNavigation.Page[] pages = {HOME, SCHEDULE, TEAMS, TICKETS};
         for (int i = 0; i < ids.length; i++) {
             Button button = activity.findViewById(ids[i]); button.setSelected(n.page == pages[i]);
             button.setTextColor(activity.getColor(n.page == pages[i] ? R.color.browse_accent : R.color.browse_muted));
@@ -77,7 +82,7 @@ public final class BrowseController {
         if (n.page == DETAIL) { renderDetail(game(n.detailMatchId)); restore(R.id.detail_scroll, n.detailScroll); }
         if (lastPage != null && lastPage != n.page && n.page != ARENA) {
             int active = n.page == HOME ? R.id.browse_home : n.page == TEAMS ? R.id.browse_teams
-                    : n.page == DETAIL ? R.id.browse_detail : R.id.game_picker;
+                    : n.page == DETAIL ? R.id.browse_detail : n.page == TICKETS ? R.id.my_tickets : R.id.game_picker;
             View page = activity.findViewById(active);
             page.animate().cancel(); page.setAlpha(0f); page.animate().alpha(1f).setDuration(140).start();
         }

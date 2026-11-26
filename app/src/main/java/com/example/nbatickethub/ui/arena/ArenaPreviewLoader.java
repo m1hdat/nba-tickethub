@@ -12,6 +12,7 @@ import java.util.concurrent.*;
 public final class ArenaPreviewLoader implements AutoCloseable {
     public interface Callback<T> { void complete(T value, Exception error); }
     private final AssetSource assets;
+    private android.content.Context context;
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
     private final Handler main = new Handler(Looper.getMainLooper());
     private Future<?> pending;
@@ -22,6 +23,9 @@ public final class ArenaPreviewLoader implements AutoCloseable {
     private volatile java.util.Map<String, CourtRenderData> courts = java.util.Collections.emptyMap();
 
     public ArenaPreviewLoader(AssetSource assets) { this.assets = assets; }
+    public ArenaPreviewLoader(AssetSource assets, android.content.Context context) {
+        this.assets = assets; this.context = context.getApplicationContext();
+    }
 
     public void catalog(Callback<ArenaCatalog> callback) {
         submit(() -> {
@@ -70,6 +74,9 @@ public final class ArenaPreviewLoader implements AutoCloseable {
             try { dataset = new MockArenaRepository(assets).load(profile.dataAsset); }
             finally { android.os.Trace.endSection(); }
             if (match != null) { dataset = com.example.nbatickethub.data.mock.MockMatchSchedule.inventory(dataset, match, catalog); }
+            if (match != null && context != null) {
+                try (BookingStore store = new BookingStore(context)) { dataset = store.overlay(dataset, match); }
+            }
             long loaded = android.os.SystemClock.elapsedRealtime();
             com.example.nbatickethub.geometry.ArenaScene scene;
             android.os.Trace.beginSection("Arena.project");

@@ -2,7 +2,7 @@ package com.example.nbatickethub.state;
 
 /** Browse stack is separate from seat state: returning never rebinds a different match. */
 public final class BrowseNavigation {
-    public enum Page { HOME, SCHEDULE, TEAMS, DETAIL, ARENA }
+    public enum Page { HOME, SCHEDULE, TEAMS, TICKETS, DETAIL, ARENA }
     public Page page = Page.HOME;
     public Page detailOrigin = Page.HOME;
     public Page arenaOrigin = Page.HOME;
@@ -10,7 +10,7 @@ public final class BrowseNavigation {
     public int homeScroll, teamsScroll, detailScroll;
 
     public void tab(Page target) {
-        if (target != Page.HOME && target != Page.SCHEDULE && target != Page.TEAMS) {
+        if (target != Page.HOME && target != Page.SCHEDULE && target != Page.TEAMS && target != Page.TICKETS) {
             throw new IllegalArgumentException("Not a tab");
         }
         page = target;

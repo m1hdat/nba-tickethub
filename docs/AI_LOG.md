@@ -1121,3 +1121,133 @@ thực tế. Báo ngắn, dừng để tôi duyệt. Không commit hoặc push.
 - AI thực hiện: phục hồi thao tác Chrome bằng cửa sổ Guest sau khi browser connector không khả dụng; mở file trực tiếp và đặt viewport 390×844. Kiểm tra các bộ lọc độc lập/kết hợp và xóa lọc; chọn L05 từ toàn sân, preview/confirm R1 ghế 9 rồi đổi sang ghế 10, thu/mở sheet; đổi BOS@NYK sang MIA@NYK cùng MSG; so góc nhìn U12 và L05. Không phát hiện lỗi cần sửa code; giữ toàn bộ thay đổi có sẵn. Một số thao tác AX trong emulation không trúng hoặc nhập ngày chưa thành công; chuyển sang tọa độ từ ảnh mới và chọn trên lịch native, sau đó quan sát kết quả thực tế. Không tính thao tác thất bại là lỗi ứng dụng hoặc ca đã qua.
 - Kiểm chứng: các kết quả Chrome, giá 86,25/91,50 US$, lựa chọn cũ bị xóa khi đổi trận và giới hạn được ghi tại PROGRESS mục QA HTML Phase 4 ngày 2026-11-26. Node integration PASS cho 33 trận/30 theme, cú pháp hai JS và diff check đạt. Test host dùng doubles, tách biệt với QA Chrome. Không chạy Gradle hoặc Android connected tests trong lượt chỉ QA HTML này.
 - File thay đổi trong lượt: docs/PROGRESS.md và docs/AI_LOG.md. Không stage/commit/push. Người dùng giao nhiệm vụ, chưa xác nhận đã tự review/kiểm thử/nghiệm thu; dừng chờ duyệt. Không tiếp tục Discover/Teams/booking.
+
+
+## 2026-11-26 — Phase 6A đặt vé mô phỏng
+
+- Công cụ: Codex (GPT-6 theo cấu hình phiên), Gradle Wrapper/JUnit/Espresso trên emulator, Node, Computer Use điều khiển Edge. Thời điểm ghi nhận theo ngày máy Asia/Saigon; không tự gán giờ cho prompt.
+- Prompt thực tế:
+
+```text
+Tiếp tục Phase 6 từ trạng thái hiện tại. Phase 4–5 đã push lên main
+(commit 88c511a). Tái sử dụng phần đã đọc, kiểm tra git status và
+làm đúng 6A trên Android. Dùng lại luồng chọn trận, chọn ghế và theme
+đội nhà hiện có.
+
+1. Xác nhận đặt vé
+- Nút “Tiếp tục” mở màn xác nhận khi đã chọn ghế. Hiện cặp đấu,
+  giờ, sân, khu/hàng/số ghế, giá từng vé và tổng tiền.
+- Gắn nhãn “Đặt vé mô phỏng”. Quay lại sơ đồ vẫn giữ ghế đã chọn.
+- Khi bấm “Xác nhận đặt vé”, kiểm tra tất cả ghế còn trống trong
+  đúng matchId. Nếu ghế bận, báo rõ ghế nào và cho chọn lại.
+- Lưu cả đơn hoặc không lưu gì. Chặn bấm đúp và kiểm tra trùng
+  theo matchId + seatId ở tầng lưu trữ để không thể đặt trùng.
+  Tái sử dụng cơ chế lưu cục bộ hiện có nếu phù hợp.
+
+2. Vé của tôi
+- Sau khi đặt, hiện mã đơn và nút “Xem vé”. Thêm “Vé của tôi”
+  vào điều hướng, có trạng thái trống dễ hiểu.
+- Hiện thông tin trận, ghế và giá đã chốt lúc đặt. Đóng rồi
+  mở app vẫn thấy vé. Quay lại sơ đồ, ghế đó hiện “Đã đặt”
+  và không chọn lại được. Trận khác cùng sân có tồn kho riêng.
+- Giữ style Phase 5: màu đội nhà, thẻ vé gọn, tổng tiền và
+  nút xác nhận nổi bật.
+
+3. Kiểm thử và bàn giao
+- Chạy build và test cho đặt thành công, bấm xác nhận hai lần,
+  đơn nhiều ghế có một ghế bận, lưu/mở lại và hai trận cùng sân.
+- Cập nhật index.html preview hiện có để tôi bấm thử luồng 6A.
+  Gắn nhãn mô phỏng và gửi đúng đường dẫn/cách mở.
+- Cập nhật PROGRESS.md và AI_LOG.md theo kết quả thật. Ghi rõ
+  phần chưa thử trên Samsung.
+
+Dừng ở 6A. Không làm 6B, thanh toán thật, tài khoản hay backend.
+Không tự commit hoặc push.
+```
+
+- Mục đích: thực hiện đúng 6A từ HEAD 88c511a, bảo vệ nguyên tử/chống trùng ở storage, snapshot bền vững và preview dùng thử.
+- AI thực hiện: kiểm status/tài liệu, tái dùng Java Views/Canvas/selection/home theme; tạo BookingStore/BookingViewModel/BookingController, nối tab/CTA và overlay inventory; viết/chạy test, sửa lỗi UI phát hiện khi hồi quy/ảnh, cập nhật HTML/storage mô phỏng và tài liệu. Không dependency/toolchain mới. Không stage/commit/push. File tạo/sửa liệt kê tại PROGRESS mục 6A.
+- Kiểm chứng: kết quả/lỗi/hạn chế cụ thể ở PROGRESS mục 6A và phần kết quả cuối sẽ được bổ sung cùng bằng chứng thực tế. Sáu test SQLite thật đạt, UI 411/360 đã có lượt đạt, hồi quy 360 phát hiện danh sách vé quá thấp do CTA mới; đã sửa bố trí summary và chạy lại. Browser thật kiểm back, double click, thẻ lưu và reload; Node chỉ test doubles. PowerShell Stop từng coi cảnh báo deprecated Java là terminating error; XML test 360 vẫn báo PASS, đã sửa script QA dùng exit code rõ ràng. Không che lỗi test bằng bỏ assertion.
+- Người dùng: đã giao phạm vi/tiêu chí; chưa xác nhận đã đọc, hiểu, tự review/kiểm thử hoặc nghiệm thu. Chưa thử Samsung thật. Không có xác nhận được ghi thay người dùng; dừng 6A để review.
+
+### Bổ sung kết quả cuối của cùng nhiệm vụ 6A
+
+- Bản cuối: Gradle BUILD SUCCESSFUL 1m20s; 81 JVM tests đạt, lint 0 errors/68 warnings; 6 SQLite tests đạt. Ở 360dp: 2 UI PhaseSix + 3 PhaseFour + 2 PhaseFive đạt, XML đều 0 failures/errors/skipped. Tổng 13 Android tests distinct; giữ bằng chứng phiên bản trung gian riêng. Các lệnh/log/XML/ảnh/hash APK được ghi trong PROGRESS mục Kết quả cuối 6A.
+- AI sửa lỗi fit thật do footer mới bằng đưa Tiếp tục vào summary sheet, giữ nguyên assertion list ≥48dp. Bổ sung ca UI tranh chấp ghế thực với helper thứ hai; kiểm không thêm đơn và ghế còn trống không bị mất. Chờ layout CTA sau đổi visibility trong setup test, thêm kiểm CTA ≥47dp. Sửa tương phản heading Vé của tôi qua resource màu; xem ảnh bản cuối 360dp xác nhận cảnh báo xung đột/thẻ/chữ rõ.
+- Browser Edge bấm thật preview sau sửa sheet: chọn L05/R1/9 giá 86,25 US$, back giữ selection; double-click xác nhận chỉ có một thẻ; reload vẫn thấy snapshot cũ. Node bổ sung empty-state và giữ test logic riêng với UI thật. Không làm bước kiểm Android nào bằng HTML.
+- PowerShell lượt cuối trả exit code 1 do cảnh báo deprecated Java ở stderr; log Gradle SUCCESSFUL và XML 81 JVM/6 storage đạt, đã phân biệt trong PROGRESS. Script QA đã dùng exit code cho các lượt hồi quy thành công và finally khôi phục size; ADB xác minh 1080×2400/420dpi.
+- Kiểm diff/resources/HTML dependencies và staged=0; không đổi assets, không commit/push. Chưa thử Samsung, FPS/heap/GPU/font scale lớn hoặc process death của draft. Người dùng chưa xác nhận review/nghiệm thu; kết thúc nhiệm vụ tại 6A.
+
+
+## 2026-11-26 — Phase 6B: một bảng Gợi ý ghế cho đơn/nhóm
+
+- Công cụ/model: Codex, GPT-6 theo cấu hình phiên. Ngày theo môi trường Asia/Saigon; đã kiểm đồng hồ máy lúc 18:25:17 +07:00 trong quá trình làm, không suy diễn giờ bắt đầu.
+- Prompt thực tế của người dùng (yêu cầu cuối bổ sung ngay trong cùng thông điệp):
+
+```text
+Đọc AGENTS.md, kiểm tra git status và triển khai Phase 6B cho
+NBA TicketHub. Tái sử dụng dữ liệu ghế, ArenaView, bộ lọc và luồng
+đặt vé 6A. Sơ đồ tiếp tục vẽ bằng Android Canvas.
+
+1. Gợi ý ghế
+- Thêm nút “Gợi ý ghế” trên màn chọn ghế. Cho nhập ngân sách mỗi vé
+  và chọn ưu tiên “Gần sân” hoặc “Giá thấp”.
+- Hiện tối đa 3 kết quả còn trống của đúng trận, thỏa ngân sách.
+  Mỗi thẻ có khu/hàng/ghế, giá và lý do ngắn. Ưu tiên gần sân dựa
+  vào hình học hiện có. Bấm thẻ để làm nổi ghế và xem góc nhìn.
+
+2. Tìm ghế nhóm
+- Cho chọn số người và tìm đủ N ghế trống liền nhau trong cùng
+  khu, cùng hàng, cùng đoạn giữa hai lối đi. Dãy số ghế liên tiếp
+  chưa đủ để kết luận liền kề. Dùng dữ liệu bố cục ghế hiện có.
+- Hiện giá từng ghế và tổng tiền. Nút “Chọn cả nhóm” đưa đủ N ghế
+  vào lựa chọn sau khi kiểm tra lại. Nếu một ghế đã bận, giữ lựa
+  chọn cũ và cho tìm lại. Nếu không có dãy phù hợp, báo rõ.
+- Giữ theme đội nhà. Đặt kết quả trong bảng trượt gọn để người
+  dùng vẫn thấy sơ đồ. Khi bấm “Tiếp tục”, dùng checkout 6A.
+
+Test các ca: gợi ý theo giá/gần sân, nhóm 3 ghế liền kề, dãy bị
+ngăn bởi lối đi, ghế đã đặt và không có kết quả. Kiểm tra hai trận
+cùng sân dùng đúng tồn kho riêng. Chạy build/test liên quan.
+Cập nhật index.html để tôi bấm thử 6B, gửi cách mở, rồi ghi kết quả
+thực tế vào PROGRESS.md và AI_LOG.md.
+
+Chỉ làm 6B. Không tự commit hoặc push.Dùng chung bảng “Gợi ý ghế” cho khách lẻ và nhóm. Cho chọn số
+người, ngân sách tối đa mỗi vé, khu/tầng và ưu tiên Giá thấp
+hoặc Gần sân. Lấy bộ lọc sơ đồ làm giá trị ban đầu và cho sửa
+ngay trong bảng.
+
+Khi bấm “Tìm ghế”, lọc ghế còn trống của đúng trận theo ngân
+sách và khu/tầng. Với N > 1, chỉ xét dãy đủ N ghế cùng hàng,
+cùng khu và không qua lối đi. Xếp hạng rồi hiện tối đa 3 kết
+quả, kèm giá mỗi vé, tổng tiền và lý do gợi ý. Nếu không có
+kết quả, giữ bộ lọc và cho người dùng tự chỉnh.
+```
+
+- Mục đích: thực hiện riêng 6B trên nền 6A còn chưa commit. AI kiểm git status trước sửa; giữ nguyên toàn bộ thay đổi 6A và các file untracked có trước, không reset/clean/stage/commit/push.
+- AI thực hiện: đọc AGENTS/REQUIREMENTS/ROADMAP/PROGRESS/DESIGN và dữ liệu/code thật; tạo SeatFinder Java thuần, controller BottomSheetDialog, kiểm lại cả nhóm với SQLite trên worker và guard match/lifecycle; giữ truy vấn trong ViewModel qua recreation. Nối candidate/focus/góc nhìn Canvas và selection/checkout 6A; sửa bộ lọc hiển thị ngân sách tự nhập. Tạo bảng/logic tương ứng trong HTML index, tái dùng payload cũ và PreviewBookings. Viết JVM/host/emulator tests và cập nhật tài liệu.
+- File tạo mới: `app/src/main/java/com/example/nbatickethub/state/SeatFinder.java`, `app/src/main/java/com/example/nbatickethub/ui/arena/SeatFinderController.java`, `app/src/test/java/com/example/nbatickethub/state/SeatFinderTest.java`, `app/src/androidTest/java/com/example/nbatickethub/SeatFinderInstrumentedTest.java`, `tools/arena-preview/seat-finder.js`.
+- File sửa trong nhiệm vụ này: MainActivity, ArenaSelection, ArenaSelectionViewModel, ArenaFilterController, SeatSheetController, activity_main XML dọc/ngang, strings.xml; tools/arena-preview index.html/mobile.js/mobile.css/test-preview.cjs/README.md; docs PROGRESS/AI_LOG/DESIGN/ROADMAP. Các thay đổi BookingStore/BookingController/BookingViewModel và browse có trước thuộc 6A, không nhận là do nhiệm vụ 6B tạo.
+- Kiểm chứng bước đầu: 88 JVM tests (7 mới) không lỗi; host test 4–6B đạt; build/lint đạt. Hai UI tests 6B đầu đã đạt trên emulator, log `.gradle/phase6b-native.log` báo BUILD SUCCESSFUL 2m27s. Lượt cuối gồm hồi quy và ảnh được ghi riêng trong PROGRESS, không lấy source trung gian thay bản cuối.
+- Lỗi/thực tế: cache mặc định trỏ C:/.gradle bị chặn; cache workspace thiếu lifecycle-livedata cho offline. Dùng cache user hiện có qua quyền công cụ, không sửa dependency/toolchain/cấu hình máy. Tham số Gradle có dấu chấm cần quote trên PowerShell; test mới ban đầu trùng import closeSoftKeyboard giữa Espresso/ViewActions, đã gọi rõ Espresso. Giữ nguyên assertion nghiệp vụ, không sửa test chỉ để che lỗi app.
+- Browser: đã đọc skill Computer Use; browser host báo unavailable. Auto-review từ chối chọn cửa sổ Edge do trang cá nhân ngoài phạm vi; không vượt qua từ chối. AI gửi câu hỏi tùy chọn xin phép cửa sổ đó, chưa có xác nhận tại lúc ghi mục này. Chưa tuyên bố QA browser pixel 6B; host doubles không thay browser thật. Kết quả browser 6A trước là lịch sử riêng.
+- Người dùng: đã giao phạm vi/tiêu chí và quyết định dùng chung bảng. Chưa xác nhận đã đọc, hiểu, tự review, kiểm thử hoặc nghiệm thu 6B. Chưa thử Samsung thật; chưa đánh giá process death/FPS/heap hoặc sightline thật. Chờ review, dừng trong 6B.
+
+- Bổ sung QA: xem ảnh emulator phát hiện bảng 58% che vùng vẽ chính và NumberFormat mặc định vi-VN làm mất phần cent khi chỉ đổi currency USD. AI sửa bảng còn 42% chiều cao, đặt min/max fraction digits=2 và nút mở bảng lấy accent đội nhà; không coi test logic đã đạt là đủ nghiệm thu UI. Lượt gọi nhiều class trong cùng Gradle property chỉ sinh XML 2 tests 6B, nên không nhận nhầm đã chạy 13 tests; hồi quy được chạy riêng từng class và ghi kết quả thực tế tại PROGRESS.
+
+
+### Kết quả cuối của cùng nhiệm vụ 6B
+
+- Bản sửa sau ảnh QA: Wrapper assembleDebug/testDebugUnitTest/lintDebug/connectedDebugAndroidTest (lọc SeatFinderInstrumentedTest), `--no-configuration-cache`: BUILD SUCCESSFUL 1m36s; **88 JVM tests**, **2 UI 6B tests**, 0 failures/errors/skipped; lint **0 errors/68 warnings**. Log `.gradle/phase6b-final.log`, XML `tmp/phase6b/native-final.xml`.
+- Chạy riêng hồi quy trên cùng source: **3 PhaseFour** (1m27s), **2 PhaseSix** (58s), **6 BookingStore** (22s), tất cả SUCCESSFUL, XML 0 failures/errors/skipped. Tổng 13 Android tests distinct gồm 2 ca 6B; không nhận các ca không thực sự chạy. Lệnh, log, XML, ảnh và SHA-256 APK có trong PROGRESS mục 6B.
+- Ảnh cuối đã được AI xem: bảng 42% còn lộ phần sơ đồ phía trên, giá 86,25 US$ từng ghế và tổng nhóm 258,75 US$ đúng cent; nút Gợi ý ghế cùng màu Knicks; perspective Canvas có mặt sân/rổ/khán đài. Conflict/empty state đọc được. Emulator vẫn 1080×2400/420dpi, không thay size; chưa kiểm Samsung hoặc bảng 6B ở 360dp/ngang/font lớn.
+- Host test Node 4–6B PASS; JS syntax, resource XML, HTML dependencies, local links mới và git diff --check PASS; assets không diff, staged=0. Browser thật 6B vẫn chưa QA do auto-review chặn cửa sổ Edge có nội dung cá nhân; không dùng đường vòng. Người dùng chưa trả lời câu hỏi tùy chọn về browser, chưa có xác nhận review/nghiệm thu.
+- PROGRESS/AI_LOG/DESIGN/ROADMAP và README preview đã cập nhật. Không commit/push, không thực hiện phase khác. Commit đề xuất: `feat: add shared single and group seat recommendations`.
+
+
+## 2026-11-26 — yêu cầu commit/push main sau 6B
+
+- Công cụ/model: Codex, GPT-6 theo cấu hình phiên. Prompt thực tế: `push len main`.
+- Người dùng trực tiếp yêu cầu xuất bản main; đây là quyền commit/push mới, thay điểm dừng không commit/push của các nhiệm vụ trước. Không suy ra đã nghiệm thu Samsung/browser.
+- AI kiểm git status/diff/remote: main local và remote cùng bắt đầu tại 88c511a9dc1ee0a49aa571b7a2ca00236e63e693. Gói 6B cần nền 6A chưa commit nên đưa chung 33 file source/resource/test/HTML/tài liệu của 6A+6B vào allowlist; không đưa PDF docs/sources, các công cụ authoring cũ, generated payload, ảnh QA, APK/cache hoặc local.properties.
+- Kiểm chứng sử dụng kết quả build/unit/lint/emulator cùng source đã ghi ở mục 6B; kiểm lại host preview, staged diff/whitespace và mẫu bí mật trước commit. Chỉ sửa tiêu đề README/DESIGN cho đúng 6B và ghi nhận xuất bản; không đổi application code trong lượt push. Kết quả push sẽ được kiểm bằng git ls-remote sau thao tác, không nhận thành công trước khi remote SHA khớp.
