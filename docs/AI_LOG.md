@@ -1,5 +1,79 @@
 # Nhật ký sử dụng AI Agent
 
+## 2026-11-26 — Chuẩn bị commit/push Phase 4–5 theo yêu cầu
+
+- Công cụ: Codex, Git/PowerShell, Node và exporter Java hiện có; không xác minh biến thể model.
+- Prompt thực tế: “push phase 4 5 len”. Người dùng đã trực tiếp cho phép commit/push phạm vi này; không coi là xác nhận đã tự kiểm thử hoặc nghiệm thu mọi UI.
+- AI kiểm tra branch main, origin GitHub, diff, file chưa theo dõi và SHA remote trước phát hành; HEAD và refs/heads/main ban đầu cùng fb405fea78f1a08e417a7f3ae350b6091d84bb7a. Chọn source/tests/docs/30 logo và HTML Phase 4–5, kèm exporter/template làm phụ thuộc để clone mới tái tạo được payload bị ignore. Không stage tmp, PDF đầu vào, APK/build/cache hoặc ~109 MB output arena-data.
+- Bổ sung /tmp/ vào gitignore và hướng dẫn export sau clone. Kiểm preflight gồm staged paths, diff whitespace, source có bí mật hay không, exporter và host integration. Các kết quả build/JVM/lint/emulator/Chrome của phần triển khai giữ nguyên bằng chứng tại PROGRESS, không nhận đã chạy lại Android chỉ vì publish.
+- Phát hành dùng commit thực của trạng thái đã làm, push thường lên origin/main và so SHA HEAD với ls-remote; kết quả cuối được báo sau khi Git xác nhận. Không sửa lịch sử hoặc tạo commit lùi thời gian; không tự triển khai Phase 6.
+
+Kiểm tra gói clone phát hiện exporter cũ thiếu lớp MatchListState mà lịch mới dùng. AI bổ sung đúng source Java thuần vào danh sách compile của exporter, không thêm Android dependency; fallback JVM runner cũng thêm BrowseNavigationTest. Chạy export lại rồi kiểm host integration trước phát hành; đây là sửa phụ thuộc đóng gói, không thay dữ liệu hình học hoặc kết quả Android đã ghi.
+
+## 2026-11-26 — Phase 5 khám phá trận và nối chọn ghế
+
+- Công cụ: Codex (không xác minh biến thể model), Java/XML, Python, Node, Gradle Wrapper, Android emulator API37 và Computer Use/Chrome Guest. Không dùng WebView/Compose/Kotlin, không thêm framework/toolchain.
+- Prompt thực tế:
+
+```text
+Đọc AGENTS.md, REQUIREMENTS và ROADMAP. Triển khai Phase 5
+cho NBA TicketHub trên Android bằng Java và Views/XML.
+Tái sử dụng bộ lọc trận, dữ liệu lịch, logo 30 đội, theme đội
+và luồng chọn ghế Phase 4.
+
+1. Tạo giao diện có chất NBA
+- Trang chủ mở bằng một trận nổi bật sắp diễn ra. Thiết kế thẻ
+  như poster trận đấu: hai logo lớn đối diện, màu đội chia hai
+  phía, tên đội rõ và một lớp họa tiết sân thật nhẹ. Dưới cặp
+  đấu hiện giờ, tên sân, giá từ và CTA “Chọn ghế”. Chọn trận
+  khác phải thấy nhận diện và màu sắc thay đổi rõ.
+- Phía dưới là “Trận sắp tới” và “Khám phá theo đội”. Dùng
+  kiểu chữ thể thao cho tiêu đề, chữ nội dung rõ dấu tiếng
+  Việt, nền tối trung tính và màu nhấn có tương phản tốt.
+  Giữ một điểm nhấn chính mỗi màn, hạn chế badge và hiệu ứng
+  dư thừa. Dùng logo, hình học sân và asset sẵn có.
+- Màn chi tiết trận lấy màu đội chủ nhà. Cho hai đội nổi bật
+  ở đầu màn, thông tin giờ/sân và giá dễ quét, CTA “Chọn ghế”
+  cố định đáy. Chuyển màn ngắn, mượt, không làm giật khi cuộn.
+
+2. Nối các màn
+- Điều hướng 3 mục: Trang chủ, Lịch đấu, Đội bóng.
+- Lịch đấu dùng lại bộ lọc Phase 4: 7 ngày tới, Hôm nay, ngày
+  cụ thể, theo đội và Chỉ sân nhà. Có trạng thái không có trận.
+- Đội bóng hiện đủ 30 đội. Bấm một đội mở lịch sắp tới của
+  đội đó, gồm cả sân nhà và sân khách, kể cả ngoài 7 ngày.
+- Bấm thẻ trận mở Chi tiết trận. CTA “Chọn ghế” ở Trang chủ
+  và Chi tiết trận đều mở đúng luồng Phase 4 bằng matchId.
+  Kiểm tra đúng sân, theme đội chủ nhà, giá và vé của trận.
+  Quay lại từ sơ đồ phải giữ bộ lọc và vị trí cuộn.
+- Dùng lịch mẫu hiện có, gắn nhãn “Lịch mẫu”. Giá từ lấy
+  từ cùng dữ liệu vé đang dùng trong luồng chọn ghế.
+
+3. Cho tôi duyệt trước khi chốt
+- Cập nhật index.html của preview hiện có ở khung 390px để
+  bấm thử Trang chủ → Chi tiết trận → Chọn ghế. Tận dụng
+  bản đồ và màn chọn ghế HTML đã có. Gửi cách mở chính xác.
+- So hai trận khác đội chủ nhà ở 360–412dp. Vừa mở phải thấy
+  rõ ai đấu với ai và bấm tiếp ở đâu. Test chọn một đội có
+  trận sân khách để chắc chắn app mở sân của đội chủ nhà.
+- Chạy build/test liên quan. Báo ngắn kết quả, ghi rõ phần
+  chưa thử trên Samsung. Cập nhật PROGRESS.md và AI_LOG.md.
+
+Dừng ở Phase 5 để tôi duyệt. Đặt vé và Vé của tôi để Phase 6.
+Không tự commit hoặc push.
+```
+
+- AI thực hiện: đọc lại quy tắc/requirements/roadmap/design/progress và mã thực tế, giữ dirty tree. Cập nhật phạm vi Phase 5 theo prompt mới; giữ ghi nhận P0 lifecycle/scale cũ chưa hoàn tất. Triển khai browse shell, poster binder, navigation trong ViewModel, home/schedule/30 teams/detail, CTA nối pipeline matchId, scroll/origin qua recreate. Đồng bộ HTML local và test điều hướng. Không làm Order/Vé của tôi.
+- Logo: kiểm tra repo không có ảnh cũ, không giả nhận có 30 logo. Truy cập CDN NBA thử nghiệm bị sandbox chặn socket; chạy lại qua auto-review, nhận HTTP403. ESPN CDN trả PNG hợp lệ; tải 30 logo qua quyền được duyệt, ghi URL/ngày/hash/usage trong assets/logos/SOURCES.json. Không bịa giấy phép mở, không đổi artwork/geometry sân. Đọc ảnh/giải mã trên worker; HTML dùng cùng file offline cho badge.
+- File tạo/sửa: danh sách đầy đủ ở PROGRESS mục Phase 5 ngày 2026-11-26; gồm Java/state/controller, browse/layout/styles, logo assets và downloader, HTML/CSS/JS/README, unit/instrumented tests, PROGRESS/AI_LOG/ROADMAP/DESIGN. Các log/ảnh/tmp cục bộ không tự stage.
+- Kiểm chứng đã thực hiện: build/unit/lint, 81 JVM tests, 0 lỗi/68 cảnh báo lint; 2 PhaseFive tests mỗi cỡ 360dp và 411dp, 3 PhaseFour và 1 calendar ở 360dp. Chrome thực 390×844 bấm home→detail→đúng MSG/Chase, direct home CTA và chạm khu mở góc nhìn/vé; Node host test riêng dùng DOM/Canvas doubles. Log, ảnh, lỗi trung gian và giới hạn ở PROGRESS. Không coi test doubles là pixel QA hoặc emulator là Samsung.
+- Lỗi AI đã sửa: resource sai tên; UTF-8 qua PowerShell; style API26 trên min24; giá USD mất cents theo locale; chờ layout trước scroll; tránh capture offset của lịch ẩn trong onPause; CSS CTA margin/legend; logo poster ghi nhầm contract logoImage/bounds của court. Giữ assertion nghiệp vụ, sửa setup test chỉ để chờ layout thực và xác nhận scroll đã tạo. System UI ANR là hạn chế emulator, không nhận đã sửa lỗi hệ thống.
+- Người dùng đã giao phạm vi, chưa xác nhận đã đọc/hiểu/review/tự kiểm thử/nghiệm thu. AI dừng để người dùng duyệt; không stage, commit hoặc push. Commit đề xuất: `feat: add NBA match discovery and detail navigation`.
+
+Bổ sung kiểm chứng cuối trong cùng nhiệm vụ: ca recreate ở detail trận sân khách phát hiện scroll UI về 0 dù state còn 280; chờ thêm 45s vẫn không khôi phục, nên không coi là chỉ test chạy sớm. AI sửa MatchPickerController để không refresh lịch ẩn, thay callback post bằng cùng mốc pre-draw với BrowseController, tắt saved-state scroll riêng của game_picker và bỏ capture onPause cũ. Giữ assertion 280px, thêm chờ UI hoàn tất pre-draw. `.gradle/phase5/final-state-360.log` BUILD SUCCESSFUL 1m36s, `final-state-411.log` BUILD SUCCESSFUL 45s: mỗi cỡ 2 tests, 0 failures/errors/skipped, đã gồm recreate ở detail. XML/ảnh trong tmp/phase5; Gradle bản cuối cũng qua 81 JVM tests và lint 0 errors/68 warnings. Các lượt lỗi trung gian được ghi nhận, không dùng kết quả bản trước để phủ lỗi. Emulator được khôi phục kích thước trong finally.
+
+Hồi quy thêm sau bản sửa scroll: MatchCalendarInstrumentedTest ở 411dp qua 1/1, log final-calendar-411.log (23s). Kiểm 65 source assets khớp byte APK, gồm 30 PNG + provenance; SHA APK ở PROGRESS. XML resources, local HTML refs/ID, Node syntax/integration và diff check đạt; staged paths 0. Chưa có kiểm thử Samsung hoặc người dùng duyệt.
+
 Nhật ký này phân biệt AI hỗ trợ với các việc người dùng thực sự xác nhận. Không suy diễn rằng người dùng đã review, hiểu hoặc chạy kiểm thử. Khi bàn giao cuối, README cần có mục nhật ký/tóm tắt và link tới file này theo đề; hiện chưa tạo README trong phase thiết kế.
 
 ## 2026-11-24 — Phase 1: thiết kế hệ thống
@@ -847,3 +921,203 @@ Tạo 3 file: `geometry/SeatHitTester.java`, test JVM `geometry/SeatHitTesterTes
 AI bàn giao checklist Samsung trong PROGRESS để test chung 3B+3C. Người dùng chưa cung cấp kết quả chạy checklist, nghiệm thu hoặc review code 3C; không ghi nhận những việc đó là đã thực hiện. Dừng 3C, không sang chọn nhiều ghế/Bottom Sheet/đặt vé. Commit đề xuất: `feat: add indexed arena seat hit testing and inspection highlight`; không commit/push.
 
 Kiểm tra cuối: XML resources/8 Markdown files/48 link cục bộ đạt; diff check đạt và staged rỗng. So baseline xác nhận app/src chỉ đổi 5 file cũ và thêm 3 file mới đúng phạm vi 3C. Không có thêm bằng chứng runtime Samsung hoặc review của người dùng.
+
+## 2026-11-25 — nâng cấp màn sơ đồ và Phase 4 Android
+
+Công cụ: Codex, dựa trên GPT-6; model build cụ thể không xác định. Ngày theo môi trường Asia/Saigon, không tự đặt giờ tương tác. Đây là nhiệm vụ Android mới; không ghi bổ sung vào lịch sử yêu cầu HTML trước đó vốn đã yêu cầu không cập nhật AI log.
+
+### Prompt thực tế
+
+```text
+Đọc AGENTS.md, REQUIREMENTS và roadmap. Nâng cấp màn sơ đồ sân
+Phase 3 và hoàn thiện Phase 4 trên Android NBA TicketHub. Dùng lại
+Java Canvas, Matrix, hit-testing và dữ liệu 30 đội hiện có.
+
+1. Nâng cấp màn sơ đồ
+- Lấy màu chủ đạo từ homeTeamId của trận đang xem. Dùng cho
+  header, nút chính và điểm nhấn, giữ nền và chữ dễ đọc.
+  Nếu màn hiện tại chưa nhận trận, dùng dữ liệu trận mẫu hiện có.
+- Thu gọn header, ưu tiên diện tích cho sơ đồ. Đặt “Vừa khung”
+  và bộ lọc gọn, chú giải dễ nhìn. Tránh che khu ghế đang xem.
+- Chạm ghế, mở/đóng chi tiết hoặc đổi ghế phải giữ nguyên pan/zoom.
+  “Vừa khung” chủ động reset. Kiểm tra cả lúc Bottom Sheet mở
+  để tránh việc đổi kích thước vùng vẽ làm sơ đồ zoom ra.
+
+2. Chi tiết và góc nhìn từ ghế
+- Chạm ghế thì làm nổi ghế và mở Bottom Sheet gọn có góc nhìn
+  từ ghế, khu, hàng, số ghế, giá và trạng thái.
+- Dựng góc nhìn mô phỏng nhẹ từ vị trí ghế, hướng về sân.
+  Ghế sát sân và ghế tầng cao phải cho cảm giác khác nhau.
+  Hiện bản xem nhỏ trong sheet, chạm để xem lớn. Gắn nhãn
+  “Góc nhìn mô phỏng”.
+- Nút “Đổi ghế” thu sheet để chọn ghế khác ngay trên sơ đồ.
+  Giữ ghế cũ nếu hủy, chạm khoảng trống hoặc chạm ghế không khả dụng.
+  Cập nhật lựa chọn và góc nhìn khi chạm ghế mới hợp lệ.
+
+3. Hoàn thiện P0
+- Làm chọn/bỏ chọn, lọc và chú giải theo rubric. Ghế đã bán hoặc
+  bị khóa không được chọn. Giữ bộ lọc và lựa chọn khi xoay màn hình
+  bằng ViewModel. Giữ dấu trạng thái dễ phân biệt trên mọi theme.
+- Chuyển động mở/thu sheet và highlight ngắn, mượt. Giữ thông tin
+  quan trọng và nút “Đổi ghế” dễ thấy trên màn hình Samsung.
+
+Chạy build và test liên quan. Kiểm tra hai trận mẫu có đội chủ nhà
+khác nhau, chạm ghế lúc đang zoom, so góc nhìn ghế thấp/cao, đổi ghế
+thành công và hủy đổi ghế. Báo gọn phần đã test và phần cần thử
+trên Samsung. Cập nhật PROGRESS.md và AI_LOG.md theo thực tế.
+Giới hạn thay đổi ở màn sơ đồ và chọn ghế. Không commit hoặc push.
+```
+
+### Quyết định và việc AI thực hiện
+
+Người dùng cho phép màn sơ đồ/Phase 4, thêm góc nhìn mô phỏng và yêu cầu giữ state/camera; chưa xác nhận đã review hoặc test 3B/3C/4 trên Samsung. AI đọc AGENTS/REQUIREMENTS/ROADMAP/PROGRESS/DESIGN và kiểm Git trước sửa. Đầu nhiệm vụ tracked tree sạch, chỉ docs/sources, preview và tools là untracked; không tạo commit hoặc đổi branch. Tìm memory không có kết quả liên quan, không dùng kết quả cũ làm bằng chứng hiện tại.
+
+AI kiểm build trước sửa bằng Wrapper root: BUILD SUCCESSFUL 5s, 1 executed/75 up-to-date (`.gradle/phase4-before.log`). Xác định mỗi dataset có game mô phỏng/homeTeamId/price/status nên tái sử dụng, không tạo lịch hoặc giá NBA thật. Home-team resolver được tách riêng vào state để không sửa ArenaCatalog/export pipeline hiện có. Header/nút dùng primaryColor và ink đen/trắng theo luminance; compact controls có Trận mẫu, filter tầng/khu, reset và legend đủ 4 trạng thái.
+
+AI viết ArenaSelection Java thuần và ViewModel/LiveData giữ IDs/filter/replacement/focus/camera/sheet qua recreate. Chọn/bỏ chỉ AVAILABLE, tổng theo minor units từ inventory; giữ ghế cũ trong đổi ghế tới khi chạm ghế mới hợp lệ, hủy/blank/blocked không xóa lựa chọn. Lọc không sửa tọa độ hay tập chọn, list/tổng vẫn gồm lựa chọn ngoài lọc; có xóa từng hàng/xóa tất cả/cuộn và định vị hàng ngoài lọc. Filter aggregate theo section được chuẩn bị lúc bind, không query lại toàn N mỗi frame; chặn callback Spinner cũ khi thay adapter nhanh.
+
+AI nối BottomSheetBehavior overlay độc lập với ArenaView; không gọi fit hoặc thay padding theo onSlide. Fix chiều cao thông báo/legend và padding peek 64dp để nội dung status không làm stage đổi kích thước khi bắt đầu đổi ghế. Panel neo phía đối diện điểm ghế theo nửa dọc/ngang, tránh dịch camera để né sheet. Bổ sung semantic camera snapshot/restore, overlay chọn có batch giới hạn 256 ghế/Path và focus fade 160ms. Không khai báo đã đo độ mượt.
+
+AI dựng SeatPerspective từ quad world + tầng/hàng, nhìn về center court; SeatPerspectiveView dùng projective Matrix và CourtRenderData hiện có, background chỉ là primitive. Có thumbnail và dialog lớn đều ghi Góc nhìn mô phỏng, không nhập ảnh/logo ngoài và không tuyên bố đây là sightline thật. Không làm mua/giữ vé/checkout hoặc Phase 5 process-death/performance audit toàn diện.
+
+File tạo/sửa đầy đủ trong PROGRESS mục Phase 4 (26 file): 10 file app mới cho state/theme resolver/perspective/controller/list/test; sửa MainActivity/ArenaView/ArenaRenderData/ViewportTransform, hai layout, strings/colors, Matrix test; khai báo hai dependency lifecycle qua catalog/app build; cập nhật runner và 4 docs. Giữ assets, ArenaCatalog, CourtRenderData và 7 file HTML mobile preview không đổi; không stage/commit/push.
+
+### Kiểm chứng thực tế và giới hạn
+
+- Wrapper root source cuối đạt assembleDebug/testDebugUnitTest/lintDebug/assembleDebugAndroidTest, dùng `--no-configuration-cache`; các log/checkpoint và thời gian cuối ghi trong PROGRESS. 65 JVM tests, 0 failures/errors/skipped, gồm 11 tests mới cho domain selection/filter/tổng/replacement/hai home teams/low-high perspective. Test 300 lựa chọn không có trần 200; không lấy đó làm benchmark GPU hoặc chứng minh UI mượt với hàng chục nghìn lựa chọn.
+- Có một test trung gian thất bại vì AI tạo fixture tầng không có section, bị validator từ chối. AI sửa test thành section hợp lệ với toàn inventory BOOKED; giữ nguyên validator và không nới assertions nghiệp vụ để làm test qua. Fixture mới kiểm count vị trí >0 nhưng available=0 và không mất lựa chọn ngoài lọc. Nhánh 0 vị trí của UI còn là dự phòng vì dữ liệu tầng/khu hợp lệ luôn có ghế; không giả đã chạy empty-filter UI.
+- Runner fallback sau sửa sources/exclusion ViewModel đạt **65 tests**, JUnit 36.579s, log `.gradle/phase4/foundation.log`; không thay build APK. Lint 0 errors/26 warnings, không suppress lỗi hoặc đổi phiên bản SDK/AGP/Gradle/Java.
+- Viết/compile 2 test Android Phase 4 qua MotionEvent/controller/ViewModel: chọn lúc zoom, panel hai phía không phủ điểm ghế/camera không đổi, preview lớn, blocked/blank/cancel/successful replace, filter và ActivityScenario.recreate; 2 sample-game header colors. Thêm 1 test snapshot/restore Matrix. **Chưa chạy** do `adb devices` ngoài sandbox trả danh sách rỗng; không chạy connected tests hoặc thao tác Samsung/emulator. Không nhận đã kiểm nhìn thấp/cao trực quan, xoay máy thật, process death, screenshot pixels, FPS/GPU/heap hoặc ANR cũ.
+- Baseline 43 file bảo toàn: 34 assets + CourtRenderData + ArenaCatalog + 7 mobile-preview files. APK chứa đúng 34 assets và DEX có VM/perspective/sheet controller. Hash/size artifact, XML/Markdown/local-link/diff/staged check cuối ghi tại PROGRESS; không ghi API keys hoặc cấu hình máy vào AI log.
+
+AI chuẩn bị checklist Samsung trong PROGRESS. Chưa có kết quả review/test mới của người dùng, không suy diễn sinh viên đã hiểu hoặc nghiệm thu mã. Dừng để review màn sơ đồ/Phase 4, không commit/push. Commit đề xuất: `feat: complete arena seat selection filters and simulated seat views`.
+
+Kiểm chứng cuối: Wrapper final-verification BUILD SUCCESSFUL 1m4s, 15 executed/61 up-to-date; 65 JVM tests không failure/error/skipped, lint 0 errors/26 warnings. XML/8 Markdown files/48 link cục bộ và diff check đạt, staged rỗng. 43 protected hashes khớp; APK 8.537.424 byte, SHA-256 `30a17adffe7111ec4b00cb43f95103a14dd0add60fecefd96f616b4871bd0ddf`, embeds đúng 34 assets và có VM/resolver/perspective/sheet classes. Không có lượt connected test hoặc review Samsung mới.
+
+
+## 2026-11-25 — Luồng Android chọn trận → khu → preview vé → xác nhận ghế
+
+**Công cụ:** Codex (họ GPT-6 theo cấu hình agent; không xác định biến thể), Gradle Wrapper/JUnit/lint/Android instrumentation, ADB/emulator và công cụ xem ảnh cục bộ. Không ghi giờ bắt đầu hoặc model cụ thể khi chưa có nguồn xác minh.
+
+### Prompt thực tế của người dùng
+
+```text
+Đọc AGENTS.md, REQUIREMENTS, HTML prototype và hai ảnh tham khảo.
+Nâng cấp luồng chọn ghế của NBA TicketHub trên Android (Java,
+Views/XML, Canvas). Dùng lại hình học sân, logo, theme 30 đội
+và pan/zoom hiện có. Dùng ảnh web để tham khảo tương tác
+chọn khu → thấy góc nhìn và vé. Thiết kế giao diện mobile riêng.
+
+1. Chọn trận
+- Hiện ít nhất 3 trận mẫu, gồm 2 trận cùng sân khác đối thủ.
+  Mỗi thẻ có tên và logo/mã của cả đội khách lẫn đội nhà,
+  ngày giờ, tên sân và giá từ. Gắn nhãn “Dữ liệu mẫu”.
+- Mỗi trận có đúng một arenaId. Chọn trận mở thẳng sân đó.
+  Màn chọn ghế có “Đổi trận”, bỏ bộ chọn sân độc lập.
+- arenaId quyết định sơ đồ, homeTeamId quyết định theme,
+  matchId quyết định giá, loại ghế, trạng thái và lựa chọn vé.
+  Đổi trận cùng sân giữ khu, bộ lọc và pan/zoom, tải vé của
+  trận mới. Đổi sân thì mở toàn cảnh. Ghế chọn của trận cũ
+  không được mang sang trận mới.
+
+2. Chọn khu → thấy góc nhìn và vé ngay
+- Mở mặc định ở toàn sân. Chạm vùng hoặc nhãn của một section
+  thì highlight khu và mở Bottom Sheet ngay, không cần zoom.
+- Đầu sheet hiện tên khu, giá từ và ảnh “Góc nhìn mô phỏng”
+  toàn chiều ngang, khoảng 16:9, có nút phóng toàn màn hình.
+  Bên dưới là vé của khu trong trận hiện tại, mỗi dòng có
+  hàng, số ghế, loại ghế và giá.
+- Dựng góc nhìn ban đầu từ một vị trí đại diện trong khu.
+  Chạm một vé thì highlight dòng đó, cập nhật góc nhìn theo
+  hàng/ghế và hiện CTA “Chọn ghế”. Chỉ xác nhận khi bấm CTA.
+- Góc nhìn phải thấy rõ mặt sân, rổ và khán đài đối diện khi
+  nằm trong khung tự nhiên. Camera hướng vào sân từ vị trí
+  ngồi, có phối cảnh và độ cao khác nhau rõ giữa khu sau rổ,
+  bên hông và tầng cao. Dùng renderer của app, không lấy ảnh
+  từ web tham khảo hay dùng chung một góc nhìn cho mọi khu.
+- “Đổi ghế” quay về danh sách đúng khu, giữ lọc, vị trí cuộn
+  và pan/zoom. Giữ ghế cũ đến khi xác nhận ghế mới hợp lệ.
+  Ghế đã bán hoặc khóa không chọn được.
+
+3. Giao diện và theme đội nhà
+- Dùng màu nền, họa tiết nhẹ và kiểu chữ tiêu đề theo đội nhà
+  cho thẻ trận, header và nền quanh bản đồ. Dùng chung layout
+  cho 30 đội. Giữ danh sách vé trên nền dễ đọc, giá nổi bật
+  và CTA dễ bấm một tay. Font nội dung phải có dấu tiếng Việt.
+- Giữ màu ghế theo đội và chú giải trạng thái rõ. Lọc theo
+  loại ghế/ngân sách, chỉ hiện vài nhãn giá đại diện trên sân.
+- Khi chưa chọn khu, ưu tiên toàn cảnh sân. Khi đã chọn,
+  sheet có thể thu gọn, chỉ một vùng cuộn cho nội dung vé
+  và CTA ở đáy. Bỏ nhãn debug. Mở/thu sheet, lọc và đổi ghế
+  không làm bản đồ tự zoom hoặc nhảy vị trí. Có “Vừa khung”.
+
+Nghiệm thu ở 360–412dp:
+- Từ toàn sân, chạm khu → thấy góc nhìn và vé ngay → chọn ghế
+  mà không cần pinch. Đổi khu thấp sang tầng cao thấy góc nhìn
+  khác rõ. Chạm vé khác cập nhật đúng hàng/ghế.
+- Đổi giữa hai trận cùng sân thấy đúng đối thủ và giá/vé mới.
+  Đổi đội nhà thấy nền và nhận diện đổi theo. Kiểm tra mở/thu
+  sheet, đổi ghế và xoay màn hình theo rubric Phase 4.
+
+Tập trung đến bước chọn ghế. Chạy build và test liên quan,
+báo kết quả thực tế và cập nhật PROGRESS.md, AI_LOG.md.
+Dừng để tôi duyệt, không tự commit hoặc push.
+```
+
+### AI hỗ trợ và phân công thực tế
+
+AI đọc AGENTS/REQUIREMENTS/ROADMAP/PROGRESS/DESIGN, HTML mobile prototype và Arena Lab template; đọc hai ảnh `tmp/refs/section-310.png` và `section-107.png` bằng đường dẫn tuyệt đối ở lượt trước trong cùng hội thoại. Nội dung hai ảnh đảo tên: file 310 hiển thị Section 107, file 107 hiển thị Section 310. Chỉ dùng bố cục tương tác của ảnh làm tham khảo, không tải/nhúng ảnh web hoặc suy diễn giá/vé thật.
+
+AI triển khai schedule/inventory mock theo match, navigation bằng thẻ trận, section hit-testing từ overview, candidate tách khỏi confirm, danh sách vé một vùng cuộn, góc nhìn Canvas có rổ/khán đài và nhận diện mobile chung 30 đội. AI viết test nghiệp vụ/hit-test/Android, chạy các lệnh kiểm chứng, lấy ảnh QA và cập nhật tài liệu. Danh sách file và kết quả cuối ở mục luồng chọn trận mới trong PROGRESS.
+
+Người dùng đã giao phạm vi và tiêu chí trong prompt trên. Chưa có xác nhận người dùng đã đọc, hiểu, review, tự kiểm thử hoặc nghiệm thu bản mới. Không tự nhận công việc AI là công việc người dùng. Không commit/push hoặc chuyển sang đặt vé/Phase 5.
+
+### Lỗi trung gian và giới hạn bằng chứng
+
+Lượt đầu gặp trùng tên string `booked_plain`; AI bỏ khai báo trùng. Test mới phát hiện công thức loại vé cho hai match vô tình đồng dư, khiến không đổi loại ghế; AI sửa cách trộn matchId/seatId, giữ assertion nghiệp vụ. Lệnh Gradle trong sandbox ban đầu không tạo được lock cache; AI chạy lại với quyền đã được duyệt, không thay cấu hình SDK/Java/Gradle. ADB ban đầu không có thiết bị; AI khởi động AVD có sẵn, không lưu snapshot hoặc sửa config.ini. Cài APK sớm khi emulator đang boot thất bại, thử lại sau sys.boot_completed=1 thành công.
+
+Ảnh home đầu tiên có hộp thoại **System UI isn't responding**, là giới hạn emulator; không coi ảnh đó là nghiệm thu app hoặc nhận đã xử lý ANR của thiết bị thật. Lượt connected ban đầu qua ca PhaseFour ở bản trước bước pin preview. Các kết quả của bản cuối, cỡ màn, ảnh và phần còn chờ người dùng được ghi trong PROGRESS; build/test tự động không thay nghiệm thu thị giác hoặc đo FPS/GPU trên Samsung.
+
+
+### Bổ sung kết quả bản bàn giao trong cùng nhiệm vụ
+
+AI xác minh **72 JVM tests**, build/lint (**0 errors/52 warnings**), **13 Android tests ở 360dp** và **3 PhaseFour tests ở khoảng 411dp**, tất cả 0 failures/errors/skipped ở các log `seat-flow-release-*`. Đã thực hiện xoay ngang/dọc trong emulator, không chỉ ActivityScenario.recreate; lấy ảnh QA khu thấp/tầng cao/vé/fullscreen/ngang, xem ảnh cục bộ và tăng assertions vùng nhìn thấy vé/CTA. File/ảnh/log/giới hạn và APK hash ở PROGRESS; không suy ra người dùng đã tự kiểm thử.
+
+Trong quá trình QA, AI gặp lỗi thật adapter giữ ID sân cũ gây NPE khi đổi arena và sửa bằng clear adapter/preview khi loading. Test trước chỉ kiểm chiều cao ListView đã qua nhưng ảnh lộ sheet bị cộng vị trí hai lần do gravity bottom; AI sửa top|end và kiểm getGlobalVisibleRect của vé/CTA. Bộ hồi quy rộng bắt thêm tình huống MOVE mất active pointer vẫn nhận UP là tap; AI hủy gesture khi pointer mất, không xóa hoặc nới test cũ. Lượt trung gian 12/13 test Android qua, sau sửa bản cuối 13/13 qua. Đây là lý do không dùng build hoặc test hình thức thay kiểm tra ảnh/runtime.
+
+Thông tin candidate được thu gọn một dòng và CTA chỉ hiện sau khi preview vé, để giữ vùng vé/CTA nhìn thấy ở 360dp. Asset source không thay đổi; 34 assets trong APK khớp byte. Không sửa toolchain/dependency ở nhiệm vụ này; không tự stage/commit/push. Người dùng mới giao nhiệm vụ, chưa có xác nhận review/nghiệm thu. Điểm dừng vẫn là bàn giao đến chọn ghế; commit đề xuất `feat: add match-scoped section ticket selection`.
+
+
+## 2026-11-25 — Đồng bộ index.html để người dùng preview QA
+
+- Công cụ: Codex (không xác minh biến thể model), Python chỉnh file, Node kiểm JS/luồng; Sites workflow local-only, không tạo/publish Site.
+- Prompt thực tế: “vay tan dung may cai cu fix toi cai index.html de t preview qa voi, lm sao it ton token nhe”.
+- Mục đích: tận dụng HTML/Canvas/theme/payload cũ để QA luồng mới, không chạy lại Android build.
+- AI hỗ trợ: cập nhật 9 file trong tools/arena-preview (index.html, mobile.js/css, selection-model.js, seat-perspective.js, arena-renderer.js, source-data.js, test-preview.cjs, README.md), PROGRESS và mục log này; giữ nguyên Android và hình học/assets gốc. Source-data lấy lại 30 themes/metadata cũ và lịch mẫu khớp MockMatchSchedule, không lấy giá/trạng thái từ web thật.
+- Kiểm chứng: Node syntax và test host integration đạt cho state/CTA/blocked/section/fullscreen/đổi trận/lọc/camera. Test dùng DOM/Canvas doubles, không chứng minh browser pixels. CUA báo browser access host unavailable; đã ghi rõ giới hạn, không nhận đã QA trực quan. Không tự mở rộng triển khai/publish hoặc cài dependency.
+- Người dùng: đã giao đồng bộ preview và yêu cầu tiết kiệm token; chưa xác nhận đã review/test/nghiệm thu. Không commit/push; dừng để người dùng mở HTML QA.
+
+## 2026-11-26 — Tiếp tục QA HTML Phase 4
+
+- Công cụ: Codex; model cụ thể không xác minh. Computer Use điều khiển Chrome Guest/DevTools; Node chạy kiểm tra host và cú pháp. Không cài dependency, không publish.
+- Prompt thực tế:
+
+```text
+Tiếp tục Phase 4 từ chỗ bị ngắt. Giữ phần đã làm và chỉ sửa lỗi
+phát hiện khi QA.
+
+Mở index.html ở viewport mobile 390px và kiểm tra:
+1. 7 ngày tới, Hôm nay, chọn ngày, chọn đội và Chỉ sân nhà.
+2. Từ toàn sân chạm khu → xem góc nhìn và vé → chọn/đổi ghế
+   khi chưa zoom. Mở/thu bảng vé không làm bản đồ nhảy.
+3. Đổi giữa hai trận cùng sân và kiểm tra đối thủ, giá, vé.
+
+Nếu không thao tác được Chrome, thử browser automation nếu có.
+Nếu vẫn bị chặn, ghi rõ ca nào chưa chạy và gửi cách mở index.html
+để tôi bấm thử. Cập nhật PROGRESS.md và AI_LOG.md theo kết quả
+thực tế. Báo ngắn, dừng để tôi duyệt. Không commit hoặc push.
+```
+
+- AI thực hiện: phục hồi thao tác Chrome bằng cửa sổ Guest sau khi browser connector không khả dụng; mở file trực tiếp và đặt viewport 390×844. Kiểm tra các bộ lọc độc lập/kết hợp và xóa lọc; chọn L05 từ toàn sân, preview/confirm R1 ghế 9 rồi đổi sang ghế 10, thu/mở sheet; đổi BOS@NYK sang MIA@NYK cùng MSG; so góc nhìn U12 và L05. Không phát hiện lỗi cần sửa code; giữ toàn bộ thay đổi có sẵn. Một số thao tác AX trong emulation không trúng hoặc nhập ngày chưa thành công; chuyển sang tọa độ từ ảnh mới và chọn trên lịch native, sau đó quan sát kết quả thực tế. Không tính thao tác thất bại là lỗi ứng dụng hoặc ca đã qua.
+- Kiểm chứng: các kết quả Chrome, giá 86,25/91,50 US$, lựa chọn cũ bị xóa khi đổi trận và giới hạn được ghi tại PROGRESS mục QA HTML Phase 4 ngày 2026-11-26. Node integration PASS cho 33 trận/30 theme, cú pháp hai JS và diff check đạt. Test host dùng doubles, tách biệt với QA Chrome. Không chạy Gradle hoặc Android connected tests trong lượt chỉ QA HTML này.
+- File thay đổi trong lượt: docs/PROGRESS.md và docs/AI_LOG.md. Không stage/commit/push. Người dùng giao nhiệm vụ, chưa xác nhận đã tự review/kiểm thử/nghiệm thu; dừng chờ duyệt. Không tiếp tục Discover/Teams/booking.

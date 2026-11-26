@@ -1,0 +1,33 @@
+<resources>
+    <color name="browse_background">#0C111A</color>
+    <color name="browse_surface">#192330</color>
+    <color name="browse_text">#F6F8FC</color>
+    <color name="browse_muted">#BAC6D6</color>
+    <color name="browse_accent">#FFC95B</color>
+    <style name="BrowseHeading">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/browse_text</item>
+        <item name="android:fontFamily">sans-serif-condensed</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">28sp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+    </style>
+    <style name="BrowseEyebrow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/browse_muted</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+    </style>
+    <style name="BrowseNav">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_height">56dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:backgroundTint">@color/browse_surface</item>
+        <item name="android:textColor">@color/browse_muted</item>
+    </style>
+</resources>

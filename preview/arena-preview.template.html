@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NBA TicketHub · Arena Preview</title>
+<style>
+:root{color-scheme:light;--ink:#172b38;--muted:#667680;--line:#dedfd8;--paper:#f5f4ee;--accent:#d86235}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+header{padding:20px 32px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:20px;align-items:center;background:#fffef9}
+.brand{font-weight:800;letter-spacing:-.6px;font-size:20px}.brand span{font-weight:400;color:var(--muted)}.edition{font-size:11px;letter-spacing:1.5px;font-weight:700;color:var(--muted)}
+main{display:grid;grid-template-columns:286px minmax(0,1fr);min-height:calc(100vh - 73px)}aside{padding:28px 24px;border-right:1px solid var(--line)}
+.eyebrow{color:var(--accent);letter-spacing:1.6px;font-size:10px;font-weight:800;text-transform:uppercase}h1{font-size:30px;line-height:1.14;letter-spacing:-1px;margin:12px 0}p{color:var(--muted)}
+.intro{font-size:13px;margin-bottom:25px}.venue-list{display:grid;gap:9px}.venue{cursor:pointer;width:100%;text-align:left;border:1px solid var(--line);background:transparent;border-radius:9px;padding:13px 12px;color:var(--ink);font:inherit}
+.venue strong{display:block;font-size:13px}.venue small{color:var(--muted);font-size:11px}.venue[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:white;box-shadow:0 3px 10px #172b3815}.venue[aria-pressed=true] small{color:#bed0d9}
+.note{border-left:3px solid #e8b66a;padding-left:12px;margin:26px 0;font-size:12px}.note strong{font-size:10px;letter-spacing:1px;display:block;color:#94703b}.note p{margin:5px 0}
+details{font-size:11px;color:var(--muted);margin:20px 0}summary{cursor:pointer;font-weight:700;color:var(--ink)}a{color:#246a8a;overflow-wrap:anywhere}code{font-size:10px;overflow-wrap:anywhere}button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #d86235;outline-offset:3px}
+.workspace{padding:28px 30px;min-width:0}.heading{display:flex;gap:15px;justify-content:space-between;align-items:flex-start}.heading h2{font-size:23px;letter-spacing:-.7px;margin:0}.heading p{margin:3px 0;font-size:13px}.badge{font-size:10px;padding:6px 10px;border:1px solid #d4d9d0;border-radius:20px;white-space:nowrap;color:#617354;background:#eef2e8}
+.stats{display:flex;gap:30px;padding:20px 0}.stat b{display:block;font-size:23px;font-variant-numeric:tabular-nums;letter-spacing:-.5px}.stat span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.arena-panel{background:#f5f7fa;border:1px solid #d9e0e7;border-radius:14px;overflow:hidden;box-shadow:0 10px 24px #0b132318}.toolbar{padding:13px 18px;display:flex;justify-content:space-between;gap:12px;align-items:center;border-bottom:1px solid #d9e0e7;color:#617487;font-size:11px}.toolbar strong{color:#344b60;letter-spacing:1px;font-size:10px}
+.zoom{display:flex;align-items:center;gap:8px}.zoom input{width:100px;accent-color:#f2c66d}.zoom output{width:32px;font-variant-numeric:tabular-nums}#reset{font:inherit;cursor:pointer;background:#fff;color:#344b60;border:1px solid #bdc9d5;border-radius:5px;padding:5px 9px}
+.viewport{height:clamp(390px,62vh,850px);overflow:auto;scrollbar-color:#aebdca #e7edf2}.sheet{width:max-content;height:max-content;min-width:100%;min-height:100%;display:grid;place-items:center}canvas{display:block}
+.panel-footer{padding:12px 18px;border-top:1px solid #d9e0e7;display:flex;gap:18px;flex-wrap:wrap;color:#617487;font-size:10px}.key{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:6px}.available{background:#146bc2}.booked{background:#a4afba}.locked{background:#435366}
+.tier-legend{display:flex;gap:14px;flex-wrap:wrap;padding:10px 18px;border-bottom:1px solid #d9e0e7;color:#526779;font-size:10px}.tier-legend i{display:inline-block;width:11px;height:11px;border:1px solid #9aaebe;border-radius:3px;margin-right:5px;vertical-align:middle}.caption{display:flex;justify-content:space-between;gap:20px;margin-top:13px;font-size:11px;color:var(--muted)}#error{color:#b52e2e;font-size:14px}
+@media(max-width:800px){header{padding:15px 18px}.edition{display:none}main{grid-template-columns:1fr}aside{border-right:0;border-bottom:1px solid var(--line);padding:20px}.intro,.note,aside details{display:none}h1{font-size:25px}.venue-list{grid-template-columns:repeat(3,1fr);gap:5px}.venue{padding:10px 8px}.venue strong{font-size:11px}.venue small{display:none}.workspace{padding:20px 14px}.heading h2{font-size:20px}.badge{display:none}.stats{gap:24px}.stat b{font-size:21px}.viewport{height:55vh;min-height:350px}.toolbar{padding:12px}.toolbar strong{display:none}.zoom input{width:80px}.caption{display:block}}
+.comparison{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 20px}.comparison article{border:1px solid #d9e0e7;border-radius:10px;background:white;overflow:hidden}.comparison strong,.comparison small{display:block;padding:6px 10px 0}.comparison small{padding:0 10px 8px;color:#667680;font-size:10px}.comparison canvas{width:100%;height:auto}.theme-tag{color:#617487;font-size:11px}
+@media(max-width:800px){.comparison{grid-template-columns:1fr}.comparison canvas{max-height:280px;object-fit:contain}.toolbar{flex-wrap:wrap}}
+.review-options{border:1px solid #d9e0e7;border-radius:8px;font-size:12px;padding:12px}.review-options label{display:block;margin:8px 0}.design-counts{font-size:12px;color:#526779}.comparison article{cursor:pointer}.comparison article[aria-current=true]{outline:2px solid #d86235;outline-offset:2px}.comparison small{min-height:35px}[hidden]{display:none!important}.comparison canvas{aspect-ratio:12/7}
+aside{position:sticky;top:0;align-self:start;max-height:100vh;overflow:auto}.comparison article:focus-visible{outline:3px solid #d86235;outline-offset:3px}@media(max-width:800px){aside{position:static;max-height:none}}
+</style>
+</head>
+<body>
+<header><div class="brand">NBA TicketHub <span>/ Arena Lab</span></div><div class="edition">30 COURTS / 30 HOME ARENAS · PHASE 3A.1</div></header>
+<main>
+<aside><div class="eyebrow">Bản xem trên trình duyệt</div><h1>30 đội.<br>30 mặt sân concept.</h1><p class="intro">Xem toàn bộ hình học từ pipeline Java của ứng dụng, không cần Android Emulator.</p>
+<nav id="venues" class="venue-list" aria-label="Chọn sân"></nav>
+<p><label for="theme-select">Theme / cấu hình trận mô phỏng</label><br><select id="theme-select" style="width:100%;padding:10px;margin-top:6px"><option value="auto">Theo cấu hình trận / đội nhà</option></select></p>
+<p id="theme-notice" class="intro"></p>
+<fieldset class="review-options"><legend>Chế độ review</legend>
+<label><input id="court-only" type="checkbox"> Chỉ xem mặt sân</label>
+<label><input id="hide-identity" type="checkbox"> Ẩn tên / mã đội / logo</label>
+<label><input id="neutral-colors" type="checkbox"> Trung tính màu để so bố cục</label>
+</fieldset><p class="intro">30 concept mặt sân tự thiết kế. 30 arena có cấu hình hình học riêng, đều mô phỏng. Màu ghế thiết kế theo theme đội, không phải màu ghế thực tế đã xác minh.</p>
+<details><summary>Đội chưa có asset logo</summary><p id="missing-logos"></p></details><div class="note"><strong>DỮ LIỆU MÔ PHỎNG</strong><p>Số ghế, section, hình học và trạng thái được tự tạo. Đây không phải sơ đồ bán vé chính thức.</p></div>
+<details><summary>Nguồn dữ liệu &amp; kiểm chứng</summary><p>Xuất trực tiếp từ ArenaSceneCompiler, ArenaOutlines và SeatPathBatches. HTML không sinh lại tọa độ ghế.</p><p id="asset"></p><p>SHA-256 JSON:<br><code id="hash"></code></p><p><a id="identity" target="_blank" rel="noopener">Nguồn identity</a> · <a id="reference" target="_blank" rel="noopener">Tham khảo sân</a></p><p id="notice"></p></details>
+<p class="intro">Android vẫn dùng Custom View + Canvas. Các điều khiển ở đây chỉ phục vụ review HTML.</p>
+</aside>
+<section class="workspace" aria-label="Sơ đồ sân">
+<div class="heading"><div><h2 id="title">Đang chuẩn bị sơ đồ…</h2><p id="team"></p></div><span class="badge">OFFLINE · JAVA GEOMETRY</span></div>
+<p id="design-counts" class="design-counts">30 mặt sân concept · 30 hình học arena mô phỏng · 0 logo official được tích hợp</p><div id="arena-stats" class="stats"><div class="stat"><b id="seats">—</b><span>Ghế mô phỏng</span></div><div class="stat"><b id="sections">—</b><span>Section</span></div><div class="stat"><b id="levels">—</b><span>Tầng</span></div><div class="stat"><b id="rows">—</b><span>Hàng</span></div></div>
+
+<div class="arena-panel"><div class="toolbar"><strong>CANVAS 2D / PHASE 3A.1</strong><div class="zoom"><label for="zoom">Độ phóng đại</label><input id="zoom" type="range" min="100" max="600" step="25" value="100"><output id="zoom-label" for="zoom">100%</output><button id="reset" type="button">Vừa khung</button></div></div>
+<div id="tier-legend" class="tier-legend" aria-label="Chú giải tầng mô phỏng"></div><div id="viewport" class="viewport"><div class="sheet"><canvas id="arena" aria-label="Sơ đồ mô phỏng toàn arena">Trình duyệt cần hỗ trợ Canvas 2D.</canvas></div></div>
+<div id="status-footer" class="panel-footer"><span><i id="legend_available" class="key available"></i>Trống</span><span><i id="legend_booked" class="key booked"></i>Đã đặt</span><span><i id="legend_locked" class="key locked"></i>Khóa</span><span>Chấm giữa ghế = trạng thái · nền ghế = palette tầng mô phỏng</span></div></div>
+<div class="caption"><span>Chọn đội hoặc bấm thẻ bên dưới. Bỏ ẩn tên để xem tên đội; bật trung tính màu để so bố cục.</span><span id="render-status" role="status" aria-live="polite"></span></div><p id="error" role="alert"></p><h3>30 sân nhà · cùng góc nhìn / mặt sân cùng kích thước</h3><div id="comparison" class="comparison" aria-label="So sánh 30 court concepts cùng kích thước"></div>
+</section>
+</main>
+<!--ARENA_DATA-->
+<script>
+ 'use strict';
+(() => {
+const $=id=>document.getElementById(id), number=n=>n.toLocaleString('vi-VN');
+const source=JSON.parse($('arena-data').textContent), style=source.style,canvas=$('arena');
+$('design-counts').textContent=`${source.themes.length} mặt sân concept · ${source.arenas.length} hình học arena mô phỏng · ${source.themes.filter(t=>t.logoImage).length} logo asset / ${source.themes.filter(t=>!t.logoImage).length} mã đội`;
+$('missing-logos').textContent=source.themes.filter(t=>!t.logoImage).map(t=>t.name+' ('+t.court.design.logo.fallback+')').join(', ');
+const colors=['available','booked','locked'].map(key=>source.seatStatusPalette[key]);
+for(const key of ['available','booked','locked'])$('legend_'+key).style.background=source.seatStatusPalette[key];
+let active,theme,paths,frame=0,draws=0,preparations=0,themeOverride=null,galleryDirty=true,loadVersion=0,ready=Promise.resolve();
+const cache=new Map(),courtCache=new Map(),overviewCache=new Map(),datasets=new Map(),pending=new Map(),cards=[],options=[];
+function remember(map,id,value){map.delete(id);map.set(id,value);while(map.size>2)map.delete(map.keys().next().value);}
+window.ArenaPreviewData={receive(data){const request=pending.get(data.id);if(!request)return;
+ const stub=source.arenas.find(a=>a.id===data.id);
+ if(!stub||data.geometrySha256!==stub.geometrySha256){request.reject(Error('Geometry mismatch'));return;}
+ remember(datasets,data.id,data);request.resolve(data);
+}};
+function load(a){
+ if(datasets.has(a.id))return Promise.resolve(datasets.get(a.id));
+ if(pending.has(a.id))return pending.get(a.id).promise;
+ let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no;});pending.set(a.id,{promise,resolve,reject});
+ const script=document.createElement('script');script.src=a.dataScript;
+ script.onload=()=>{if(!datasets.has(a.id))reject(Error('Empty arena payload'));pending.delete(a.id);script.remove();};
+ script.onerror=()=>{pending.delete(a.id);script.remove();reject(Error('Không tải được '+a.dataScript+'. Hãy giữ thư mục arena-data cạnh HTML.'));};
+ document.head.append(script);return promise;
+}
+function overview(a){if(!overviewCache.has(a.id))overviewCache.set(a.id,{envelope:polygon(a.envelope),sections:a.sections.map(s=>polygon(s.polygon)),rows:[],seats:[]});return overviewCache.get(a.id);}
+
+const polygon=(points,close=true)=>{const path=new Path2D();path.moveTo(points[0],points[1]);for(let i=2;i<points.length;i+=2)path.lineTo(points[i],points[i+1]);if(close)path.closePath();return path;};
+function artPath(p){if(p.type!=='ellipse')return polygon(p.points,p.type==='polygon');const [x,y,r,b]=p.points,path=new Path2D();path.ellipse((x+r)/2,(y+b)/2,(r-x)/2,(b-y)/2,0,0,2*Math.PI);return path;}
+const linePaths={lines:new Path2D(),rims:new Path2D()};
+for(const p of source.courtMarkings)(p.part==='key'?linePaths.rims:linePaths.lines).addPath(artPath(p));
+function prepareCourt(t){
+ if(courtCache.has(t.id))return courtCache.get(t.id);
+ const result={paths:t.court.design.primitives.map(artPath),image:null};
+ if(t.logoImage){const img=new Image();img.onload=()=>{result.image=img;galleryDirty=true;schedule();};img.src=t.logoImage.dataUrl;}
+ courtCache.set(t.id,result);return result;
+}
+function prepare(a){
+ if(cache.has(a.id))return cache.get(a.id);
+ const markerPaths=(inset)=>a.batches.map(batch=>{const path=new Path2D();for(const index of batch.slice(1)){const [x,y,r]=a.seats[index][4];path.moveTo(x+r*inset,y);path.arc(x,y,r*inset,0,2*Math.PI);}return path;});
+ const result={envelope:polygon(a.envelope),sections:a.sections.map(s=>polygon(s.polygon)),rows:a.rows.map(r=>polygon(r[2],false)),
+  seats:a.batches.map(batch=>{const p=new Path2D();for(const index of batch.slice(1))p.addPath(polygon(a.seats[index][3]));return p;}),markers:markerPaths(1),dots:markerPaths(.72),
+  batchLevels:a.batches.map(batch=>{const row=a.seats[batch[1]][1],section=a.rows.find(r=>r[0]===row)[1];return a.sections.find(s=>s.id===section).levelOrder;})};
+ remember(cache,a.id,result);preparations++;return result;
+}
+function resolve(a){const t=source.themes.find(t=>t.id===(themeOverride||a.defaultThemeId));if(!t)throw Error('Unknown theme');return t;}
+const hidden=()=>$('hide-identity').checked,neutral=()=>$('neutral-colors').checked,onlyCourt=()=>$('court-only').checked;
+function court(ctx,t){
+ const c=t.court,prepared=prepareCourt(t),n=neutral(),wood=n?'#e4cc9d':c.wood;
+ const fill=(color,x,y,w,h)=>{ctx.fillStyle=color;ctx.fillRect(x,y,w,h);};
+ const part=name=>{for(let i=0;i<prepared.paths.length;i++){const p=c.design.primitives[i];if(p.part!==name)continue;
+  const color=n?({wood:'#c2a67a',decor:'#b39a75',key:'#c5b17d',border:'#b5a17d'}[name]):p.color;
+  if(p.strokeWidth){ctx.strokeStyle=color;ctx.lineWidth=p.strokeWidth;ctx.stroke(prepared.paths[i]);}else{ctx.fillStyle=color;ctx.fill(prepared.paths[i]);}}};
+ fill(n?'#293d50':c.apron,-4,-4,102,58);part('border');fill(wood,0,0,94,50);
+ ctx.save();ctx.beginPath();ctx.rect(0,0,94,50);ctx.clip();part('wood');part('decor');
+ fill(n?'#586c80':c.paint,0,17,19,16);fill(n?'#586c80':c.paint,75,17,19,16);part('key');
+ if(!hidden()){
+  const mark=c.design.logo;
+  if(prepared.image&&t.logoImage){const [x,y,r,b]=t.logoImage.bounds;ctx.drawImage(prepared.image,x,y,r-x,b-y);}
+  else{ctx.fillStyle=c.center;ctx.font=`bold ${Math.min(mark.width/3.3,mark.height/2.5)}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(mark.fallback,47,25);ctx.textBaseline='alphabetic';}
+ }
+ // Final line passes are above every team graphic and logo, with a dark visibility keyline.
+ ctx.strokeStyle='#273a48';ctx.lineWidth=.7;ctx.stroke(linePaths.lines);
+ ctx.strokeStyle=n?'#ffffff':c.lines;ctx.lineWidth=.34;ctx.stroke(linePaths.lines);
+ ctx.strokeStyle='#e46b35';ctx.stroke(linePaths.rims);ctx.restore();
+ if(!hidden()){ctx.fillStyle=c.lettering;ctx.font='bold 2.1px system-ui';ctx.textAlign='center';for(let side=0;side<2;side++){ctx.save();ctx.translate(side?96:-2,25);ctx.rotate(side?Math.PI/2:-Math.PI/2);ctx.fillText(c.baselineText,0,.7);ctx.restore();}}
+}
+function surface(target,w,h){
+ const dpr=Math.min(window.devicePixelRatio||1,2,Math.sqrt(16000000/(w*h)));target.width=Math.round(w*dpr);target.height=Math.round(h*dpr);target.style.width=w+'px';target.style.height=h+'px';return {ctx:target.getContext('2d'),dpr};
+}
+function renderCourt(target,t,width,height,zoom=100){
+ const scale=Math.min((width-24)/102,(height-24)/58)*zoom/100,w=zoom===100?width:102*scale+24,h=zoom===100?height:58*scale+24;
+ const {ctx,dpr}=surface(target,w,h);target.style.background='#f5f7fa';
+ ctx.setTransform(scale*dpr,0,0,scale*dpr,(w-94*scale)/2*dpr,(h-50*scale)/2*dpr);court(ctx,t);
+}
+function renderArena(target,a,p,t,zoom,width,height){
+ const fit=Math.max(.01,Math.min((width-48)/a.world[0],(height-48)/a.world[1])),scale=fit*zoom/100,w=a.world[0]*scale+48,h=a.world[1]*scale+48;
+ const {ctx,dpr}=surface(target,w,h),stands=a.stands;target.style.background=stands.background;ctx.setTransform(scale*dpr,0,0,scale*dpr,24*dpr,24*dpr);
+ ctx.fillStyle=stands.concourse;ctx.fill(p.envelope);
+ for(let i=0;i<p.sections.length;i++){const tier=t.seatPalette[a.sections[i].levelOrder-1];ctx.fillStyle=tier.section;ctx.fill(p.sections[i]);ctx.strokeStyle=stands.sectionBorder;ctx.lineWidth=style.sectionStroke+1;ctx.stroke(p.sections[i]);ctx.strokeStyle=tier.accent;ctx.lineWidth=style.sectionStroke;ctx.stroke(p.sections[i]);}
+ ctx.strokeStyle=stands.rowLine;ctx.lineWidth=style.rowStroke;for(const row of p.rows)ctx.stroke(row);
+ for(let i=0;i<p.seats.length;i++){ctx.fillStyle=t.seatPalette[p.batchLevels[i]-1].seatBackground;ctx.fill(p.seats[i]);ctx.fillStyle='#ffffff';ctx.fill(p.markers[i]);ctx.fillStyle=colors[a.batches[i][0]];ctx.fill(p.dots[i]);}
+ ctx.textAlign='center';const fontSize=style.labelSize/scale;ctx.font=`600 ${fontSize}px system-ui`;
+ for(const s of a.sections){const [x,y]=s.labelPoint,half=ctx.measureText(s.label).width/2+fontSize*.25;ctx.fillStyle=stands.labelBackground;ctx.beginPath();ctx.roundRect(x-half,y-fontSize*.65,half*2,fontSize*1.3,fontSize*.25);ctx.fill();ctx.fillStyle=stands.labelText;ctx.fillText(s.label,x,y+fontSize*.34);}
+ ctx.save();ctx.translate(a.world[0]/2,a.world[1]/2);ctx.rotate(a.court[2]*Math.PI/180);ctx.scale(a.court[0]/94,a.court[1]/50);ctx.translate(-47,-25);court(ctx,t);ctx.restore();
+}
+function updateInfo(){
+ const index=source.themes.indexOf(theme)+1,mask=hidden(),mode=onlyCourt();
+ $('title').textContent=mask?'Sân '+String(index).padStart(2,'0'):theme.name;
+ $('team').textContent=mode?'Concept mô phỏng · khung mặt sân 102 × 58':active.name+' · khán đài mô phỏng · màu ghế thiết kế theo theme đội';
+ $('arena-stats').hidden=mode;$('tier-legend').hidden=mode;$('status-footer').hidden=mode;$('venues').hidden=mode;
+ $('theme-notice').textContent='30 court concepts / 30 home arena geometries. Màu ghế thiết kế theo theme đội, không phải màu ghế thực tế. Mọi artwork tự thiết kế; mã đội thay logo khi chưa có asset hợp lệ.';
+ $('tier-legend').replaceChildren();for(const level of active.levels){const span=document.createElement('span'),swatch=document.createElement('i');swatch.style.background=theme.seatPalette[level.order-1].section;swatch.style.borderColor=theme.seatPalette[level.order-1].accent;span.append(swatch,document.createTextNode(level.name.replace(' (simulated)','')));$('tier-legend').append(span);}
+ for(const card of cards){const i=source.themes.indexOf(card.theme)+1;card.title.textContent=mask?'Mặt sân '+String(i).padStart(2,'0'):card.theme.name;card.detail.textContent=mode?(mask?'Ẩn danh · khung 480 × 280':card.theme.court.design.woodFeature+' / '+card.theme.court.design.graphicFeature):(mask?'Khán đài mô phỏng':source.arenas.find(a=>a.id===source.homeArenas[card.theme.teamId]).name)+' · thumbnail đường bao; zoom sơ đồ lớn để xem ghế';card.canvas.setAttribute('aria-label',card.title.textContent);card.node.setAttribute('aria-current',String(card.theme===theme));}
+ for(let i=0;i<options.length;i++)options[i].textContent=mask?'Mặt sân '+String(i+1).padStart(2,'0'):source.themes[i].name;
+ $('notice').textContent=active.notice+' '+theme.seatThemeNotice+' '+theme.notice;
+}
+function draw(){
+ frame=0;if(!active)return;
+ if(onlyCourt())renderCourt(canvas,theme,$('viewport').clientWidth,$('viewport').clientHeight,Number($('zoom').value));
+ else renderArena(canvas,active,paths||overview(active),theme,Number($('zoom').value),$('viewport').clientWidth,$('viewport').clientHeight);
+ if(galleryDirty){for(const card of cards){if(onlyCourt())renderCourt(card.canvas,card.theme,480,280);else{const a=source.arenas.find(a=>a.id===source.homeArenas[card.theme.teamId]);renderArena(card.canvas,a,overview(a),card.theme,100,480,320);}card.canvas.style.width='100%';card.canvas.style.height='auto';}galleryDirty=false;}
+ draws++;$('render-status').textContent=(onlyCourt()?'30 thiết kế mặt sân · ':'30 arena mô phỏng · '+(paths?'đã tải ghế · ':'đang tải ghế · '))+(hidden()?'ẩn danh':theme.name);
+}
+function schedule(){if(!frame)frame=requestAnimationFrame(draw);}
+function selectTheme(id){
+ themeOverride=id==='auto'?null:id;
+ if(themeOverride){const selected=source.themes.find(t=>t.id===id);if(!selected)throw Error('Unknown theme');return activate(source.homeArenas[selected.teamId]);}
+ return activate(active.id);
+}
+function selectArena(id){themeOverride=null;return activate(id);}
+function activate(id){
+ const stub=source.arenas.find(a=>a.id===id);if(!stub)throw Error('Unknown arena: '+id);
+ const changed=!active||active.id!==id;active=stub;if(changed)paths=null;
+ theme=resolve(active);$('theme-select').value=themeOverride||'auto';updateInfo();
+ for(const [key,value] of [['seats',active.capacity],['sections',active.sections.length],['levels',active.levelCount],['rows',active.rowCount]])$(key).textContent=number(value);
+ $('asset').textContent=active.asset;$('hash').textContent=active.sha256;$('identity').href=active.identitySource;$('reference').href=active.referenceSource;
+ for(const b of $('venues').children)b.setAttribute('aria-pressed',String(b.dataset.id===id));
+ if(changed){$('zoom').value='100';$('zoom-label').textContent='100%';$('viewport').scrollTo(0,0);}
+ const version=++loadVersion;$('error').textContent='';schedule();
+ ready=load(stub).then(data=>{if(version!==loadVersion)return;active=data;paths=prepare(data);schedule();}).catch(error=>{if(version===loadVersion){$('error').textContent=error.message;schedule();}});
+ return ready;
+}
+for(const t of source.themes){
+ const option=document.createElement('option');option.value=t.id;$('theme-select').append(option);options.push(option);
+ const node=document.createElement('article'),title=document.createElement('strong'),map=document.createElement('canvas'),detail=document.createElement('small');node.setAttribute('tabindex','0');node.setAttribute('role','button');node.append(title,map,detail);node.addEventListener('click',()=>selectTheme(t.id));node.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();selectTheme(t.id);}});$('comparison').append(node);cards.push({theme:t,node,title,canvas:map,detail});
+}
+for(const a of source.arenas){const b=document.createElement('button');b.type='button';b.className='venue';b.dataset.id=a.id;const strong=document.createElement('strong'),small=document.createElement('small');strong.textContent=a.name;small.textContent='Geometry mô phỏng · '+a.id;b.append(strong,small);b.addEventListener('click',()=>selectArena(a.id));$('venues').append(b);}
+$('theme-select').addEventListener('change',()=>selectTheme($('theme-select').value));
+for(const id of ['court-only','hide-identity','neutral-colors'])$(id).addEventListener('change',()=>{galleryDirty=true;updateInfo();schedule();});
+$('zoom').addEventListener('input',()=>{$('zoom-label').textContent=$('zoom').value+'%';schedule();});
+$('reset').addEventListener('click',()=>{$('zoom').value='100';$('zoom-label').textContent='100%';$('viewport').scrollTo(0,0);schedule();});
+window.addEventListener('resize',schedule);
+window.ArenaPreview={selectArena,selectTheme,whenReady:()=>ready,state:()=>({arenaId:active.id,teamId:theme.teamId,themeId:theme.id,geometrySha256:active.geometrySha256,seats:active.capacity||active.seats.length,batches:active.batches?.length||0,draws,preparations,courtPreparations:courtCache.size,courtOnly:onlyCourt(),hiddenIdentity:hidden(),courtDesignCount:source.themes.length,arenaGeometryCount:source.arenas.length,geometryCache:cache.size,datasetCache:datasets.size,palette:theme.seatPalette,queued:!!frame})};
+selectArena(source.arenas[0].id);
+})();
+</script>
+</body></html>

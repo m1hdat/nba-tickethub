@@ -1,10 +1,55 @@
 # Tiến độ thực tế
 
+### Cho phép đưa Phase 4–5 lên GitHub — 2026-11-26
+
+Người dùng yêu cầu “push phase 4 5 len”, cho phép commit/push phần đã làm. Giữ nhánh main/origin hiện có, không force push. Gói source gồm Android Phase 4–5, tests, logo/provenance, HTML preview và exporter Java/template cần thiết để tái tạo payload. Không đưa tmp, log/ảnh QA, APK/build/cache, PDF đầu vào hoặc asset HTML sinh tự động (~109 MB) vào Git. Hướng dẫn clone → export một lần → mở HTML ở tools/arena-preview/README.md. Các dòng “không commit/push” phía dưới là điểm dừng lịch sử trước yêu cầu mới; không được sửa thành người dùng đã nghiệm thu mọi giao diện. SHA và trạng thái remote được kiểm tra/báo trong bàn giao Git, không suy ra thành công từ việc chỉ tạo commit.
+
+## Phase 5 — Trang chủ, lịch đấu, đội bóng và chi tiết trận (2026-11-26)
+
+**Đã triển khai, đang chờ người dùng review.** Phạm vi mới do người dùng giao thay tên Phase 5 cũ trong roadmap; không coi các công việc scale/process death/performance P0 đã xong. Phase 6 Đặt vé/Vé của tôi chưa triển khai. Giữ các thay đổi đã có trong working tree; không stage/commit/push.
+
+### Nội dung và tiêu chí
+
+- Java + Views/XML: Trang chủ có trận nổi bật gần nhất chưa bắt đầu, poster chia hai màu đội, hai logo/tên lớn, đường sân nhẹ, giờ/sân/giá từ và CTA Chọn ghế; phía dưới là Trận sắp tới/Khám phá theo đội. Nền tối, chữ Việt rõ, accent vàng. Một binder poster dùng cho cả ba màn để thông tin/giá nhất quán. Chi tiết dùng màu chủ nhà, CTA cố định đáy; chuyển browse bằng alpha 140ms, không animate lúc cuộn.
+- Ba tab Trang chủ/Lịch đấu/Đội bóng. Giữ nguyên bộ lọc lịch Phase 4 và dữ liệu tương đối 33 trận. 30 đội mở lịch ALL_UPCOMING cả nhà/khách, kể cả ngoài 7 ngày. Thẻ mở detail; CTA ở home/detail mở sân bằng đúng Game/matchId. Geometry theo arenaId, theme theo homeTeamId và vé theo matchId giữ nguyên trách nhiệm.
+- `BrowseNavigation` trong ViewModel giữ màn, origin, ID chi tiết và scroll. Back từ sân về màn trước; Đổi trận mở lịch. Back từ detail giữ lọc/cuộn lịch. Khôi phục cuộn chờ pre-draw sau layout; capture chỉ lấy offset của màn đang mở. Giữ bộ máy Canvas/pan/zoom/hit-test/renderer/confirmation Phase 4.
+- Catalog cũ chưa có ảnh logo. Bổ sung **30 PNG offline, 1,771,563 byte** từ ESPN CDN, nguồn/ngày tải/hash ở [SOURCES.json](../app/src/main/assets/logos/SOURCES.json). Logo là thương hiệu NBA/đội, không khai báo giấy phép mở; dùng nhận diện giáo dục. Worker decode bitmap, không tải mạng lúc chạy app. Không thay 34 asset cũ, geometry/court art/payload sân. HTML dùng `teamBadgeUrl` riêng để không ghi đè contract logo giữa sân.
+- [HTML preview](../tools/arena-preview/index.html) có cùng ba tab/poster/detail/CTA; nối lại bản đồ và vé cũ, nhãn Preview/Lịch mẫu, không booking. Đường mở chính xác: Chrome → Ctrl+O → `D:\24tn-fitus\project\nba-tickethub\tools\arena-preview\index.html`; F12 → Device Toolbar → 390 × 844, Ctrl+F5 nếu đang giữ bản cũ. Không cần server. Giữ JS/CSS, preview/arena-data và app/src/main/assets/logos tại đúng vị trí.
+
+### Kiểm chứng thực tế
+
+- Wrapper `assembleDebug testDebugUnitTest lintDebug connectedDebugAndroidTest --no-configuration-cache`, bản cuối chạy class PhaseFive ở 360dp: **BUILD SUCCESSFUL**, **81 JVM tests / 0 failures**, lint **0 errors / 68 warnings**. Log `.gradle/phase5/final-state-360.log`. Ba test JVM mới kiểm stack/origin/scroll khi đổi màn; test cũ xác minh giá từ cùng inventory. Không sửa SDK/Java/Gradle/dependency hoặc suppress lỗi lint.
+- **360×640dp** (945×1680px/420dpi): 2 PhaseFive tests qua; card/CTA thực sự trong vùng nhìn thấy, detail recreate, home/chi tiết vào đúng MSG/Chase, 30 đội, Knicks sân khách mở home arena/theme Boston, quay lại giữ lọc và scroll 280px. **411.4×914.3dp** (1080×2400px/420dpi): 2 PhaseFive tests qua cùng các điều kiện. Bản cuối có thêm recreate khi đang xem detail trận sân khách rồi về lịch đúng 280px. Log `.gradle/phase5/final-state-360.log` (**1m36s**), `final-state-411.log` (**45s**); XML `tmp/phase5/results-360-final.xml`, `results-411-final.xml`, mỗi cỡ 2 tests/0 failures/errors/skipped. Kích thước emulator khôi phục trong finally về 1080×2400/420dpi.
+- Hồi quy trên bản Phase 5 ở 360dp: **3 PhaseFour tests / 0 failures** (`.gradle/phase5/regression-360.log`, `tmp/phase5/results-phase4-360.xml`); **1 MatchCalendar test / 0 failures** (`final-calendar-360.log`, `results-calendar-360.xml`). Bao gồm candidate/CTA/blocked, hai trận cùng sân, khu thấp/cao, sheet/camera, recreate/xoay theo các ca Phase 4 và date/team/homeOnly/empty/recreate theo ca calendar. Đây không phải lượt chạy toàn bộ suite camera cũ.
+- Sau sửa xung đột scroll, chạy lại **1 MatchCalendar test ở 411dp / 0 failures/errors/skipped**, BUILD SUCCESSFUL 23s; log `.gradle/phase5/final-calendar-411.log`, XML `tmp/phase5/results-calendar-411.xml`. APK debug cuối **9,119,630 byte**, SHA-256 `37ee340f0bcbcbe012c1afcad44d37df2d4e862056cc167555b8ea0171f5efe8`; toàn bộ **65 source asset files** khớp byte trong APK, gồm 34 asset cũ và 31 file logo/provenance mới.
+- **Chrome Guest Responsive 390×844 CSS px**: trực tiếp mở file và bấm home poster → detail → chọn ghế; CTA home vào sân trực tiếp; BOS@NYK đúng MSG/86,25 US$, LAL@GSW đúng Chase/89,25 US$; so hai poster/nhận diện, CTA đáy nằm trong màn. Chạm L05 từ toàn sân mở preview/vé, không cần zoom. Quan sát console sau nạp lại và đi cả hai sân không còn lỗi ứng dụng. Browser connector unavailable nhưng điều khiển cửa sổ Chrome bằng Computer Use hoạt động. Chưa coi HTML và Android giống từng pixel.
+- Node `test-preview.cjs` PASS: home/detail/direct CTA/back, 30 logo/đội, sân khách và scroll, lọc lịch, overview/list/confirm/blocked/fullscreen, cùng sân giữ camera/lọc và đổi sân reset. Test dùng DOM/Canvas doubles; ảnh/thao tác Chrome được kiểm riêng. `node --check mobile.js`, `team-logos.js`, `git diff --check`, parse XML resources và hash 30 PNG đạt. Có cảnh báo LF/CRLF ở file cũ, không phải lỗi whitespace.
+
+Ảnh Android đã xem: [Home 360dp](../tmp/phase5/qa-360-final/phase5-qa/home.png), [Knicks detail 360dp](../tmp/phase5/qa-360-final/phase5-qa/nyk-detail.png), [Warriors detail 360dp](../tmp/phase5/qa-360-final/phase5-qa/gsw-detail.png); [Knicks detail 411dp](../tmp/phase5/qa-411-final/nyk-detail.png), [Warriors detail 411dp](../tmp/phase5/qa-411-final/gsw-detail.png). Artifact dưới tmp/.gradle là cục bộ, không tự stage.
+
+### Lỗi trong quá trình QA và giới hạn
+
+Build trung gian bắt sai tên string và text bị mất dấu khi ghi qua PowerShell; đã ghi lại UTF-8. Lint bắt paddingVertical trong style không hỗ trợ minSdk24; thay bằng paddingTop/Bottom. Test bắt formatter USD theo locale Việt bỏ cents; đã cố định hai chữ số thập phân. Test scroll ban đầu cuộn trước layout nên chưa tạo được offset; setup giờ chờ layout và xác nhận offset trước mở card. Ca bổ sung recreate ở detail bắt lỗi thật: offset trong ViewModel còn 280 nhưng UI quay về 0, vẫn thất bại khi chờ 45s. Đã bỏ capture onPause cũ với lịch ẩn, không refresh lịch ẩn, loại callback post khôi phục offset cũ; cả refresh và navigation khôi phục tại pre-draw, ViewModel là nguồn scroll thay vì cạnh tranh với saved-state riêng của ScrollView. Giữ nguyên yêu cầu UI phải về 280px; bản cuối cả 360/411dp qua. Lượt 3 PhaseFour hồi quy phía trên có trước phần bổ sung scroll này; hai ca PhaseFive cuối kiểm lại navigation đến sân trên bản mới.
+
+Chrome bắt CTA poster thừa margin kế thừa và legend trắng trên nền sáng, đã sửa CSS. Console bắt ảnh logo mới dùng nhầm trường logoImage không có bounds của court renderer; đã tách teamBadgeUrl, giữ artwork cũ và thêm assertion contract vào host test. Không nới assertion để che lỗi. Emulator có hộp **System UI isn't responding** trong lượt đầu; đã chọn Wait và chạy lại, không nhận là lỗi app đã được sửa.
+
+**Chưa thử trên Samsung thật**, chưa đo FPS/heap/GPU hoặc kiểm process death, chưa duyệt thủ công mọi đội/mọi hướng màn/font scale. Đã kiểm recreate/navigation/CTA trong emulator, không suy ra đã có nghiệm thu thẩm mỹ của người dùng. Bộ kiểm scale và hồ sơ P0 cũ vẫn cần theo dõi riêng. Lịch/giá/vé là mô phỏng. Dừng Phase 5, chờ duyệt; không có vấn đề phạm vi cần xin phép thêm.
+
+### File tạo/sửa trong Phase 5
+
+- Java: MainActivity; state/BrowseNavigation (mới), ArenaSelectionViewModel; ui/arena/BrowseController (mới), MatchPoster (mới), MatchPickerController, ArenaPreviewLoader.
+- XML/resources: layout/browse_shell, calendar_screen và values/browse_styles (mới); activity_main cả dọc/ngang, match_card, match_filters, strings.
+- Assets/tools: assets/logos/30 PNG + SOURCES.json (mới), tools/download-team-logos.py (mới). HTML: index.html/mobile.js/test-preview.cjs/README; browse.css và team-logos.js (mới).
+- Tests: BrowseNavigationTest và PhaseFiveInstrumentedTest (mới); MatchCalendarInstrumentedTest, PhaseFourInstrumentedTest, ArenaPreviewInstrumentedTest điều chỉnh thao tác qua màn detail mới, giữ assertion nghiệp vụ.
+- Tài liệu: PROGRESS.md, AI_LOG.md, ROADMAP.md, DESIGN.md. Những file khác đang dirty từ trước được giữ nguyên.
+
+Commit đề xuất sau review: `feat: add NBA match discovery and detail navigation`. AI không commit/push.
+
 Cập nhật: 2026-11-25 (Asia/Saigon).
 
 ## Tóm tắt
 
-Người dùng đã giao Phase 3C ngày 2026-11-25. **3B+3C đã triển khai trên Android, chờ test chung trên Samsung và review.** Đã kiểm build 3B trước sửa; 3C có index quad/inverse Matrix, phân biệt tap/drag/pinch, highlight một ghế và thông tin khu/hàng/số ghế. 54 JVM tests đạt; build/lint/test APK compile đạt, chưa chạy test Android do ADB không có thiết bị. Giữ nguyên 30 court designs / 30 cấu hình khán đài / 30 home mappings, 626.904 ghế mô phỏng, 0 logo assets / 30 mã đội fallback. Chưa sang selection nhiều ghế/Bottom Sheet/đặt vé; không commit/push. Các mục trước là lịch sử; xem mục Phase 3C cuối file.
+Người dùng đã giao nâng cấp màn sơ đồ Phase 3 và Phase 4 ngày 2026-11-25. **Đã triển khai chọn/bỏ nhiều ghế, đổi ghế có hủy, lọc tầng/khu, Bottom Sheet, góc nhìn mô phỏng và ViewModel giữ state khi xoay.** Header/theme lấy từ homeTeamId của trận mẫu đang xem. Build/unit/lint và test APK compile đạt: 65 JVM tests, lint 0 lỗi/26 cảnh báo. Chưa chạy test Android hoặc nghiệm thu Samsung do ADB không có thiết bị. Giữ nguyên dữ liệu và thiết kế 30 đội/626.904 ghế mô phỏng; chưa làm đặt vé/thanh toán, không commit/push. Các mục trước là lịch sử; bằng chứng Phase 4 ở cuối file.
 
 ## Cấu trúc Android
 
@@ -702,3 +747,158 @@ APK để test: `app/build/outputs/apk/debug/app-debug.apk`. Khi có Samsung k�
 Chờ người dùng test/review 3C; chưa nghiệm thu toàn Phase 3, không chuyển Phase 4. Commit đề xuất: `feat: add indexed arena seat hit testing and inspection highlight`.
 
 Kiểm tra cuối 3C: XML resources parse đạt; 8 Markdown files có fence cân bằng, 48 link cục bộ tồn tại; `git diff --check` đạt và staged rỗng. So baseline app/src xác nhận chỉ 5 file có sẵn được sửa đúng danh sách, cộng 3 file mới của 3C; các app files còn lại giữ nguyên. Không có kết quả Android runtime hoặc người dùng nghiệm thu mới.
+
+## Màn sơ đồ nâng cấp và Phase 4 — 2026-11-25
+
+**Đã triển khai; build/unit/lint và test APK compile đạt. Chưa có instrumentation runtime/Samsung hoặc nghiệm thu độ mượt/thẩm mỹ.** Người dùng giao Phase 4 rõ ràng; không coi việc giao việc là đã nghiệm thu 3B/3C hoặc đã thử trên máy.
+
+### Chức năng và tiêu chí
+
+- REQ-03/07/08: chọn/bỏ nhiều ghế AVAILABLE, không chọn ghế đã bán/khóa; viền chọn riêng giữ status-dot và màu nền của mọi theme. Lọc tầng/khu, xóa lọc, số vị trí/số còn trống; lựa chọn và tổng toàn bộ không mất theo lọc/LOD/reset. Danh sách thể hiện số ghế ngoài lọc, chạm hàng đó xóa lọc kèm thông báo và định vị; xóa từng hàng/xóa tất cả, list cuộn và tái sử dụng row.
+- REQ-10/11/12: BottomSheetBehavior có tóm tắt count/tổng, phần chi tiết cuộn, nút Đổi ghế/Bỏ hoặc Chọn cố định dễ tiếp cận. ViewModel giữ selection/filter/replacement/focus/sheet và snapshot camera khi recreate. Không đưa dataset/index/bitmap vào Bundle. Process-death/snapshot phiên lớn vẫn là Phase 5, chưa làm trong nhiệm vụ này.
+- Yêu cầu người dùng: header gọn, màu từ **homeTeamId của trận mô phỏng trong dataset**, chữ đen/trắng theo luminance; nút chính/reset cùng accent. Chọn 30 trận mẫu theo sân/đội qua điều khiển “Trận mẫu” thu gọn. Hai fixture đã kiểm logic: MSG/Knicks và Chase/Warriors. Không tạo trận NBA có thật hoặc giá mới.
+- Chạm ghế mở thông tin khu/hàng/số ghế/giá/trạng thái và thumbnail **Góc nhìn mô phỏng**; chạm thumbnail mở dialog lớn với cùng nhãn. Eye position và độ cao mô phỏng khác theo vị trí/tầng/hàng; CourtRenderData dùng lại art hiện có. Không ảnh chụp, không dữ liệu sightline thật hoặc mức nhìn được đảm bảo.
+- Đổi ghế thu panel, giữ ghế cũ tới khi có ghế mới hợp lệ. Hủy/tap trống/ghế khóa không làm mất ghế cũ; ghế đã có trong tập không làm trùng hoặc âm thầm giảm số lượng. Khi hủy quay về thông tin/góc nhìn ghế cũ. Mỗi action cập nhật một nguồn state.
+- Camera: Canvas không đổi bounds theo sheet, không fit khi chọn/đổi/hủy/mở/thu chi tiết. Thông báo/legend cố định chiều cao, padding đáy 64dp cố định cho peek bar. Panel mở ở phía đối diện ghế theo nửa màn hình để tránh phủ điểm ghế, không dịch camera để né. Chỉ Vừa khung, đổi arena và list-row focus là hành động chủ động thay góc nhìn; rotation giữ tâm world/zoom ratio rồi clamp theo kích thước mới. Highlight fade 160ms; sheet dùng motion Material, chưa đo độ mượt trên thiết bị.
+
+### File thuộc nhiệm vụ
+
+Tạo:
+
+- `geometry/SeatPerspective.java`.
+- `state/ArenaSelection.java`, `ArenaSelectionViewModel.java`, `GameThemeResolver.java`.
+- `ui/arena/ArenaFilterController.java`, `SeatSheetController.java`, `SeatPerspectiveView.java`.
+- `res/layout/selection_item.xml`.
+- `app/src/test/java/com/example/nbatickethub/state/ArenaSelectionTest.java`.
+- `app/src/androidTest/java/com/example/nbatickethub/ui/arena/PhaseFourInstrumentedTest.java`.
+
+Các đường dẫn Java main phía trên nằm trong `app/src/main/java/com/example/nbatickethub/`; res nằm trong `app/src/main/res/`.
+
+Sửa `MainActivity.java`, `ArenaRenderData.java`, `ArenaView.java`, `ViewportTransform.java`; hai `activity_main.xml` dọc/ngang, `preview_colors.xml`, `strings.xml`; test Android `ViewportTransformInstrumentedTest.java`; `app/build.gradle.kts`, `gradle/libs.versions.toml` (khai báo ViewModel/LiveData qua catalog, không đổi AGP/SDK/Gradle/Java); runner `tools/test-foundation.ps1`; `docs/DESIGN.md`, `ROADMAP.md`, `PROGRESS.md`, `AI_LOG.md`. Tổng 26 file tạo/sửa. Không sửa assets hoặc HTML Arena Lab/mobile preview; ArenaCatalog được giữ nguyên sau khi tách resolver riêng.
+
+### Kiểm chứng thực tế
+
+- Trước sửa: root Wrapper `assembleDebug testDebugUnitTest lintDebug assembleDebugAndroidTest --no-configuration-cache` **BUILD SUCCESSFUL 5s**, 1 executed/75 up-to-date (`.gradle/phase4-before.log`). Không coi cache build là kiểm runtime 3B/3C.
+- Source cuối: cùng lệnh **BUILD SUCCESSFUL 1m4s**, 15 executed/61 up-to-date (`.gradle/phase4/final-verification.log`), gồm guard callback filter cũ và padding layout cố định. Checkpoint trước đó đạt 1m4s (`release-check.log`); một lượt chỉ đổi padding đạt 6s, sau đó log final-verification được chạy lại trên source cuối. Không dùng mirror.
+- XML xác nhận **65 tests, 0 failures/errors/skipped**. 11 JVM tests mới kiểm toggle/tổng/idempotent remove, 300 lựa chọn không giới hạn 200, giữ ghế cũ khi trống/khóa/hủy, replace hợp lệ/trùng/ghế gốc, lọc không mất tập/tổng, focus ngoài lọc, chuyển tầng xóa khu sai, rebind cùng game/đổi game, 2 home-team themes và perspective thấp/cao khác nhau/finite. Fixture khu đã bán hết kiểm vị trí vẫn tồn tại nhưng available=0. Nhánh “không có vị trí” là dự phòng: các tầng/khu hợp lệ trong dữ liệu hiện tại đều có ghế, chưa có ca UI tạo bộ lọc 0 vị trí.
+- Một lượt test trung gian thất bại do fixture thêm tầng không có section, validator từ chối đúng quy tắc. Đã sửa fixture sang section hợp lệ với inventory BOOKED; không sửa hoặc nới validator để làm test đạt. Log trung gian `.gradle/phase4/build-final.log` giữ lỗi đó; kết quả cuối ở log final-verification.
+- Fallback runner sau khi thêm state sources/test: **OK (65 tests)**, JUnit 36.579s, `.gradle/phase4/foundation.log`; `./tools/test-foundation.ps1 -JdkPath 'C:/Program Files/Android/Android Studio/jbr'`. Đây là kiểm runner đã sửa, không thay build APK.
+- Lint cuối **0 errors, 26 warnings**, gồm version dependency, plurals, legacy resources không dùng, overdraw/button style; không suppress để giả sạch hoặc tự nâng toolchain.
+- Test Android mới có 2 ca Phase 4 (production MotionEvent/VM/controller): chọn lúc zoom, sheet hai phía không phủ điểm ghế và camera không đổi, thumbnail/dialog lớn, đổi ghế khóa/trống/hủy/thành công, filter và ActivityScenario.recreate; hai màu header theo game. Thêm 1 ca Matrix snapshot/restore ngữ nghĩa. Test APK đã compile, **chưa chạy**. `adb devices` ngoài sandbox trả danh sách rỗng; không chạy connectedDebugAndroidTest. Không có chứng cứ xoay máy thật/process death, screenshot pixel, FPS/GPU, hoặc khẳng định sửa ANR cũ.
+- SHA-256 baseline: **43 file được bảo toàn** gồm 34 assets, CourtRenderData, ArenaCatalog và 7 file mobile preview. Hình học, ghế, giá/trạng thái mock, theme/court/name/logo của 30 đội không đổi. APK embeds đúng 34 assets và có ArenaSelectionViewModel/SeatPerspectiveView/SeatSheetController trong DEX.
+- APK **8.537.424 byte**, SHA-256 `30a17adffe7111ec4b00cb43f95103a14dd0add60fecefd96f616b4871bd0ddf`; đường dẫn `app/build/outputs/apk/debug/app-debug.apk`. Không stage/commit/push.
+
+### Checklist Samsung — chưa ghi nhận thực hiện
+
+1. Chọn Knicks/MSG rồi Warriors/Chase trong Trận mẫu: header/nút/court đúng đội chủ nhà; legend trống/đã bán/khóa/đã chọn vẫn dễ phân biệt.
+2. Zoom sâu rồi chạm ghế ở cả nửa trên và nửa dưới; mở/thu sheet và mở/đóng preview lớn: ghế và độ zoom không nhảy, panel không phủ điểm ghế đang xem. Thử cả màn ngang và cỡ chữ máy đang dùng.
+3. So ghế sát sân với ghế tầng cao: góc nhìn có cảm giác khác, thumbnail/lớn cùng một vị trí, cả hai ghi Góc nhìn mô phỏng. Đây là review trực quan còn thiếu.
+4. Đổi ghế: thử ghế mới trống, ghế đã bán/khóa, lối đi và Hủy đổi. Ghế cũ chỉ mất khi thay thành công; hủy giữ ghế cũ, pan/zoom không đổi.
+5. Chọn nhiều ghế, bỏ/xóa từng hàng, lọc tầng/khu rồi xóa lọc, định vị hàng ngoài lọc và Vừa khung; kiểm tổng/số lượng. Xoay khi đã chọn/lọc/đang đổi/sheet mở: không mất ID hoặc bộ lọc, camera hợp lệ, nút Đổi ghế dễ thấy.
+
+Khi có thiết bị ADB đã ủy quyền, chạy `./gradlew.bat connectedDebugAndroidTest`. Dừng để review màn sơ đồ/Phase 4; không làm đặt vé hoặc tự chuyển Phase 5. Commit đề xuất: `feat: complete arena seat selection filters and simulated seat views`.
+
+Kiểm tra cuối: XML resources parse đạt; 8 Markdown files có fence cân bằng, 48 link cục bộ tồn tại; `git diff --check` đạt, staged rỗng. 43 protected hashes và 34 assets trong APK tiếp tục khớp; DEX có VM/resolver/sheet/perspective. Không có thêm kết quả Android runtime/Samsung hoặc nghiệm thu người dùng.
+
+
+## Nâng cấp chọn trận → khu → preview vé → xác nhận ghế (2026-11-25)
+
+**Đã triển khai trong phạm vi người dùng giao đến chọn ghế; chưa có nghiệm thu của người dùng.** Mục này thay trạng thái màn sơ đồ/spinner của các mục lịch sử phía trên. Hợp đồng thiết kế mới ở DESIGN mục 16, không gọi các bổ sung nhiều trận/góc nhìn/theme là yêu cầu nguyên văn của PDF.
+
+### Thực hiện và đối chiếu tiêu chí
+
+| Phạm vi | Kết quả triển khai | Tiêu chí / rubric liên quan |
+| --- | --- | --- |
+| Chọn trận | 31 card dữ liệu mẫu, gồm BOS @ NYK và MIA @ NYK cùng MSG, LAL @ GSW tại Chase; đủ tên/mã hai đội, giờ/sân/giá từ; không có bộ chọn sân độc lập | Yêu cầu 1; REQ-12/14 |
+| Ranh giới dữ liệu | arenaId chọn geometry; homeTeamId chọn theme; immutable inventory một match có giá, trạng thái và loại vé theo matchId. Đổi cùng sân giữ khu/lọc/camera, xóa lựa chọn cũ; đổi sân mở toàn cảnh | Yêu cầu 1; REQ-03/12 |
+| Chạm khu ở overview | Polygon + nearest-label hit-test qua inverse Matrix hiện có; highlight và mở sheet ngay, không cần pinch/focusSeat | Yêu cầu 2; REQ-01/04–06 |
+| Preview/CTA | Representative seat → tap dòng đổi candidate/ảnh → CTA mới xác nhận. Booked/locked hoặc ngoài lọc không xác nhận được. Đổi ghế giữ ghế cũ đến confirm hợp lệ; ID/tổng không bị đổi khi chỉ xem vé | Yêu cầu 2; REQ-03/10–12 |
+| Sheet mobile | Preview 16:9, mở toàn màn hình; vé nền trắng, giá nhấn mạnh, một ListView cuộn và CTA cố định. Dọc preview trên/vé dưới; ngang preview và vé hai cột. Scroll theo khu/lọc giữ trong ViewModel; sheet không gọi fit/zoom | Yêu cầu 2–3; REQ-09–12 |
+| Renderer/theme/lọc | Court/logo/30 theme cũ; nền/họa tiết/font nhóm theo homeTeamId. Camera từ ghế, rổ cao 10ft mô phỏng và khán đài đối diện; thấp/cao/side/end khác qua tọa độ và độ cao. Lọc loại/ngân sách đồng bộ vé và mask Canvas; vài nhãn giá cache ngoài onDraw; legend giữ trạng thái | Yêu cầu 2–3; REQ-07/08/13 |
+
+Không sửa JSON/geometry/logo/court art gốc, không dùng ảnh tham khảo làm asset của app, không thêm framework/dependency hoặc thay SDK/AGP/Java. Tất cả lịch/đối thủ ghép/giá/loại/trạng thái là mô phỏng. Tên font tiêu đề là lựa chọn UI của app, không tuyên bố font thương hiệu chính thức.
+
+### File của nhiệm vụ này (27 file nguồn/tài liệu)
+
+- `app/src/main/java/com/example/nbatickethub/MainActivity.java`.
+- `app/src/main/java/com/example/nbatickethub/data/mock/MockMatchSchedule.java`.
+- `app/src/main/java/com/example/nbatickethub/geometry/SectionHitTester.java`.
+- `app/src/main/java/com/example/nbatickethub/geometry/SeatPerspective.java`.
+- `app/src/main/java/com/example/nbatickethub/model/GameSeat.java`.
+- `app/src/main/java/com/example/nbatickethub/state/ArenaSelection.java`.
+- `app/src/main/java/com/example/nbatickethub/state/ArenaSelectionViewModel.java`.
+- `app/src/main/java/com/example/nbatickethub/ui/arena/ArenaFilterController.java`.
+- `app/src/main/java/com/example/nbatickethub/ui/arena/ArenaPreviewLoader.java`.
+- `app/src/main/java/com/example/nbatickethub/ui/arena/ArenaRenderData.java`.
+- `app/src/main/java/com/example/nbatickethub/ui/arena/ArenaView.java`.
+- `app/src/main/java/com/example/nbatickethub/ui/arena/SeatPerspectiveView.java`.
+- `app/src/main/java/com/example/nbatickethub/ui/arena/SeatSheetController.java`.
+- `app/src/main/java/com/example/nbatickethub/ui/arena/TeamAppearance.java`.
+- `app/src/main/res/layout/activity_main.xml`.
+- `app/src/main/res/layout-land/activity_main.xml`.
+- `app/src/main/res/layout/section_sheet_header.xml`.
+- `app/src/main/res/values/strings.xml`.
+- `app/src/test/java/com/example/nbatickethub/state/MatchSeatFlowTest.java`.
+- `app/src/test/java/com/example/nbatickethub/geometry/SectionHitTesterTest.java`.
+- `app/src/androidTest/java/com/example/nbatickethub/ui/arena/PhaseFourInstrumentedTest.java`.
+- `app/src/androidTest/java/com/example/nbatickethub/ArenaPreviewInstrumentedTest.java`.
+- `tools/test-foundation.ps1`.
+- `docs/DESIGN.md`.
+- `docs/ROADMAP.md`.
+- `docs/PROGRESS.md`.
+- `docs/AI_LOG.md`.
+
+Các scripts/ảnh/log QA trong `tmp/seat-flow/` và `.gradle/seat-flow*.log` là artifact cục bộ, không tự stage. Working tree đã có thay đổi của các nhiệm vụ trước; giữ nguyên các thay đổi không thuộc danh sách trên. Không reset/clean/commit/push.
+
+### Kiểm chứng đã quan sát
+
+- Gradle Wrapper `assembleDebug testDebugUnitTest lintDebug assembleDebugAndroidTest --no-configuration-cache`: BUILD SUCCESSFUL; 72 JVM tests (65 có trước + 5 luồng match/confirmation + 2 section hit-test). Không coi số lượng test là nghiệm thu UX.
+- Connected lượt đầu ở cỡ mặc định khoảng 411dp qua ca PhaseFour cũ trước thay đổi pin preview. Lượt 360dp đầu phát hiện lỗi thật: adapter còn ID sân cũ khi thay dataset, gây NPE ở TicketAdapter.getView. Đã xóa adapter và preview ngay khi bắt đầu load, giữ nguyên test đổi sân. Không nới assertion để làm test qua.
+- Chạy lại ở **360×640dp** bằng override tạm 945×1680px / 420dpi: `assembleDebug testDebugUnitTest lintDebug connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.example.nbatickethub.ui.arena.PhaseFourInstrumentedTest --no-configuration-cache` **BUILD SUCCESSFUL 1m48s**, 77 tasks; **2 Android tests, 0 failures/errors/skipped**. Qua luồng overview/candidate/CTA/blocked replacement/recreate/same-arena/new-arena và kiểm preview 16:9, còn ít nhất 48dp danh sách vé, low/high preview pixels khác. Log `.gradle/seat-flow-360.log`. Cỡ emulator được khôi phục trong finally.
+- Lint ở lượt này 0 errors/49 warnings; phần lớn là resource cũ không còn dùng, version dependency và style/overdraw. Không nâng toolchain hoặc suppress để che kết quả. Kết quả bản cuối và ảnh ở phần bổ sung dưới.
+
+### Giới hạn và điểm dừng
+
+Chưa có review của người dùng/Samsung, đo FPS/GPU/heap hoặc kiểm chứng sightline thực tế. Góc nhìn do renderer mô phỏng, không phải ảnh chụp. Một lần System UI của emulator báo ANR khi vừa khởi động; không quy kết đó là crash app hoặc nhận đã chữa ANR. Phần giữ state giới hạn trong configuration change, không nghiệm thu process death/Phase 5. HTML prototype không được thay đổi trong nhiệm vụ Android này.
+
+Đề nghị review: từ card đầu vào toàn sân → chọn khu và vé; so khu sát sân/bên hông/sau rổ/tầng cao; mở lớn; xác nhận/đổi/hủy; kiểm lọc và giữ vị trí cuộn; đổi hai trận MSG rồi Warriors và xoay máy. Người dùng chưa xác nhận đã thực hiện các bước này.
+
+Dừng tại chọn ghế, chờ duyệt. Không có vấn đề phạm vi nào cần xin phép thêm. Commit đề xuất: `feat: add match-scoped section ticket selection`.
+
+
+### Bản bàn giao cuối — bằng chứng sau sửa lỗi và thu gọn thông tin vé
+
+- **Build/JVM/lint:** `assembleDebug testDebugUnitTest lintDebug connectedDebugAndroidTest` bằng Wrapper, `--no-configuration-cache`; **72 JVM tests, 0 failures/errors/skipped**. Lint **0 errors/52 warnings**; không suppress hoặc đổi phiên bản công cụ. Log bản cuối `.gradle/seat-flow-release-360.log`.
+- **360×640dp:** override tạm 945×1680px với 420dpi, lọc test theo package `com.example.nbatickethub.ui.arena`: **13 tests, 0 failures/errors/skipped**, gồm 3 PhaseFour, 6 ViewportTransform, 2 SeatInspection, 1 ArenaCamera và 1 ArenaTheme. Bao gồm inverse Matrix/pan/pinch/biên, cache giữ khi đổi theme, overview section tap, candidate/CTA, blocked replacement, đổi trận cùng sân/khác sân, recreate, xoay ngang/dọc, ảnh thấp/cao khác và fullscreen không đổi camera. XML: `tmp/seat-flow/results-release-360.xml`.
+- **Khoảng 411.4×914.3dp:** kích thước gốc 1080×2400px / 420dpi, chạy lại **3 PhaseFour tests, 0 failures/errors/skipped**, log `.gradle/seat-flow-release-411.log`, XML `tmp/seat-flow/results-release-411.xml`. Cỡ emulator được khôi phục trong finally sau lượt 360dp. Test lần này kiểm **getGlobalVisibleRect** của vé/CTA: không chỉ có chiều cao layout mà nằm trong màn hình; danh sách vẫn còn tối thiểu 48dp sau khi preview vé. CTA chờ có candidate mới hiện; dòng mô tả candidate một dòng để không lấn vùng vé.
+- **QA ảnh:** đã lấy 6 PNG cho mỗi cỡ màn: overview, low-section, high-section, ticket-preview, fullscreen và landscape. [Toàn cảnh 360dp](../tmp/seat-flow/qa-360-final/overview.png), [khu thấp](../tmp/seat-flow/qa-360-final/low-section.png), [vé đang xem](../tmp/seat-flow/qa-360-final/ticket-preview.png), [toàn màn hình](../tmp/seat-flow/qa-360-final/fullscreen.png); [khu thấp 411dp](../tmp/seat-flow/qa-411-final/low-section.png), [tầng cao](../tmp/seat-flow/qa-411-final/high-section.png), [ngang](../tmp/seat-flow/qa-411-final/landscape.png). Kiểm tra ảnh để xác nhận khu thấp/cao có phối cảnh/độ cao khác, mặt sân/rổ/khán đài hiện theo khung mô phỏng. Không coi ảnh này là người dùng đã nghiệm thu.
+- **Lỗi được sửa trong quá trình nghiệm tra:** adapter giữ ID sân cũ gây NPE khi đổi arena; `layout_gravity=bottom` cộng vị trí với BottomSheetBehavior đẩy vé/CTA ngoài màn hình (đổi sang top|end và tăng assertion vùng nhìn thấy); mất active pointer trong MOVE vẫn cho UP thành tap (hủy cả gesture, giữ nguyên test hồi quy cũ). Lượt rộng trung gian 12/13 qua, lỗi pointer ở `.gradle/seat-flow-360-regression.log`; bản bàn giao cuối 13/13 qua. Lỗi hình học/camera không được che bằng việc bỏ test. File ảnh từ thư mục app bị harness xóa sau uninstall, nên QA sau chuyển sang Download trên emulator rồi pull về workspace; đây là thao tác test, không phải production I/O.
+- **Artifact:** [APK debug](../app/build/outputs/apk/debug/app-debug.apk), **8,550,237 byte**, SHA-256 `0f969a21d2c5acf1e3458b4c3800c81ebede8a83982a42881ec7fb2c087c79f8`. Toàn bộ **34 asset files** trong APK khớp byte với source hiện tại; Git không có diff assets. XML resources parse và kiểm Markdown/local links thực hiện sau cập nhật; `git diff --check` đạt. Staged paths: **0**; AI không stage/commit/push.
+
+Các kết quả emulator là bằng chứng kiểm thử do AI thực hiện, chưa thay kiểm tra trên Samsung hoặc xác nhận người dùng. Không có đo FPS/GPU/heap và không nghiệm thu process death. Đã cập nhật PROGRESS/AI_LOG/DESIGN/ROADMAP; giữ điểm dừng để người dùng duyệt. Không làm thêm chức năng sau chọn ghế.
+
+
+## Đồng bộ HTML preview cho QA — 2026-11-25
+
+Theo yêu cầu mới, tái dùng prototype cũ tại `tools/arena-preview/index.html`, renderer và 30 payload hình học/theme Java đã xuất. Chỉ sửa preview; không sửa Android hoặc assets/export gốc. Đã thêm 31 trận mẫu theo lịch MockMatchSchedule, cùng công thức hash/trạng thái/giá/loại vé; chọn khu từ overview, representative/candidate/CTA xác nhận, vé theo khu, đổi trận cùng sân giữ khu/lọc/camera và xóa lựa chọn, đổi sân fit; preview có rổ/khán đài, 16:9/fullscreen, theme và lọc loại/ngân sách. Đây là HTML mô phỏng phục vụ QA, không phải app Android hoặc booking thật.
+
+File sửa: `tools/arena-preview/index.html`, `mobile.js`, `mobile.css`, `selection-model.js`, `seat-perspective.js`, `arena-renderer.js`, `source-data.js`, `test-preview.cjs`, `README.md`; `docs/PROGRESS.md`, `docs/AI_LOG.md`. Source-data sinh lại từ 30 theme/geometry snapshot và manifests sẵn có, không tạo tọa độ ghế mới.
+
+Kiểm tra: `node --check` các JS thay đổi và `node tools/arena-preview/test-preview.cjs` đạt. Test host dùng dữ liệu thật của prototype + DOM/Canvas doubles, kiểm 31 trận/30 đội, preview chưa chọn, xác nhận/blocked, chạm khu ở overview, danh sách vé, fullscreen, đổi cùng sân giữ lọc/camera và đổi arena reset. Browser host báo unavailable: chưa kiểm pixel/fit trong browser, không lấy test doubles làm nghiệm thu UI. Không chạy lại Gradle vì không sửa Android. Hướng dẫn QA ở `tools/arena-preview/README.md`.
+
+Mở file HTML trực tiếp và Ctrl+F5 để QA ở 360–412px; chờ người dùng review. Không commit/push. Commit đề xuất: `feat: sync HTML seat preview with match and section flow`.
+
+## QA HTML Phase 4 — 2026-11-26
+
+Lượt này tiếp tục phần bị ngắt, chỉ QA preview hiện có; không thay đổi code Android/HTML vì chưa phát hiện lỗi ứng dụng cần sửa. Các thay đổi lịch tương đối và bộ lọc đã có trước lượt QA được giữ nguyên. Kết quả dưới đây thay cho giới hạn browser unavailable của mục HTML trước, không thay bằng chứng Android.
+
+- Mở trực tiếp `tools/arena-preview/index.html` bằng Chrome Guest, DevTools Responsive **390 × 844 CSS px**, múi giờ Asia/Saigon. Browser connector báo host unavailable nhưng điều khiển cửa sổ Chrome bằng Computer Use hoạt động; không cần cài browser automation.
+- **Đạt trên Chrome:** mặc định 7 ngày gồm 26/11–2/12, nhóm theo ngày; Hôm nay có BOS@NYK và LAL@GSW; chọn 27/11 bằng lịch chỉ còn MIA@NYK. Chọn Knicks chuyển sang mọi trận sắp tới, có cả sân nhà/khách và trận 6/12 ngoài 7 ngày. Chỉ sân nhà còn đúng ba trận BOS/MIA/LAL tại MSG; kết hợp ngày 27/11 còn một trận. Xóa lọc về 7 ngày/Tất cả đội và ẩn Chỉ sân nhà. Quay lại danh sách giữ bộ lọc.
+- **Đạt trên Chrome:** từ toàn cảnh chạm nhãn L05 mở sheet, góc nhìn và vé ngay, không zoom. Cuộn tới R1 ghế 9, chạm để cập nhật góc nhìn rồi bấm Chọn ghế: 1 ghế/86,25 US$. Đổi ghế giữ khu/vị trí cuộn và ghế cũ; chạm R1 ghế 10 chỉ đổi preview, xác nhận mới thay ghế. Thu/mở sheet giữ toàn cảnh, không nhảy bản đồ; CTA nằm trong khung mobile. Chạm U12 ở toàn cảnh cho góc nhìn cao/rộng khác rõ L05.
+- **Đạt trên Chrome:** đổi BOS@NYK → MIA@NYK cùng MSG giữ L05 và toàn cảnh, không mang ghế cũ (0 ghế); giá khu/vé đổi **86,25 → 91,50 US$**, đối thủ/giờ đổi đúng; loại R1 ghế 6 đổi VIP sang Tiêu chuẩn, ghế 7 đổi Tiêu chuẩn sang VIP trong danh sách vé trận mới.
+- **Kiểm tra host:** `node tools/arena-preview/test-preview.cjs` PASS (33 trận tương đối/30 theme, date/team/home filters, loại trận đã bắt đầu, confirmation/blocked, overview, fullscreen, same-arena camera/filter, new-arena reset). DOM/Canvas doubles chỉ chứng minh logic; kiểm tra hình ảnh/thao tác nêu trên chạy riêng trên Chrome. `node --check tools/arena-preview/mobile.js`, `node --check tools/arena-preview/match-list.js` và `git diff --check` đạt; Git có cảnh báo LF/CRLF ở file cũ, không có lỗi whitespace. Staged paths: 0.
+- **Giới hạn:** lượt này chỉ QA HTML ở 390px; không chạy lại Gradle/emulator, xoay Android hoặc nghiệm thu 360/412dp. Loại trận đã bắt đầu được kiểm tra bằng host test, không đợi đồng hồ Chrome qua giờ bắt đầu. Chưa QA thủ công mọi đội, fullscreen hoặc pan/pinch ở mức zoom khác; test host có kiểm tra camera số. Không suy ra người dùng đã nghiệm thu. Những kết quả Android trước chỉ áp dụng đúng phiên bản đã ghi, không chứng minh mọi thay đổi lịch mới đã chạy thiết bị.
+
+Mở lại: Chrome → Ctrl+O → chọn `D:\24tn-fitus\project\nba-tickethub\tools\arena-preview\index.html` → F12, bật Device Toolbar và đặt 390 × 844; Ctrl+F5 nếu đang giữ trang cũ. Không cần local server; giữ nguyên các file JS/CSS và thư mục dữ liệu đi kèm.
+
+Chỉ cập nhật `docs/PROGRESS.md`, `docs/AI_LOG.md` trong lượt QA này. Dừng chờ review, không commit/push. Commit đề xuất cho phần ghi nhận QA: `docs: record Phase 4 mobile preview QA`.

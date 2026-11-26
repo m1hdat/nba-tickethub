@@ -1,4 +1,5 @@
 <resources>
+    <color name="seat_selected">#117149</color>
     <color name="arena_hit_outline">#142D52</color>
     <color name="preview_surface">#F5F7FA</color>
     <color name="preview_selector_surface">#FFFFFF</color>

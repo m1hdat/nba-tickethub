@@ -17,6 +17,8 @@ public final class ArenaPreviewLoader implements AutoCloseable {
     private Future<?> pending;
     private int generation;
     private boolean closed;
+    public java.util.Map<String, Long> startingPrices = java.util.Collections.emptyMap();
+    private final java.util.Map<String, android.graphics.Bitmap> logos = new java.util.HashMap<>();
     private volatile java.util.Map<String, CourtRenderData> courts = java.util.Collections.emptyMap();
 
     public ArenaPreviewLoader(AssetSource assets) { this.assets = assets; }
@@ -28,10 +30,23 @@ public final class ArenaPreviewLoader implements AutoCloseable {
             for (com.example.nbatickethub.model.ArenaTheme theme : catalog.themes) {
                 if (Thread.currentThread().isInterrupted()) { throw new java.io.InterruptedIOException("Courts cancelled"); }
                 prepared.put(theme.id, new CourtRenderData(theme, assets));
+                try (java.io.InputStream input = assets.open("logos/" + theme.teamId + ".png")) {
+                    android.graphics.BitmapFactory.Options options = new android.graphics.BitmapFactory.Options();
+                    options.inSampleSize = 2;
+                    logos.put(theme.teamId, android.graphics.BitmapFactory.decodeStream(input, null, options));
+                } catch (java.io.IOException error) {
+                    android.util.Log.w("TeamLogo", "Using existing court logo/code fallback: " + theme.teamId);
+                }
             }
             courts = java.util.Collections.unmodifiableMap(prepared);
+            startingPrices = com.example.nbatickethub.data.mock.MockMatchSchedule.startingPrices(catalog, assets);
             return catalog;
         }, callback);
+    }
+
+    public android.graphics.Bitmap teamLogo(com.example.nbatickethub.model.ArenaTheme theme) {
+        android.graphics.Bitmap logo = logos.get(theme.teamId);
+        return logo == null ? court(theme.id).logoBitmap() : logo;
     }
 
     public CourtRenderData court(String themeId) {
@@ -41,6 +56,10 @@ public final class ArenaPreviewLoader implements AutoCloseable {
     }
 
     public void arena(ArenaProfile profile, Callback<ArenaRenderData> callback) {
+        arena(profile, null, null, callback);
+    }
+
+    public void arena(ArenaProfile profile, com.example.nbatickethub.model.Game match, ArenaCatalog catalog, Callback<ArenaRenderData> callback) {
         submit(() -> {
             if (Looper.myLooper() == Looper.getMainLooper()) {
                 throw new IllegalStateException("Arena pipeline must not run on main thread");
@@ -50,6 +69,7 @@ public final class ArenaPreviewLoader implements AutoCloseable {
             android.os.Trace.beginSection("Arena.loadValidateGenerate");
             try { dataset = new MockArenaRepository(assets).load(profile.dataAsset); }
             finally { android.os.Trace.endSection(); }
+            if (match != null) { dataset = com.example.nbatickethub.data.mock.MockMatchSchedule.inventory(dataset, match, catalog); }
             long loaded = android.os.SystemClock.elapsedRealtime();
             com.example.nbatickethub.geometry.ArenaScene scene;
             android.os.Trace.beginSection("Arena.project");

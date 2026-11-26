@@ -1,6 +1,8 @@
 # Kế hoạch phát triển
 
-Cập nhật: 2026-11-25. Người dùng giao **Phase 3C Android**, yêu cầu kiểm build 3B trước và test chung trên Samsung sau bàn giao. Hit-testing theo inverse Matrix, chỉ mục quad, highlight một ghế và thông tin khu/hàng/số ghế đã triển khai. Giữ nguyên 30 thiết kế đội/sân và 626.904 ghế mô phỏng. Chờ kiểm runtime Samsung/review 3B+3C; chưa làm selection nhiều ghế, Bottom Sheet hoặc đặt vé. Hợp đồng dữ liệu ở [DESIGN §14](DESIGN.md#14-phase-3a1--30-sân-nhà-hình-học-arena-và-palette-đội), bằng chứng tại [PROGRESS](PROGRESS.md).
+**Phạm vi hiện hành — 2026-11-26:** người dùng giao Phase 5 là Trang chủ/Lịch đấu/Đội bóng/Chi tiết trận và nối vào chọn ghế Phase 4, có HTML preview để duyệt. Phase 6 dành cho Đặt vé/Vé của tôi, chưa triển khai. Mô tả Phase 5 lifecycle/scale trước đây là lịch sử kế hoạch; các hạng mục chất lượng P0 chưa có bằng chứng vẫn cần theo dõi, không coi đã hoàn tất khi thêm màn khám phá. Kết quả ở PROGRESS; dừng sau Phase 5, không tự commit/push.
+
+Cập nhật: 2026-11-25. Người dùng giao **luồng Android chọn trận → khu → preview vé → xác nhận ghế trong Phase 4**. Đã triển khai, 72 JVM tests/build/lint đạt; emulator 360dp qua 13 ca UI/camera/hit-test/theme, 411dp qua 3 ca Phase 4 gồm xoay ngang/dọc. Chờ người dùng review; không coi test tự động là nghiệm thu thẩm mỹ hoặc Samsung. Giữ geometry/logo/theme 30 đội, không làm đặt vé hoặc Phase 5 toàn diện. Hợp đồng tại DESIGN mục 16, bằng chứng tại PROGRESS.
 
 200 ghế chỉ là fixture nhỏ phân bố trên toàn arena thu nhỏ, không phải một khu duy nhất hay giới hạn thiết kế cuối. Profile 200/1k/10k/30k/50k dùng chung schema/pipeline/index; 30k/50k là tham số mock/benchmark, không phải sức chứa NBA thật hoặc giới hạn schema. Phải làm rõ cách nộp full-arena so với khoảng 150–250 đối tượng trong rubric; chưa có xác nhận giảng viên.
 
@@ -15,9 +17,9 @@ Cập nhật: 2026-11-25. Người dùng giao **Phase 3C Android**, yêu cầu k
 | 3A.1. Theme đội chủ nhà | ArenaGeometry/ArenaTheme độc lập; 30 court concepts + 30 home arena geometries, palette ghế theo teamId; Android Canvas và HTML chung dữ liệu | Đổi theme giữ tọa độ/Path; kiểm data/contrast/legend; kiểm 30 mapping đội/sân, palette đổi khi dùng chung sân; người dùng review 30 court/khán đài | Đã triển khai; unit/export/build đạt ở mirror; chờ review trực quan, chưa sang 3B |
 | 3B. Camera và hiệu năng | Matrix fit, pan/pinch theo focal point, giới hạn pan/zoom, Reset; LOD/culling/cache batches phù hợp | Test transform/anchor/clamp; kiểm tra gesture thực, đo chi phí rendering | Đã triển khai; build/unit/lint đạt tại root; test Android đã biên dịch, chưa chạy; gesture/chi phí rendering Samsung và nghiệm thu còn chờ |
 | 3C. Hit-testing | Inverse camera Matrix, spatial candidates/quad test, phân biệt tap/drag/pinch, highlight/debug | Test ghế/trống/biên sau pan/zoom, chuyển sân, dữ liệu lớn | Đã triển khai; 54 JVM tests đạt gồm 6 ca hit-test; build/lint đạt; test Android đã compile, chờ chạy Samsung và review chung 3B+3C trước Phase 4 |
-| 4. Selection, filter và sheet | ViewModel, tập chọn ổn định qua LOD; filter tầng/section, aggregate theo khu, tổng mock, focus/xóa/cuộn; đồng bộ phiên bản worker | REQ-03, 08, 10–12; ID/tổng không lệch khi lọc/LOD/reset; focus đúng tầng/hàng/ghế, không publish index/filter cũ | Chưa thực hiện |
-| 5. Lifecycle, scale và chất lượng P0 | Rotation/restore, bộ nhớ saved state/snapshot phiên, dọc/ngang/gesture; đo 1k/10k/30k/50k, frame/query/load/heap/GC, end-to-end | Có số đo trên thiết bị tham chiếu; so index với oracle; không dùng kết quả 200 ghế để kết luận quy mô lớn; sửa lỗi P0 | Chưa thực hiện |
-| 6. Mở rộng có điều kiện | Chỉ các P1 được duyệt: nhiều trận, search, xác nhận mua/Order mock, lịch sử | P0 đã ổn, có scope bổ sung và thời gian; kiểm tra lại luồng bị ảnh hưởng | Chưa duyệt, có thể bỏ qua |
+| 4. Selection, filter và sheet | ViewModel, chọn/bỏ/đổi có hủy; lọc tầng/khu, tổng mock, focus/xóa/cuộn; sheet overlay giữ camera và góc nhìn mô phỏng theo nhiệm vụ mới | REQ-03, 08, 10–12; ID/tổng không lệch khi lọc/LOD/reset; focus đúng; xác minh thao tác sheet/rotation và hai trận mẫu | Đã triển khai luồng chọn trận/khu/vé; 72 JVM tests, build/lint đạt; 13 ca Android ở 360dp và 3 ca Phase 4 ở 411dp đạt; chờ người dùng/Samsung nghiệm thu |
+| 5. Trang chủ và khám phá trận | Poster hai đội, ba tab, lịch dùng lọc Phase 4, 30 đội, chi tiết và CTA theo matchId; HTML 390px | Đúng arena/home theme/giá/vé, quay lại giữ lọc/cuộn; so hai home team ở 360–412dp, build/test và chờ review | Đã triển khai theo yêu cầu 26/11; bằng chứng và hạn chế ở PROGRESS, chờ người dùng duyệt |
+| 6. Đặt vé và Vé của tôi | Luồng xác nhận/Order mock/lịch sử theo nhiệm vụ tiếp theo | Chỉ triển khai khi người dùng giao; không giao dịch thật | Chưa thực hiện, chưa được giao triển khai |
 | 7. Bàn giao | README, AI log đầy đủ; video 1–5 phút; checklist rubric, artifact và link truy cập | REQ-14–18 có bằng chứng; sinh viên tự review và hiểu mã | Chưa thực hiện |
 
 Không đánh dấu phase triển khai hoàn thành từ việc có tài liệu hoặc test template. Trạng thái/bằng chứng cụ thể ghi tại [PROGRESS.md](PROGRESS.md); tác động của AI ghi tại [AI_LOG.md](AI_LOG.md).
@@ -61,4 +63,11 @@ Phạm vi Phase 2 lịch sử là geometry và tính hợp lệ dữ liệu; nhi
 
 Mỗi message chỉ dùng khi thay đổi tương ứng đã thực hiện và được cho phép commit; số lượng thực tế phụ thuộc các phần việc có nghĩa. README phải có mục nhật ký/tóm tắt AI và link AI_LOG, không chỉ để AI_LOG riêng rồi coi đã đạt yêu cầu README của đề.
 
-**Điểm dừng hiện tại:** bàn giao Phase 3C để người dùng test chung 3B+3C trên Samsung. Không suy diễn người dùng đã kiểm runtime hoặc nghiệm thu 3B/3C. Build trước sửa 3C đạt; unit/index/build/lint 3C đạt, instrumentation chưa chạy vì không có thiết bị ADB. Không chuyển Phase 4 hoặc commit/push. Các đoạn mô tả “chờ 3B/3C” phía trên lưu kế hoạch/lịch sử trước lần giao việc này.
+**Điểm dừng lịch sử trước nhiệm vụ luồng chọn trận:** bàn giao màn sơ đồ nâng cấp và Phase 4 để người dùng thử trên Samsung. Chưa suy diễn runtime, độ mượt/góc nhìn thẩm mỹ hoặc nghiệm thu. Không sang Phase 5/đặt vé/checkout, không commit/push. Các đoạn mô tả “chờ 3B/3C/4” phía trên giữ kế hoạch/lịch sử trước các nhiệm vụ đã được giao sau đó.
+
+
+## Điều chỉnh phạm vi được giao — chọn trận/khu/vé (2026-11-25)
+
+Người dùng trực tiếp giao nâng cấp Phase 4: chọn trận mẫu (ít nhất 3, gồm 2 cùng sân), khu từ overview, vé theo matchId, preview trước CTA, góc nhìn từng khu/ghế và theme mobile 30 đội. Phần nhiều trận mẫu trước nằm ở P1/Phase 6 nay được cho phép **chỉ đến bước chọn ghế**; không suy ra quyền triển khai booking, tài khoản, lịch sử hoặc thanh toán.
+
+Tiêu chí: chạm khu từ toàn sân mở preview/vé; đổi thấp/cao có phối cảnh khác; đổi trận cùng sân giữ ngữ cảnh/camera nhưng không giữ ghế; đổi home team đổi nhận diện; sheet/filter/replacement/rotation giữ state đúng ở 360–412dp. Mức kiểm chứng thực tế và phần còn chờ review ở [PROGRESS](PROGRESS.md), hợp đồng ở DESIGN mục 16. Dừng để người dùng duyệt; không tự chuyển phase, commit/push.

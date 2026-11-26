@@ -89,41 +89,49 @@ public class ArenaPreviewInstrumentedTest {
         }
     }
 
-    @Test public void launcherSwitchesVenuesAndRestoresVenueAfterRecreate() {
+    @Test public void launcherSelectsMatchAndRestoresItAfterRecreate() {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
-            awaitArena(scenario, "msg");
-            scenario.onActivity(activity -> ((Spinner) activity.findViewById(R.id.arena_selector)).setSelection(1));
-            awaitArena(scenario, "chase");
-            scenario.onActivity(activity -> ((Spinner) activity.findViewById(R.id.arena_selector)).setSelection(2));
-            awaitArena(scenario, "crypto");
-            scenario.onActivity(activity -> ((Spinner) activity.findViewById(R.id.theme_selector)).setSelection(20));
-            awaitArena(scenario, "msg");
-            scenario.recreate();
-            awaitArena(scenario, "msg");
-            scenario.onActivity(activity -> {
-                assertTrue(activity.findViewById(R.id.reset_view).isEnabled());
-                assertTrue(activity.findViewById(R.id.arena_view).getHeight() > 0);
-                assertEquals("nyk-demo", ((ArenaView) activity.findViewById(R.id.arena_view)).displayedThemeId());
+            choose(scenario, 0); awaitArena(scenario, "msg");
+            scenario.onActivity(a -> a.findViewById(R.id.show_games).performClick());
+            choose(scenario, 2); awaitArena(scenario, "chase");
+            scenario.recreate(); awaitArena(scenario, "chase");
+            scenario.onActivity(a -> {
+                assertTrue(a.findViewById(R.id.reset_view).isEnabled());
+                assertEquals("gsw-demo", ((ArenaView)a.findViewById(R.id.arena_view)).displayedThemeId());
             });
         }
     }
-
-    @Test public void thirtyTeamSelectionsLoadTheirMappedHomeAndIdentity() throws Exception {
+    @Test public void thirtyHomeTeamsResolveThroughMatchCards() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         ArenaCatalog catalog = new ArenaCatalogReader().load(new AndroidAssetSource(context.getAssets()));
+        java.util.List<com.example.nbatickethub.model.Game> games = com.example.nbatickethub.data.mock.MockMatchSchedule.games(catalog);
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
-            awaitArena(scenario, "msg");
-            for (int i = 0; i < catalog.themes.size(); i++) {
-                final int position = i + 1;
-                com.example.nbatickethub.model.ArenaTheme theme = catalog.themes.get(i);
-                scenario.onActivity(activity -> ((Spinner) activity.findViewById(R.id.theme_selector)).setSelection(position));
-                awaitArena(scenario, catalog.homeArena(theme.teamId).id);
-                scenario.onActivity(activity -> {
-                    assertEquals(theme.id, ((ArenaView) activity.findViewById(R.id.arena_view)).displayedThemeId());
-                    assertEquals(theme.name, ((android.widget.TextView) activity.findViewById(R.id.venue_title)).getText().toString());
-                });
+            for (int i = 0; i < games.size(); i++) {
+                if (i > 0) scenario.onActivity(a -> a.findViewById(R.id.show_games).performClick());
+                choose(scenario, i); awaitArena(scenario, games.get(i).arenaId);
+                final com.example.nbatickethub.model.Game game = games.get(i);
+                scenario.onActivity(a -> assertEquals(com.example.nbatickethub.state.GameThemeResolver.resolve(catalog, game).id,
+                        ((ArenaView)a.findViewById(R.id.arena_view)).displayedThemeId()));
             }
         }
+    }
+    private void choose(ActivityScenario<MainActivity> scenario, int index) {
+        long deadline = SystemClock.uptimeMillis() + 30000;
+        AtomicBoolean clicked = new AtomicBoolean();
+        do {
+            scenario.onActivity(a -> {
+                android.widget.LinearLayout cards = a.findViewById(R.id.game_cards);
+                com.example.nbatickethub.state.ArenaSelectionViewModel state = new androidx.lifecycle.ViewModelProvider(a).get(com.example.nbatickethub.state.ArenaSelectionViewModel.class);
+                if (state.sampleGames == null) return;
+                if (state.navigation.page != com.example.nbatickethub.state.BrowseNavigation.Page.SCHEDULE) a.findViewById(R.id.show_games).performClick();
+                com.example.nbatickethub.model.Game target = state.sampleGames.get(index);
+                if (index > 2 && !target.homeTeamId.equals(state.matchList.teamId)) { state.matchList.selectTeam(target.homeTeamId); a.findViewById(R.id.show_games).performClick(); }
+                for (int i=0;i<cards.getChildCount();i++) if (target.id.equals(cards.getChildAt(i).getTag())) { cards.getChildAt(i).performClick();a.findViewById(R.id.detail_choose_seats).performClick();clicked.set(true);break; }
+            });
+            if (clicked.get()) return;
+            SystemClock.sleep(50);
+        } while (SystemClock.uptimeMillis() < deadline);
+        fail("Game cards timed out");
     }
 
     private void awaitArena(ActivityScenario<MainActivity> scenario, String id) {

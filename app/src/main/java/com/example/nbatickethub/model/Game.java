@@ -7,9 +7,16 @@ public final class Game {
     public final String awayTeamId;
     public final String arenaId;
     public final String displayTime;
+    public final long startsAtMillis;
     public final DataProvenance provenance;
 
     public Game(String id, String homeTeamId, String awayTeamId, String arenaId, String displayTime, DataProvenance provenance) {
+        this(id, homeTeamId, awayTeamId, arenaId, displayTime, provenance, 0);
+    }
+
+    public Game(String id, String homeTeamId, String awayTeamId, String arenaId, String displayTime,
+                DataProvenance provenance, long startsAtMillis) {
+        this.startsAtMillis = startsAtMillis;
         this.id = ModelChecks.id(id);
         this.homeTeamId = ModelChecks.id(homeTeamId);
         this.awayTeamId = ModelChecks.id(awayTeamId);

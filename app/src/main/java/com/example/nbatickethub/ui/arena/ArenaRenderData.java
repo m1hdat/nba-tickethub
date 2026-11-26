@@ -17,6 +17,7 @@ public final class ArenaRenderData {
     final SeatHitTester hitTester;
     final Seat[] seatsByGeometry;
     final Path[] sectionPaths;
+    final float[][] sectionPolygons;
     final Path[] rowLines;
     final Path[] seatPaths;
     final int[] seatStatuses;
@@ -30,6 +31,7 @@ public final class ArenaRenderData {
     final float minSeatWidth;
     final Path envelope = new Path();
     final String[] labels;
+    final String[] priceLabels;
     final float[] labelPoints;
 
     public ArenaRenderData(ArenaScene scene) throws InterruptedIOException {
@@ -38,6 +40,7 @@ public final class ArenaRenderData {
         seatsByGeometry = new Seat[scene.seats.size()];
         for (Seat seat : scene.dataset.seatOrder) { seatsByGeometry[seat.geometryIndex] = seat; }
         sectionPaths = new Path[scene.dataset.sections.size()];
+        sectionPolygons = new float[sectionPaths.length][];
         sectionBounds = new RectF[sectionPaths.length];
         Map<String, Integer> sectionIndices = new LinkedHashMap<>();
         List<List<Integer>> batchesBySection = new ArrayList<>();
@@ -51,6 +54,7 @@ public final class ArenaRenderData {
         }
         minSeatWidth = smallestSeat;
         labels = new String[sectionPaths.length];
+        priceLabels = new String[sectionPaths.length];
         sectionLevelOrders = new int[sectionPaths.length];
         labelPoints = new float[sectionPaths.length * 2];
         rowLines = new Path[scene.dataset.sections.size()];
@@ -64,7 +68,8 @@ public final class ArenaRenderData {
         int index = 0;
         for (Section section : scene.dataset.sections.values()) {
             Path path = new Path();
-            append(path, ArenaOutlines.section(scene, section.boundary));
+            sectionPolygons[index] = ArenaOutlines.section(scene, section.boundary);
+            append(path, sectionPolygons[index]);
             path.close();
             sectionPaths[index] = path;
             sectionBounds[index] = new RectF();
@@ -72,7 +77,7 @@ public final class ArenaRenderData {
             sectionIndices.put(section.id, index);
             batchesBySection.add(new ArrayList<>());
             sectionLevelOrders[index] = scene.dataset.levels.get(section.levelId).order;
-            labels[index] = section.code.replace("SIM-", "") + "*";
+            labels[index] = section.code.replace("SIM-", "");
             float[] point = ArenaOutlines.label(scene, section.boundary);
             labelPoints[index * 2] = point[0];
             labelPoints[index * 2 + 1] = point[1];
@@ -80,6 +85,23 @@ public final class ArenaRenderData {
             rowLines[index] = rows;
             rowsBySection.put(section.id, rows);
             index++;
+        }
+        java.util.Map<String, Long> minima = new java.util.HashMap<>();
+        java.util.Map<String, GameSeat> offers = scene.dataset.inventory.values().iterator().next();
+        for (Seat seat : scene.dataset.seatOrder) {
+            GameSeat offer = offers.get(seat.id);
+            if (offer.baseStatus == SeatStatus.AVAILABLE) {
+                String section = scene.dataset.rows.get(seat.rowId).sectionId;
+                minima.merge(section, offer.price.amountMinor, Math::min);
+            }
+        }
+        int priceIndex = 0;
+        for (String section : scene.dataset.sections.keySet()) {
+            Long minimum = minima.get(section);
+            if (minimum != null && priceIndex % Math.max(1, sectionPaths.length / 4) == 0) {
+                priceLabels[priceIndex] = "$" + java.math.BigDecimal.valueOf(minimum, 2).stripTrailingZeros().toPlainString();
+            }
+            priceIndex++;
         }
         for (SeatRow row : scene.dataset.rows.values()) {
             append(rowsBySection.get(row.sectionId), ArenaOutlines.arc(scene, row.boundary,
@@ -130,6 +152,11 @@ public final class ArenaRenderData {
     }
 
     public String arenaId() { return scene.profile.id; }
+    public com.example.nbatickethub.data.ArenaDataset dataset() { return scene.dataset; }
+    public Game previewGame() { return scene.dataset.games.values().iterator().next(); }
+    public com.example.nbatickethub.geometry.SeatPerspective perspective(String id) {
+        return new com.example.nbatickethub.geometry.SeatPerspective(scene, scene.dataset.seats.get(id));
+    }
     public int seatCount() { return scene.seats.size(); }
     public int sectionCount() { return scene.dataset.sections.size(); }
     public String homeTeamName() { return scene.profile.homeTeam.displayName; }

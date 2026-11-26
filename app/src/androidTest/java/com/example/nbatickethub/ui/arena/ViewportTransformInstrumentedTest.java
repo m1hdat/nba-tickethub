@@ -104,4 +104,14 @@ public class ViewportTransformInstrumentedTest {
         camera.worldToScreen(bounds);
         assertArrayEquals(new float[]{50, 40, 950, 760}, bounds, .001f);
     }
+
+    @Test public void semanticSnapshotRestoresWorldCenterAndZoomAfterRecreation() {
+        ViewportTransform original = camera();
+        original.zoom(6, 500, 400, 500, 400); original.pan(50, -20);
+        float[] saved = original.snapshot();
+        ViewportTransform recreated = new ViewportTransform();
+        recreated.configure(100, -50, 1100, 750, 0, 0, 800, 1000, 20, true);
+        recreated.restore(saved);
+        assertArrayEquals(saved, recreated.snapshot(), .002f);
+    }
 }

@@ -83,6 +83,19 @@ public final class ViewportTransform {
     }
 
     public void concat(Canvas canvas) { canvas.concat(matrix); }
+    public float[] snapshot() {
+        float[] center = {viewport.centerX(), viewport.centerY(), scale / fitScale};
+        inverse.mapPoints(center, 0, center, 0, 1);
+        return center;
+    }
+    public void restore(float[] snapshot) {
+        if (!ready || snapshot.length != 3 || !Float.isFinite(snapshot[0])
+                || !Float.isFinite(snapshot[1]) || !Float.isFinite(snapshot[2]) || snapshot[2] <= 0) { return; }
+        scale = Math.max(fitScale, Math.min(maxScale, fitScale * snapshot[2]));
+        tx = viewport.centerX() - scale * snapshot[0];
+        ty = viewport.centerY() - scale * snapshot[1];
+        update();
+    }
     public void worldToScreen(float[] points) { matrix.mapPoints(points); }
     public void screenToWorld(float[] points) { inverse.mapPoints(points); }
     public void visibleWorld(RectF result) {

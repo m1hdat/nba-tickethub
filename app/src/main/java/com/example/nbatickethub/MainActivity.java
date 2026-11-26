@@ -21,9 +21,14 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 public class MainActivity extends AppCompatActivity {
+    private com.example.nbatickethub.state.ArenaSelectionViewModel model;
+    private com.example.nbatickethub.ui.arena.SeatSheetController sheet;
+    private com.example.nbatickethub.ui.arena.ArenaFilterController filters;
     private static final String STATE_ARENA = "previewArenaId";
     private static final String STATE_THEME = "previewThemeOverride";
     private ArenaPreviewLoader loader;
+    private com.example.nbatickethub.ui.arena.MatchPickerController matchPicker;
+    private com.example.nbatickethub.ui.arena.BrowseController browse;
     private ArenaView arenaView;
     private TextView title, subtitle, status;
     private String selectedId;
@@ -34,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        model = new androidx.lifecycle.ViewModelProvider(this).get(com.example.nbatickethub.state.ArenaSelectionViewModel.class);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -42,108 +48,112 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
         arenaView = findViewById(R.id.arena_view);
-        arenaView.setSeatInspectionListener((seat, row, section) -> {
-            TextView debug = findViewById(R.id.seat_debug);
-            debug.setText(seat == null ? getString(R.string.seat_debug_empty)
-                    : getString(R.string.seat_debug_hit, section.code, row.rowLabel, seat.positionNumber));
+        sheet = new com.example.nbatickethub.ui.arena.SeatSheetController(this, model, arenaView);
+        filters = new com.example.nbatickethub.ui.arena.ArenaFilterController(this, model);
+        arenaView.setSectionListener(id -> {
+            if (currentRender == null) { return; }
+            model.selection.browseSection(id); model.changed(); sheet.expand();
         });
+        arenaView.setSeatInspectionListener((seat, row, section) -> {
+            if (currentRender == null || seat == null) { return; }
+            model.selection.preview(seat.id); model.changed(); sheet.expand();
+        });
+        findViewById(R.id.show_games).setOnClickListener(view -> showGames());
+        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+            @Override public void handleOnBackPressed() {
+                if (browse != null && browse.back()) { return; }
+                setEnabled(false); getOnBackPressedDispatcher().onBackPressed();
+            }
+        });
+        model.changes().observe(this, revision -> renderSelection());
         findViewById(R.id.reset_view).setOnClickListener(view -> arenaView.fitArena());
         title = findViewById(R.id.venue_title);
         subtitle = findViewById(R.id.venue_subtitle);
         status = findViewById(R.id.preview_status);
-        Spinner selector = findViewById(R.id.arena_selector);
-        String restoredId = savedInstanceState == null ? null : savedInstanceState.getString(STATE_ARENA);
-        themeOverride = savedInstanceState == null ? null : savedInstanceState.getString(STATE_THEME);
         loader = new ArenaPreviewLoader(new AndroidAssetSource(getApplicationContext().getAssets()));
         loader.catalog((catalog, error) -> {
             if (error != null) { showFailure(error); return; }
             arenaCatalog = catalog;
-            setupThemes();
-            ArrayAdapter<ArenaProfile> adapter = new ArrayAdapter<>(this,
-                    android.R.layout.simple_spinner_item, catalog.profiles);
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            selector.setAdapter(adapter);
-            int selected = 0;
-            for (int i = 0; i < catalog.profiles.size(); i++) {
-                if (catalog.profiles.get(i).id.equals(restoredId)) { selected = i; }
-            }
-            selector.setSelection(selected);
-            selector.setEnabled(true);
-            selector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    ArenaProfile selected = catalog.profiles.get(position);
-                    if (selected.id.equals(selectedId)) { return; }
-                    themeOverride = null;
-                    ((Spinner) findViewById(R.id.theme_selector)).setSelection(0);
-                    loadArena(selected);
+            if (model.sampleGames == null) model.sampleGames = com.example.nbatickethub.data.mock.MockMatchSchedule.games(catalog);
+            games = model.sampleGames;
+            matchPicker = new com.example.nbatickethub.ui.arena.MatchPickerController(this, model, catalog, loader, games, game -> browse.detail(game));
+            com.example.nbatickethub.state.BrowseNavigation.Page restoredPage = model.navigation.page;
+            browse = new com.example.nbatickethub.ui.arena.BrowseController(this, model, catalog, loader, games,
+                    this::selectMatch, this::captureCamera, () -> matchPicker.refresh());
+            if (getLifecycle().getCurrentState().isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)) matchPicker.resume();
+            if (model.matchId != null) {
+                for (com.example.nbatickethub.model.Game game : games) {
+                    if (game.id.equals(model.matchId)) { selectMatch(game); break; }
                 }
-                @Override public void onNothingSelected(AdapterView<?> parent) { }
-            });
-            loadArena(catalog.profiles.get(selected));
-        });
-    }
-
-    private void loadArena(ArenaProfile profile) {
-        if (profile.id.equals(selectedId)) { return; }
-        selectedId = profile.id;
-        title.setText(profile.venueName);
-        subtitle.setText(profile.homeTeam.displayName);
-        status.setText(R.string.preview_loading);
-        ((TextView) findViewById(R.id.tier_legend)).setText("");
-        arenaView.setRenderData(null);
-        findViewById(R.id.reset_view).setEnabled(false);
-        currentRender = null;
-        applyTheme();
-        loader.arena(profile, (data, error) -> {
-            if (error != null) { showFailure(error); return; }
-            currentRender = data;
-            applyTheme();
-            arenaView.setRenderData(data);
-            findViewById(R.id.reset_view).setEnabled(true);
-            arenaView.setContentDescription(getString(R.string.arena_description, profile.venueName,
-                    data.sectionCount(), data.seatCount()));
-            status.setText(getString(R.string.preview_counts, data.sectionCount(), data.seatCount()));
-        });
-    }
-
-    private void setupThemes() {
-        Spinner themes = findViewById(R.id.theme_selector);
-        java.util.List<String> names = new java.util.ArrayList<>();
-        names.add(getString(R.string.theme_home_team));
-        int restored = 0;
-        for (int i = 0; i < arenaCatalog.themes.size(); i++) {
-            ArenaTheme theme = arenaCatalog.themes.get(i);
-            names.add(theme.name);
-            if (theme.id.equals(themeOverride)) { restored = i + 1; }
-        }
-        if (restored == 0) { themeOverride = null; }
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, names);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        themes.setAdapter(adapter);
-        themes.setSelection(restored);
-        themes.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                themeOverride = position == 0 ? null : arenaCatalog.themes.get(position - 1).id;
-                if (themeOverride != null) {
-                    ArenaTheme team = arenaCatalog.themesById.get(themeOverride);
-                    ArenaProfile home = arenaCatalog.homeArena(team.teamId);
-                    if (!home.id.equals(selectedId)) {
-                        loadArena(home);
-                        ((Spinner) findViewById(R.id.arena_selector)).setSelection(arenaCatalog.profiles.indexOf(home));
-                    } else { applyTheme(); }
-                } else { applyTheme(); }
             }
-            @Override public void onNothingSelected(AdapterView<?> parent) { }
+            model.navigation.page = restoredPage;
+            browse.render();
         });
-        themes.setEnabled(true);
+    }
+
+    private java.util.List<com.example.nbatickethub.model.Game> games;
+    private com.example.nbatickethub.model.Game currentGame;
+    private void showGames() {
+        if (browse != null) browse.tab(com.example.nbatickethub.state.BrowseNavigation.Page.SCHEDULE);
+    }
+
+    private void captureCamera() {
+        if (currentRender != null && arenaView.cameraSnapshot() != null) {
+            model.camera = arenaView.cameraSnapshot(); model.cameraArenaId = selectedId;
+        }
+    }
+
+    private void selectMatch(com.example.nbatickethub.model.Game game) {
+        boolean sameArena = game.arenaId.equals(selectedId);
+        if (sameArena && arenaView.cameraSnapshot() != null) {
+            model.camera = arenaView.cameraSnapshot(); model.cameraArenaId = selectedId;
+        } else if (selectedId != null) { model.camera = null; model.cameraArenaId = null; }
+        model.navigation.arena();
+        model.choosingGame = false;
+        findViewById(R.id.browse_shell).setVisibility(View.GONE);
+        findViewById(R.id.game_picker).setVisibility(View.GONE);
+        findViewById(R.id.arena_screen).setVisibility(View.VISIBLE);
+        if (currentGame != null && currentGame.id.equals(game.id) && currentRender != null) { return; }
+        currentGame = game; model.matchId = game.id;
+        selectedId = game.arenaId; model.arenaId = selectedId;
+        ArenaProfile profile = arenaCatalog.byId.get(selectedId);
+        status.setText(R.string.preview_loading);
+        currentRender = null; filters.setData(null); sheet.setData(null, null); arenaView.setRenderData(null);
+        findViewById(R.id.reset_view).setEnabled(false);
+        loader.arena(profile, game, arenaCatalog, (data, error) -> {
+            if (error != null) { showFailure(error); return; }
+            currentRender = data; model.selection.bind(data.dataset(), game);
+            arenaView.setRenderData(data); applyTheme();
+            if (profile.id.equals(model.cameraArenaId) && model.camera != null) { arenaView.restoreCamera(model.camera); }
+            filters.setData(data); sheet.setData(data, loader.court(arenaView.displayedThemeId()));
+            renderSelection(); findViewById(R.id.reset_view).setEnabled(true);
+            arenaView.setContentDescription(getString(R.string.arena_description, profile.venueName, data.sectionCount(), data.seatCount()));
+        });
     }
 
     private void applyTheme() {
         if (arenaCatalog == null || selectedId == null) { return; }
-        ArenaTheme theme = arenaCatalog.resolveTheme(arenaCatalog.byId.get(selectedId), themeOverride);
+        ArenaTheme theme = currentRender == null
+                ? arenaCatalog.resolveTheme(arenaCatalog.byId.get(selectedId), null)
+                : com.example.nbatickethub.state.GameThemeResolver.resolve(arenaCatalog, currentRender.previewGame());
+        model.themeId = themeOverride;
+        int ink = androidx.core.graphics.ColorUtils.calculateLuminance(theme.primaryColor) > .179
+                ? android.graphics.Color.BLACK : android.graphics.Color.WHITE;
+        findViewById(R.id.arena_header).setBackgroundColor(theme.primaryColor);
+        title.setTextColor(ink); subtitle.setTextColor(ink);
+        ((android.widget.Button) findViewById(R.id.show_games)).setTextColor(ink);
+        findViewById(R.id.show_games).setBackgroundTintList(android.content.res.ColorStateList.valueOf(theme.primaryColor));
+        findViewById(R.id.reset_view).setBackgroundTintList(android.content.res.ColorStateList.valueOf(theme.primaryColor));
+        ((android.widget.Button) findViewById(R.id.reset_view)).setTextColor(ink);
+        sheet.setAccent(theme.primaryColor, ink);
         arenaView.setArenaTheme(theme, loader.court(theme.id));
-        title.setText(theme.name);
-        subtitle.setText(arenaCatalog.byId.get(selectedId).venueName);
+        arenaView.setBackground(com.example.nbatickethub.ui.arena.TeamAppearance.background(theme, true));
+        findViewById(R.id.arena_screen).setBackground(com.example.nbatickethub.ui.arena.TeamAppearance.background(theme, true));
+        findViewById(R.id.arena_header).setBackground(com.example.nbatickethub.ui.arena.TeamAppearance.background(theme, false));
+        title.setTypeface(com.example.nbatickethub.ui.arena.TeamAppearance.heading(currentGame.homeTeamId));
+        title.setText(getString(R.string.match_title, currentGame.awayTeamId.toUpperCase(java.util.Locale.ROOT), currentGame.homeTeamId.toUpperCase(java.util.Locale.ROOT)));
+        subtitle.setText(currentRender == null ? arenaCatalog.byId.get(selectedId).venueName
+                : getString(R.string.game_context, arenaCatalog.byId.get(selectedId).venueName, com.example.nbatickethub.state.MatchListState.display(currentGame.startsAtMillis, "dd/MM/yyyy · HH:mm (z)", java.util.TimeZone.getDefault())));
         android.text.SpannableStringBuilder legend = new android.text.SpannableStringBuilder();
         if (currentRender != null) {
             for (int i = 0; i < currentRender.levelCount(); i++) {
@@ -165,7 +175,24 @@ public class MainActivity extends AppCompatActivity {
             statusLegend.setSpan(new android.text.style.ForegroundColorSpan(theme.statuses.color(statuses[i])),
                     start, start + 1, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
+        int selectedStart = statusLegend.length();
+        statusLegend.append("   ").append(getString(R.string.status_selected));
+        statusLegend.setSpan(new android.text.style.ForegroundColorSpan(getColor(R.color.seat_selected)),
+                selectedStart, statusLegend.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         ((TextView) findViewById(R.id.status_legend)).setText(statusLegend);
+    }
+
+    private void renderSelection() {
+        if (currentRender == null) { return; }
+        filters.refresh();
+        com.example.nbatickethub.state.ArenaSelection state = model.selection;
+        arenaView.setFilter(state.levelId(), state.sectionId());
+        arenaView.setSelection(state.selectedIds(), state.candidateId() == null ? state.focusedId() : state.candidateId());
+        arenaView.setTicketFilter(state);
+        arenaView.highlightSection(state.browsingSection());
+        sheet.render();
+        status.setText(state.replacingId() != null ? getString(R.string.changing_hint)
+                : getString(R.string.section_tap_hint));
     }
 
     private void showFailure(Exception error) {
@@ -175,12 +202,30 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override protected void onSaveInstanceState(Bundle state) {
+        float[] snapshot = arenaView.cameraSnapshot();
+        if (snapshot != null) { model.camera = snapshot; model.cameraArenaId = selectedId; }
+        model.arenaId = selectedId; model.themeId = themeOverride;
         super.onSaveInstanceState(state);
         state.putString(STATE_ARENA, selectedId);
         state.putString(STATE_THEME, themeOverride);
     }
 
+    @Override protected void onResume() {
+        super.onResume();
+        if (matchPicker != null) matchPicker.resume();
+        if (currentRender != null) applyTheme();
+        if (browse != null) browse.render();
+    }
+
+    @Override protected void onPause() {
+        if (browse != null) browse.capture();
+        if (matchPicker != null) matchPicker.pause();
+        super.onPause();
+    }
+
     @Override protected void onDestroy() {
+        if (matchPicker != null) matchPicker.close();
+        if (sheet != null) { sheet.close(); }
         if (loader != null) { loader.close(); }
         super.onDestroy();
     }

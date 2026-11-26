@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp" android:layout_marginBottom="12dp">
+    <TextView android:id="@+id/match_sample_label" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="11sp" android:textStyle="bold" android:text="@string/sample_schedule" android:textColor="#FFFFFF" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:paddingVertical="12dp">
+        <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:gravity="center">
+            <ImageView android:id="@+id/match_away_logo" android:layout_width="80dp" android:layout_height="80dp" />
+            <TextView android:id="@+id/match_away_name" android:textColor="#FFFFFF" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="20sp" android:textStyle="bold" android:gravity="center" android:minLines="2" android:paddingTop="6dp" />
+        </LinearLayout>
+        <TextView android:id="@+id/match_versus" android:textColor="#FFFFFF" android:layout_width="32dp" android:layout_height="wrap_content" android:text="@string/match_versus" android:gravity="center" android:textSize="20sp" />
+        <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:gravity="center">
+            <ImageView android:id="@+id/match_home_logo" android:layout_width="80dp" android:layout_height="80dp" />
+            <TextView android:id="@+id/match_home_name" android:textColor="#FFFFFF" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="20sp" android:textStyle="bold" android:gravity="center" android:minLines="2" android:paddingTop="6dp" />
+        </LinearLayout>
+    </LinearLayout>
+    <TextView android:id="@+id/match_start_time" android:textColor="#FFFFFF" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="13sp" />
+    <TextView android:id="@+id/match_venue" android:textColor="#FFFFFF" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="4dp" android:textSize="12sp" />
+    <TextView android:id="@+id/match_from_price" android:textColor="#FFFFFF" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="8dp" android:textSize="22sp" android:textStyle="bold" />
+    <Button android:id="@+id/open_match" android:layout_width="match_parent" android:layout_height="48dp" android:text="@string/open_match" />
+</LinearLayout>

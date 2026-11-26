@@ -20,6 +20,7 @@ public final class CourtRenderData {
     private final Path[] artwork;
     private final Path lines = new Path(), rims = new Path();
     private final Bitmap logo;
+    public Bitmap logoBitmap() { return logo; }
     private final RectF logoBounds;
 
     public CourtRenderData(ArenaTheme theme, AssetSource assets) throws IOException {

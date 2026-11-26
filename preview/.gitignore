@@ -1,0 +1,5 @@
+# Generated HTML plus local per-arena seat payloads; regenerate from the Java pipeline.
+/arena-preview.html
+/qa-*.png
+
+/arena-data/
